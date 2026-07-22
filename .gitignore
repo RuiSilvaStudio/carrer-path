@@ -1,0 +1,18 @@
+# Cache and temp
+cache/
+*.pyc
+__pycache__/
+*.swp
+*.swo
+*~
+
+# Hermes cache
+.hermes/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp downloads
+/tmp/
+*.zip

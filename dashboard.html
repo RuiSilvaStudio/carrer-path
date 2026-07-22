@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rui Silva — Career Dashboard</title>
+<style>
+  :root {
+    --bg: #f8f6f2;
+    --surface: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-faint: #8a8a8a;
+    --accent: #b85c38;
+    --accent-soft: #f4e6df;
+    --line: #e8e4dc;
+    --good: #2d6a4f;
+    --good-soft: #d8f3dc;
+    --warn: #b7791f;
+    --warn-soft: #fef3c7;
+    --bad: #9b2226;
+    --bad-soft: #fde8e8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Source Sans Pro", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  header { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
+  .eyebrow { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  h1 { font-family: Georgia, "Source Serif Pro", serif; font-size: 32px; font-weight: 600; margin: 6px 0 4px; letter-spacing: -0.01em; }
+  .subtitle { color: var(--ink-soft); font-size: 15px; }
+  .updated { color: var(--ink-faint); font-size: 12px; margin-top: 8px; }
+
+  nav { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0 32px; }
+  nav a {
+    font-size: 12px; padding: 6px 12px; border-radius: 20px;
+    background: var(--surface); border: 1px solid var(--line);
+    color: var(--ink-soft); text-decoration: none; transition: all 0.15s;
+  }
+  nav a:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+  section { margin-bottom: 48px; scroll-margin-top: 20px; }
+  h2 { font-family: Georgia, "Source Serif Pro", serif; font-size: 20px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  h2 .num { font-size: 12px; color: var(--ink-faint); font-weight: 400; font-family: sans-serif; }
+
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 10px; padding: 18px 20px;
+  }
+  .card h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-faint); margin-bottom: 8px; font-weight: 600; }
+  .card p { font-size: 14px; color: var(--ink-soft); }
+  .card .big { font-size: 22px; font-weight: 600; color: var(--ink); font-family: Georgia, serif; }
+
+  .pill { display: inline-block; font-size: 11px; padding: 3px 9px; border-radius: 12px; font-weight: 600; margin-right: 4px; }
+  .pill-good { background: var(--good-soft); color: var(--good); }
+  .pill-warn { background: var(--warn-soft); color: var(--warn); }
+  .pill-bad { background: var(--bad-soft); color: var(--bad); }
+  .pill-accent { background: var(--accent-soft); color: var(--accent); }
+
+  .quote { border-left: 3px solid var(--accent); padding: 10px 16px; background: var(--surface); border-radius: 0 8px 8px 0; font-style: italic; color: var(--ink-soft); font-size: 14px; }
+  .quote strong { font-style: normal; color: var(--ink); }
+
+  .decision { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .decision:last-child { border-bottom: none; }
+  .decision .label { flex: 0 0 140px; font-size: 12px; color: var(--ink-faint); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 2px; }
+  .decision .value { flex: 1; font-size: 14px; color: var(--ink); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--line); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); font-weight: 600; }
+  td { padding: 10px; border-bottom: 1px solid var(--line); color: var(--ink-soft); vertical-align: top; }
+  td strong { color: var(--ink); }
+  tr:hover td { background: var(--surface); }
+
+  .stat-row { display: flex; gap: 24px; flex-wrap: wrap; }
+  .stat { }
+  .stat .num { font-size: 28px; font-weight: 600; color: var(--accent); font-family: Georgia, serif; }
+  .stat .lab { font-size: 12px; color: var(--ink-faint); }
+
+  .alert { padding: 14px 18px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+  .alert-warn { background: var(--warn-soft); border-left: 3px solid var(--warn); color: #74420a; }
+  .alert-good { background: var(--good-soft); border-left: 3px solid var(--good); color: #1b4332; }
+  .alert-accent { background: var(--accent-soft); border-left: 3px solid var(--accent); color: #7a3a20; }
+
+  .checklist { list-style: none; }
+  .checklist li { padding: 8px 0 8px 28px; position: relative; font-size: 14px; color: var(--ink-soft); border-bottom: 1px solid var(--line); }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li::before { content: "☐"; position: absolute; left: 0; color: var(--ink-faint); font-size: 16px; }
+  .checklist li.done { color: var(--ink-faint); text-decoration: line-through; }
+  .checklist li.done::before { content: "✓"; color: var(--good); }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .tag { font-size: 11px; padding: 3px 8px; border-radius: 4px; background: var(--bg); color: var(--ink-soft); border: 1px solid var(--line); }
+
+  footer { margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--ink-faint); font-size: 12px; text-align: center; }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 20px 16px 60px; }
+    h1 { font-size: 26px; }
+    .decision { flex-direction: column; gap: 4px; }
+    .decision .label { flex: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">Career Dashboard</div>
+  <h1>Rui Silva</h1>
+  <div class="subtitle">Senior Creative Operations Leader · Ex-SVP, FARFETCH · Job Search 2026</div>
+  <div class="updated">Last updated: 21 July 2026 · Living document — ask the coach to update any section</div>
+</header>
+
+<nav>
+  <a href="#situation">Situation</a>
+  <a href="#positioning">Positioning</a>
+  <a href="#numbers">Key Numbers</a>
+  <a href="#profile">Leadership Profile</a>
+  <a href="#companies">Target Companies</a>
+  <a href="#networking">Network Activation</a>
+  <a href="#courses">Credentials</a>
+  <a href="#actions">Action Plan</a>
+  <a href="#interview">Interview Prep</a>
+  <a href="#assets">Assets</a>
+  <a href="#status">Search Status</a>
+</nav>
+
+<!-- SITUATION -->
+<section id="situation">
+  <h2>Where things stand <span class="num">as decided</span></h2>
+  <div class="alert alert-warn">
+    <strong>Urgent:</strong> Unemployed since Feb 2024 (~16 months). Benefits exhausted. Wife also unemployed. 7-year-old son. Income is the priority.
+  </div>
+  <div class="grid grid-3">
+    <div class="card">
+      <h3>Target role</h3>
+      <p>Senior Creative Operations / Content Supply Chain leadership — leading teams + process at scale.</p>
+      <div class="tag-row"><span class="tag">Director</span><span class="tag">Sr Director</span><span class="tag">VP</span></div>
+    </div>
+    <div class="card">
+      <h3>Location</h3>
+      <p>Guimarães, Portugal. 50km radius (up to Porto) onsite, OR remote-anywhere. PT + EN.</p>
+    </div>
+    <div class="card">
+      <h3>Industry</h3>
+      <p>Flexible — prioritising AI-content, gaming, pharma, streaming, D2C, and luxury fashion where the right opportunity arises.</p>
+      <div class="tag-row"><span class="tag">AI-content</span><span class="tag">Startups</span><span class="tag">Marketplaces</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- POSITIONING -->
+<section id="positioning">
+  <h2>How you're positioned <span class="num">the agreed story</span></h2>
+  <div class="card">
+    <h3>LinkedIn headline</h3>
+    <div class="quote"><strong>Senior Creative Operations Leader | Ex-SVP, FARFETCH | Content Supply Chain & Automation</strong></div>
+    <p style="font-size:12px;color:var(--ink-faint);margin-top:8px;">No numbers in the headline — peer-validated. "Content Supply Chain & Automation" tagline adds breadth (opens non-fashion searches) + differentiator (automation). Both backed by 15 years of FARFETCH experience.</p>
+  </div>
+  <div class="card" style="margin-top:12px;">
+    <h3>About opening line</h3>
+    <div class="quote"><strong>I build the creative production systems that let creative work ship globally without losing quality.</strong></div>
+    <p style="font-size:12px;color:var(--ink-faint);margin-top:8px;">Narrative identity statement — peer convention. Numbers follow in paragraph 2, not paragraph 1.</p>
+  </div>
+  <div class="card" style="margin-top:12px;">
+    <h3>The studio framing</h3>
+    <div class="quote"><strong>A side venture, a labor of love I keep running when time allows.</strong></div>
+    <p style="font-size:12px;color:var(--ink-faint);margin-top:8px;">Not "sabbatical", not "failed venture", not "parallel career". The job is the priority; the studio is the practice.</p>
+  </div>
+  <div class="card" style="margin-top:12px;">
+    <h3>The 16-month gap framing</h3>
+    <div class="quote">After 15 years at FARFETCH I needed space to breathe and rebuild — and I'd carried a creative idea for a long time. What it confirmed is that my real edge is at scale.</div>
+    <p style="font-size:12px;color:var(--ink-faint);margin-top:8px;">Honest, planned pause — not a fallback. Pivots back to operations leadership.</p>
+  </div>
+</section>
+
+<!-- NUMBERS -->
+<section id="numbers">
+  <h2>The ammunition <span class="num">agreed figures, consistent everywhere</span></h2>
+  <div class="stat-row" style="margin-bottom:20px;">
+    <div class="stat"><div class="num">600+</div><div class="lab">Full-time team (900+ with temps)</div></div>
+    <div class="stat"><div class="num">€40M+</div><div class="lab">Annual P&L managed</div></div>
+    <div class="stat"><div class="num">10%→1%</div><div class="lab">Op spend as % of sales</div></div>
+    <div class="stat"><div class="num">3.6M</div><div class="lab">Digital assets / year</div></div>
+    <div class="stat"><div class="num">€60→€30</div><div class="lab">Cost-per-item (Virtual Model)</div></div>
+    <div class="stat"><div class="num">80%</div><div class="lab">Product categorisation automated</div></div>
+  </div>
+  <div class="alert alert-good">
+    <strong>Consistency rule:</strong> These exact figures are used in the CV, LinkedIn About, and LinkedIn Experience — no mismatches anywhere. If you change one, the coach updates all three.
+  </div>
+</section>
+
+<!-- LEADERSHIP PROFILE -->
+<section id="profile">
+  <h2>Who you are as a leader <span class="num">from 3 assessments, cross-referenced</span></h2>
+  <div class="card">
+    <div class="quote"><strong>A precise, analytical, results-driven operational leader who combines systems thinking with genuine care for people — and whose edge is driving hard for perfection and control, sometimes harder than the situation needs.</strong></div>
+  </div>
+  <div class="grid grid-2" style="margin-top:16px;">
+    <div class="card">
+      <h3>Top 5 strengths (CliftonStrengths)</h3>
+      <ol style="padding-left:20px;font-size:14px;color:var(--ink-soft);">
+        <li><strong>Relator</strong> — deep relationships, not wide networks</li>
+        <li><strong>Deliberative</strong> — anticipates risks, decides carefully</li>
+        <li><strong>Learner</strong> — continuous improvement is intrinsic</li>
+        <li><strong>Analytical</strong> — decisions on data, not gut</li>
+        <li><strong>Responsibility</strong> — owns outcomes</li>
+      </ol>
+      <p style="font-size:12px;color:var(--ink-faint);margin-top:8px;">+ Futuristic #7, Arranger #6, Strategic #8. Leads with Strategic Thinking + Executing.</p>
+    </div>
+    <div class="card">
+      <h3>Behavioural style (DiSC)</h3>
+      <p><span class="pill pill-accent">High C</span> Conscientiousness — primary. Analytical, precise, quality-focused.</p>
+      <p style="margin-top:6px;"><span class="pill pill-accent">High i</span> Influence — secondary. Persuasive, sociable.</p>
+      <p style="font-size:12px;color:var(--ink-faint);margin-top:8px;">Pattern: "Prático" (Practical). Leads through expertise + persuasion, not command.</p>
+    </div>
+  </div>
+  <div class="grid grid-2" style="margin-top:16px;">
+    <div class="card">
+      <h3>Development areas — interview-ready</h3>
+      <div class="decision"><div class="label">Blind spot</div><div class="value">Under-claims strengths. LCP 360° showed others rate you ~10 pts higher than you rate yourself. Practice saying "I drove X" without hedging.</div></div>
+      <div class="decision"><div class="label">Weakness answer</div><div class="value">Perfectionism — backed by all 3 assessments. Most authentic, most defensible.</div></div>
+      <div class="decision"><div class="label">Network</div><div class="value">Relator, not networker. Target 5-10 deep contacts, not 100 cold ones.</div></div>
+    </div>
+    <div class="card">
+      <h3>Interview calibration</h3>
+      <p style="font-size:14px;color:var(--ink-soft);">Lead with <strong>competence and numbers</strong>, not warmth. Have 2 relational stories ready (building LA/HK teams, developing people). Claim achievements plainly — no hedging.</p>
+    </div>
+  </div>
+</section>
+
+<!-- COMPANIES -->
+<section id="companies">
+  <h2>Target companies <span class="num">the watchlist</span></h2>
+  <div class="alert alert-accent">
+    <strong>Weekly auto-scan:</strong> Every Monday at 9am, the scanner checks all Tier A + B career pages and delivers a summary here. Last scan: 21 Jul — no matching roles found this week.
+  </div>
+  <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin-bottom:10px;">Tier A — check weekly (highest fit)</h3>
+  <table>
+    <thead><tr><th>Company</th><th>Location</th><th>Why it fits</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Sword Health</strong></td><td>Porto</td><td>Healthtech unicorn. Multi-market content needs. Your AI + localization fit</td><td><span class="pill pill-accent">Monitor</span> 16 roles, no direct creative ops yet</td></tr>
+      <tr><td><strong>Salsa Jeans</strong></td><td>Famalicão (30km!)</td><td>Fashion e-commerce (Sonae Group). FARFETCH creative ops transfers directly</td><td><span class="pill pill-accent">Monitor</span> Recently posted creative roles</td></tr>
+      <tr><td><strong>Parfois</strong></td><td>Porto HQ</td><td>Fast-fashion accessories, 800+ stores globally. Content at scale</td><td><span class="pill pill-accent">Monitor</span> Video Content Creator + Head of Buying posted</td></tr>
+      <tr><td><strong>Threads Styling</strong></td><td>Porto hub</td><td>Luxury personal shopping platform. FARFETCH-adjacent</td><td><span class="pill pill-good">Hiring</span> Content creator roles</td></tr>
+      <tr><td><strong>Blip</strong></td><td>Porto</td><td>Content-heavy betting/gaming ops (Entain Group)</td><td><span class="pill pill-good">Hiring</span> 18 open roles</td></tr>
+      <tr><td><strong>Unbabel</strong></td><td>Lisbon</td><td>AI-powered language ops — DIRECT overlap with your ML translation work</td><td><span class="pill pill-accent">Monitor</span> Acquired by TransPerfect</td></tr>
+      <tr><td><strong>Talkdesk</strong></td><td>Lisbon/Porto</td><td>AI-powered CX platform, unicorn. AI automation + content ops fit</td><td><span class="pill pill-good">Hiring</span> 15+ roles in Portugal</td></tr>
+      <tr><td><strong>Synthesia</strong></td><td>London, remote EU</td><td>AI video — your Virtual Model playbook</td><td><span class="pill pill-warn">No fit now</span> Cold-message founders</td></tr>
+      <tr><td><strong>LaLaLand</strong></td><td>Amsterdam</td><td>AI virtual models — your exact experience</td><td><span class="pill pill-warn">Reach out</span> Small team, message founders</td></tr>
+      <tr><td><strong>The Fabricant</strong></td><td>Amsterdam</td><td>3D digital fashion production</td><td><span class="pill pill-warn">Reach out</span> Contact Kerry Murphy</td></tr>
+      <tr><td><strong>Bigthinx</strong></td><td>Milan</td><td>AI fashion tech</td><td><span class="pill pill-warn">Reach out</span> Contact founders</td></tr>
+      <tr><td><strong>Vinted</strong></td><td>Berlin/Vilnius</td><td>Marketplace creative ops</td><td><span class="pill pill-accent">Monitor</span> Posted "Creative Ops Mgr" before</td></tr>
+      <tr><td><strong>Back Market</strong></td><td>Paris</td><td>Refurbished marketplace, Series D</td><td><span class="pill pill-accent">Monitor</span></td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;color:var(--ink-faint);margin-top:12px;">Full list (30 Portuguese companies) in <code>~/career-kb/14-portuguese-companies.md</code></p>
+  <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin:20px 0 10px;">Tier B — check biweekly (larger tech / consumer)</h3>
+  <table>
+    <thead><tr><th>Company</th><th>What to watch</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Adobe</strong></td><td>Director Content Operations, Content Supply Chain roles</td></tr>
+      <tr><td><strong>Snowflake</strong></td><td>Head of Creative Operations & AI-Driven Brand</td></tr>
+      <tr><td><strong>Netflix</strong></td><td>VP Regional Head of Creative Production EMEA</td></tr>
+      <tr><td><strong>Nike</strong></td><td>Senior Director Creative Operations</td></tr>
+      <tr><td><strong>Electronic Arts</strong></td><td>Head of Studio Operations</td></tr>
+      <tr><td><strong>Shopify</strong></td><td>Creative Operations Lead</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;color:var(--ink-faint);margin-top:12px;">Full watchlist with URLs in <code>~/career-kb/10-watchlist.md</code></p>
+</section>
+
+<!-- COURSES -->
+<section id="courses">
+  <h2>Credentials to pursue <span class="num">corrected after peer research</span></h2>
+  <div class="alert alert-bad">
+    <strong>Don't display these on LinkedIn:</strong> Coursera content marketing, Google AI for Content Creation, Six Sigma Yellow Belt, Adobe GenStudio, Lokalise. All read as junior at SVP level. (Fine to take for learning — just don't list them.)
+  </div>
+  <table>
+    <thead><tr><th>Priority</th><th>Credential</th><th>Cost</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill pill-accent">1 ⭐</span></td><td><strong>MIT Professional Education — Applied Generative AI</strong></td><td>~$2,000-5,000</td><td>Executive-grade AI credential. Matches your FARFETCH AI/ML experience. Appeared on 3 senior profiles.</td></tr>
+      <tr><td><span class="pill pill-accent">2</span></td><td><strong>Google Cloud Certified Generative AI Leader</strong></td><td>~$100-200 exam</td><td>6 profiles, emerging 2025-2026 differentiator. Professional cert, not consumer course.</td></tr>
+      <tr><td><span class="pill pill-accent">3</span></td><td><strong>PMP (Project Management Professional)</strong></td><td>~$400-600</td><td>~10 profiles, often in headlines. The operations credential recruiters recognise. You likely qualify on experience.</td></tr>
+      <tr><td><span class="pill pill-accent">4</span></td><td><strong>Adobe Workfront Certification</strong></td><td>~$150-300</td><td>8 profiles. THE Content Supply Chain platform credential. Replaces GenStudio.</td></tr>
+    </tbody>
+  </table>
+  <div class="alert alert-good" style="margin-top:16px;">
+    <strong>Most important:</strong> Your FARFETCH SVP experience is worth more than any certification in the dataset. Don't let a list of courses undermine senior positioning.
+  </div>
+</section>
+
+<!-- ACTION PLAN -->
+<section id="actions">
+  <h2>Action plan <span class="num">8-week sprint</span></h2>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Weeks 1-2 · Build target list</h3>
+      <ul class="checklist">
+        <li>Build 30-40 target list from Sifted 250/100</li>
+        <li>Message Michelle Rowe (former direct report, now Fashion Nova) — warm contact</li>
+        <li>Apply to Synthesia (cold message founders)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Weeks 3-4 · Outreach</h3>
+      <ul class="checklist">
+        <li>Send 20-30 personalised founder messages</li>
+        <li>Register with 5 VC talent partners (Balderton, Index, Accel, Northzone, EQT)</li>
+        <li>Message 15-20 ex-FARFETCH colleagues at startups</li>
+        <li>Apply to 5-10 open roles on Ashby / startup.jobs</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Weeks 5-8 · Content + follow-up</h3>
+      <ul class="checklist">
+        <li>Post 4-5 LinkedIn articles (Virtual Model, ML translation, Kaizen, automation)</li>
+        <li>Follow up with non-responders after 2 weeks</li>
+        <li>Attend Web Summit Lisbon (Nov 2026 — local)</li>
+        <li>Target 5-10 first calls</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Now · Today</h3>
+      <ul class="checklist">
+        <li>Fix LinkedIn headline + About (use the agreed versions)</li>
+        <li>Set LinkedIn Industry to "Marketing and Advertising"</li>
+        <li>Pin the 5 skills: Creative Operations, Content Supply Chain, AI/ML Content Automation, Global Operations Leadership, Lean Six Sigma</li>
+        <li>Add Henry Stewart DAM video to LinkedIn Featured</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- INTERVIEW -->
+<section id="interview">
+  <h2>Interview prep <span class="num">ready-to-use answers</span></h2>
+  <div class="card">
+    <h3>"Why did you leave Farfetch / what have you been doing?"</h3>
+    <div class="quote">After 15 years at FARFETCH I needed space to breathe and rebuild. I'd also carried a creative idea for a long time — furniture as collectible craft — and I wanted to test it with my own hands, not just manage others making things. So I built a workshop, designed a credenza for my own living room, and the feedback made me keep going. It became Rui Silva Studio.<br><br>The studio is a side venture, a labor of love I keep running when time allows. It's where I imagine, design, and build until something is done. It keeps my creative mind sharp. What it also did was confirm something I already suspected: my real edge is at scale. I love the craft, but the place I create the most value is leading the creative engine that makes craft possible at industrial scale. That's what I'm looking to do next.</div>
+  </div>
+  <div class="card" style="margin-top:12px;">
+    <h3>"Tell me about yourself"</h3>
+    <div class="quote">I started in textile and graphic design, then joined FARFETCH early and spent 15 years there, rising from Production Manager to SVP of Creative Operations. The thread through all of it has been making creative work happen at scale without losing quality — whether that's a 600-person team across five countries, a €40M+ P&L, or 3.6 million assets a year. The wins I'm proudest of are operational: cutting spend from 10% to 1% of sales, automating 80% of product categorization, bringing Virtual Model tech in to halve cost-per-item. I recently took time to run a small furniture studio to test craft at boutique scale; it sharpened my conviction that my real value is at the intersection of creative and operations. That's what I'm looking to do next.</div>
+  </div>
+  <div class="card" style="margin-top:12px;">
+    <h3>"What's a weakness / blind spot?"</h3>
+    <div class="quote">My drive for quality and precision is my biggest strength, and I've learned to watch it. Earlier in my career I could over-control under pressure — I've gotten better at distinguishing where precision matters (luxury quality, SLAs) and where 'good and done' beats 'perfect and late.' 360° feedback also showed me I under-claim my work — others consistently rated me higher than I rated myself. I'm learning to claim achievements plainly.</div>
+  </div>
+</section>
+
+<!-- NETWORKING -->
+<section id="networking">
+  <h2>Network activation <span class="num">designed for a Relator who hates networking</span></h2>
+
+  <div class="alert alert-accent">
+    <strong>The reframe:</strong> This is NOT networking. It's <strong>"market intelligence conversations"</strong> and <strong>"reconnecting with former colleagues."</strong> Never use the word "networking" in your planning. The research is clear: the label determines whether you engage or avoid.
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>The methodology</h3>
+      <p><strong>Dormant Tie Reactivation Protocol</strong> — synthesised from 3 peer-reviewed studies (Levin 2011, Rondi 2023, Yang 2021).</p>
+      <p style="margin-top:8px;font-size:13px;">Evidence: reconnecting dormant ties produces outcomes comparable to active ties. Previously STRONG dormant ties give BOTH trust AND novel information — the best of both worlds. People under job insecurity naturally reactivate dormant ties (it's a researched coping mechanism, not desperation).</p>
+    </div>
+    <div class="card">
+      <h3>Why it fits you</h3>
+      <p>You're not "bad at networking" — you're bad at the <em>extrovert</em> version. This approach works WITH your wiring:</p>
+      <p style="margin-top:6px;font-size:13px;">
+        <strong>Relator #1</strong> → deep not wide; these are people who already know you<br>
+        <strong>Deliberative #2</strong> → structured protocol, not open-ended anxiety<br>
+        <strong>Learner #3</strong> → framed as "research conversations"<br>
+        <strong>Analytical #4</strong> → track outcomes, analyse yield
+      </p>
+    </div>
+  </div>
+
+  <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin:24px 0 10px;">The protocol — 5 steps</h3>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Step 1 · Map & tier (one-time, 1 hr)</h3>
+      <p>Export LinkedIn connections (Settings → Data Privacy → Get a copy of your data → Connections). Segment into: direct reports, cross-functional peers, vendors/agencies, industry contacts. Tier each: A (would definitely take your call), B (would probably respond). Only A+B go on active list (~130-200 people). Don't map all 600.</p>
+    </div>
+    <div class="card">
+      <h3>Step 2 · Reactivation message</h3>
+      <div class="quote" style="font-size:13px;">Hi [Name], it's been a while — I think we last connected at [specific shared context]. I hope you're doing well. I saw [specific recent thing about them] and wanted to reach out. I'm currently exploring senior creative ops roles and would really value your perspective on [specific thing they'd know about]. Would you have 20 minutes for a quick call? No pressure — I'd just love to catch up and hear what you're working on.</div>
+      <p style="font-size:11px;color:var(--ink-faint);margin-top:6px;">Acknowledge the gap · catch up first · low-stakes ask · reference something specific · frame as exploration</p>
+    </div>
+    <div class="card">
+      <h3>Step 3 · The conversation (TIARA)</h3>
+      <p style="font-size:13px;">Structured 20-min call. Listen 80%, talk 20%. Use TIARA questions:</p>
+      <p style="font-size:12px;margin-top:6px;">
+        <strong>T</strong>rends — what's changing in your field?<br>
+        <strong>I</strong>nsights — why does this work interest you?<br>
+        <strong>A</strong>dvice — how did you get your role?<br>
+        <strong>R</strong>esources — who else should I talk to? ← referrals happen here<br>
+        <strong>A</strong>ssignments — what should I learn?
+      </p>
+      <p style="font-size:11px;color:var(--ink-faint);margin-top:6px;">NEVER ask for a job. Ask for information + referrals. The relationship does the work.</p>
+    </div>
+    <div class="card">
+      <h3>Step 4 · Follow-up</h3>
+      <p style="font-size:13px;">Within 24 hrs: thank-you referencing something specific they said. If referred: contact the referral, name-drop ("[Name] suggested I reach out"). Follow up again in 4-6 weeks with something relevant.</p>
+    </div>
+    <div class="card">
+      <h3>Step 5 · Cadence</h3>
+      <p style="font-size:13px;"><strong>2-3 reactivation messages per week.</strong> Not 50. Start with 5 Tier-A contacts. Do NOT proceed to Tier B until Tier A is exhausted. Expect 30-50% response rate.</p>
+    </div>
+    <div class="card">
+      <h3>The warm-up (optional but powerful)</h3>
+      <p style="font-size:13px;"><strong>5-Minute Favor</strong> (Adam Rifkin / Adam Grant): before the reactivation message, send a small favor — an article, an introduction, a LinkedIn endorsement. "Saw this and thought of you — no response needed." Builds social capital; makes the later ask feel natural. Ideal for a Relator — offering help is less aversive than asking.</p>
+    </div>
+  </div>
+
+  <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin:24px 0 10px;">Your first 5 Tier-A contacts (warm)</h3>
+  <table>
+    <thead><tr><th>Name</th><th>Company</th><th>Connection</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Luis Teixeira</strong></td><td>FARFETCH</td><td>Former boss. Already aware you're job-searching.</td><td><span class="pill pill-good">Aware</span> Have the conversation</td></tr>
+      <tr><td><strong>Andrew Robb</strong></td><td>FARFETCH</td><td>Former boss. Already aware you're job-searching.</td><td><span class="pill pill-good">Aware</span> Have the conversation</td></tr>
+      <tr><td><strong>André Eiras</strong></td><td>Sword Health</td><td>Porto Business School (Exec MBA cohort)</td><td><span class="pill pill-accent">Ready</span> Message drafted</td></tr>
+      <tr><td><strong>Michelle Rowe</strong></td><td>Fashion Nova</td><td>Former direct report at FARFETCH</td><td><span class="pill pill-accent">Ready</span> Message drafted</td></tr>
+      <tr><td>?</td><td>?</td><td>Former direct report (promoted to Sr Dir)</td><td><span class="pill pill-warn">Add</span> After LinkedIn export</td></tr>
+    </tbody>
+  </table>
+  <div class="alert alert-good" style="margin-top:12px;">
+    <strong>Your two former bosses are the easiest wins.</strong> They already know you're looking. You don't need a reactivation message — you need a follow-up conversation. Ask them: "Who are you hearing from? What are you seeing in the market? Is there anyone you'd suggest I talk to?" They're Tier A, warm, and the conversation is already half-started.
+  </div>
+
+  <div class="alert alert-good" style="margin-top:16px;">
+    <strong>The evidence on yield:</strong> Warm referrals convert at ~46% vs 3% for cold outreach — a 15x difference. 70-80% of VP/SVP roles are never publicly posted. Your dormant FARFETCH network (600+) are exactly the "moderately weak ties" research shows are highest-yield for job mobility. You don't need to build a network — you need to activate one that already exists.
+  </div>
+
+  <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-faint);margin:24px 0 10px;">Market Intelligence Tracker</h3>
+  <p style="font-size:13px;color:var(--ink-soft);margin-bottom:8px;">NOT a "networking tracker" — a research log. Columns:</p>
+  <table>
+    <thead><tr><th>Name</th><th>Company now</th><th>Sector</th><th>Relationship</th><th>Tier</th><th>Status</th><th>Next action</th></tr></thead>
+    <tbody>
+      <tr><td>Luis Teixeira</td><td>FARFETCH</td><td>Luxury fashion</td><td>Former boss</td><td>A</td><td><span class="pill pill-good">Aware</span></td><td>Follow-up call — who is he hearing from?</td></tr>
+      <tr><td>Andrew Robb</td><td>FARFETCH</td><td>Luxury fashion</td><td>Former boss</td><td>A</td><td><span class="pill pill-good">Aware</span></td><td>Follow-up call — market intel + referrals</td></tr>
+      <tr><td>André Eiras</td><td>Sword Health</td><td>Healthtech</td><td>Porto Business School</td><td>A</td><td>Not contacted</td><td>Send reactivation message</td></tr>
+      <tr><td>Michelle Rowe</td><td>Fashion Nova</td><td>Fashion</td><td>Former direct report</td><td>A</td><td>Not contacted</td><td>Send reactivation message</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:11px;color:var(--ink-faint);margin-top:8px;">Status flow: Not contacted → Message sent → Conversation scheduled → Conversation done → Referral received → Lead identified → Closed</p>
+
+  <p style="font-size:12px;color:var(--ink-faint);margin-top:16px;">Full research with 14 academic citations in <code>~/career-kb/13-networking-methodologies-research.md</code></p>
+</section>
+
+<!-- ASSETS -->
+<section id="assets">
+  <h2>Credibility assets <span class="num">things that prove your claims</span></h2>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Henry Stewart DAM talk (2018)</h3>
+      <p>"Creative Ops Interview | How Farfetch approach Data" — presented at the leading DAM industry conference alongside Charlotte Cole (Head of Content, FARFETCH).</p>
+      <p style="font-size:12px;margin-top:8px;"><a href="https://www.youtube.com/watch?v=5moqOisGRYA" style="color:var(--accent);">Watch on YouTube →</a></p>
+      <p style="font-size:12px;color:var(--ink-faint);margin-top:4px;">Add to LinkedIn Featured section. Use in outreach to AI-content startups.</p>
+    </div>
+    <div class="card">
+      <h3>The org chart</h3>
+      <p>The Creative Operations functional org diagram (4 pillars: Content Development, Content Creation, PPM, SDD) — proves you <em>designed</em> the org, not just managed it.</p>
+      <p style="font-size:12px;color:var(--ink-faint);margin-top:8px;">Use in interviews when asked "how was your org structured?"</p>
+    </div>
+    <div class="card">
+      <h3>Kaizen award</h3>
+      <p>1st place, Kaizen Lean Excellence on Productivity — Kaizen Institute & APGEI. Backs your process engineering claim with external validation.</p>
+    </div>
+    <div class="card">
+      <h3>Rui Silva Studio site</h3>
+      <p>ruisilvastudio.com — "Furniture as Cultural Infrastructure." Manifesto, Lusitano Collection, Studio Partnership programme. Evidence of creative imagination + end-to-end execution.</p>
+    </div>
+  </div>
+</section>
+
+<!-- STATUS -->
+<section id="status">
+  <h2>Search status <span class="num">living log</span></h2>
+  <div class="grid grid-3">
+    <div class="card"><h3>Applications</h3><div class="big">0</div><p>Active</p></div>
+    <div class="card"><h3>Outreach sent</h3><div class="big">0</div><p>Founders + warm contacts</p></div>
+    <div class="card"><h3>Interviews</h3><div class="big">0</div><p>In progress</p></div>
+  </div>
+  <div class="alert alert-warn" style="margin-top:16px;">
+    <strong>Market reality:</strong> Senior creative ops hiring is shrinking (down 8.7% YoY). Luxury fashion is the worst-hit sector. Expect 90-120 day hiring cycles — run 5-10 parallel processes. Referrals beat cold applications; most senior startup ops hires are NOT posted on LinkedIn.
+  </div>
+  <p style="font-size:12px;color:var(--ink-faint);margin-top:12px;">Update the log in <code>~/career-kb/04-search-log.md</code> as things progress. This dashboard reflects what's there.</p>
+</section>
+
+<footer>
+  Rui Silva Career Dashboard · Generated by Hermes Career Coach · <br>
+  All source files in <code>~/career-kb/</code> · This file is local and private — not hosted online.
+</footer>
+
+</div>
+</body>
+</html>

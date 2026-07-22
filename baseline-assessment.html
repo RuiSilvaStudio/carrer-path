@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Baseline — Personality Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<style>
+  :root {
+    --bg: #18120e;
+    --bg-elevated: #1f1813;
+    --bg-surface: #251d17;
+    --bg-surface-2: #2c241c;
+    --border: #3a2f25;
+    --border-light: #4a3d31;
+    --ink: #e8dfd3;
+    --ink-muted: #a89a87;
+    --ink-dim: #756657;
+    --ink-faint: #4a3f36;
+    --accent: #d4a574;
+    --accent-bright: #e8b884;
+    --accent-dim: #8a6f4e;
+    --signal: #7ba89b;
+    --signal-bright: #9ec9b8;
+    --danger: #c97757;
+    --danger-bright: #d98a6a;
+    --warn: #c4a96a;
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'IBM Plex Sans', system-ui, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 0%, rgba(212,165,116,0.04), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(123,168,155,0.03), transparent),
+      var(--bg);
+  }
+  ::selection { background: rgba(212,165,116,0.25); }
+
+  /* Progress bar */
+  .progress-track {
+    position: fixed; top: 0; left: 0; right: 0;
+    height: 3px; background: var(--border);
+    z-index: 100;
+  }
+  .progress-fill {
+    height: 100%; background: var(--accent);
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 0 8px rgba(212,165,116,0.4);
+  }
+
+  .wizard-container {
+    max-width: 920px; margin: 0 auto;
+    padding: 60px 40px 80px;
+  }
+
+  /* Screen system */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* Welcome */
+  .welcome-screen { text-align: left; padding-top: 40px; }
+  .welcome-label {
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--accent); opacity: 0.8; margin-bottom: 16px;
+  }
+  .welcome-title {
+    font-family: var(--serif); font-size: 48px; font-weight: 400;
+    line-height: 1.1; color: var(--ink); letter-spacing: -0.01em;
+    font-variation-settings: "opsz" 72; margin-bottom: 24px;
+  }
+  .welcome-desc {
+    font-size: 15px; color: var(--ink-muted); line-height: 1.7;
+    max-width: 580px; margin-bottom: 40px;
+  }
+  .welcome-points { display: flex; flex-direction: column; gap: 20px; margin-bottom: 48px; }
+  .welcome-point {
+    display: flex; align-items: flex-start; gap: 16px;
+    padding: 20px 24px; background: var(--bg-elevated);
+    border: 1px solid var(--border); border-radius: 4px;
+    transition: border-color 0.3s;
+  }
+  .welcome-point:hover { border-color: var(--border-light); }
+  .welcome-point-num {
+    font-family: var(--mono); font-size: 11px; color: var(--accent);
+    letter-spacing: 0.1em; flex-shrink: 0; margin-top: 2px;
+  }
+  .welcome-point-text {
+    font-size: 14px; color: var(--ink); line-height: 1.6;
+  }
+  .welcome-meta {
+    font-family: var(--mono); font-size: 11px; color: var(--ink-dim);
+    letter-spacing: 0.08em; margin-bottom: 24px;
+  }
+  .welcome-meta span { color: var(--accent); }
+
+  /* Buttons */
+  .btn {
+    font-family: var(--mono); font-size: 12px; font-weight: 500;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 14px 32px; border-radius: 3px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--bg-surface);
+    color: var(--ink); transition: all 0.25s;
+  }
+  .btn:hover { border-color: var(--accent-dim); background: var(--bg-surface-2); }
+  .btn-primary {
+    background: var(--accent); color: var(--bg); border-color: var(--accent);
+    font-weight: 600;
+  }
+  .btn-primary:hover {
+    background: var(--accent-bright); border-color: var(--accent-bright);
+    box-shadow: 0 0 20px rgba(212,165,116,0.3);
+  }
+  .btn-primary:disabled {
+    background: var(--bg-surface); color: var(--ink-dim);
+    border-color: var(--border); cursor: not-allowed; box-shadow: none;
+  }
+  .btn-secondary {
+    background: transparent; color: var(--ink-muted);
+  }
+  .btn-secondary:hover { color: var(--ink); border-color: var(--border-light); }
+
+  /* Assessment screen */
+  .section-header { margin-bottom: 32px; }
+  .section-progress {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+    color: var(--ink-dim); margin-bottom: 8px;
+  }
+  .section-progress span { color: var(--accent); }
+  .section-title {
+    font-family: var(--serif); font-size: 28px; font-weight: 400;
+    color: var(--ink); font-variation-settings: "opsz" 40;
+    margin-bottom: 6px;
+  }
+  .section-desc {
+    font-size: 13px; color: var(--ink-muted); line-height: 1.6;
+    max-width: 600px;
+  }
+
+  /* Likert items */
+  .item-list { display: flex; flex-direction: column; gap: 0; }
+  .item {
+    padding: 24px 0; border-bottom: 1px solid var(--border);
+  }
+  .item:last-child { border-bottom: none; }
+  .item-text {
+    font-size: 15px; color: var(--ink); line-height: 1.6;
+    margin-bottom: 16px; font-weight: 400;
+  }
+  .item-key {
+    font-family: var(--mono); font-size: 10px; color: var(--ink-faint);
+    letter-spacing: 0.05em; margin-right: 8px;
+  }
+  .likert-scale {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .likert-option {
+    flex: 1; min-width: 100px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; cursor: pointer; padding: 12px 8px;
+    border: 1px solid var(--border); border-radius: 3px;
+    background: var(--bg-surface); transition: all 0.2s;
+    position: relative;
+  }
+  .likert-option:hover {
+    border-color: var(--accent-dim); background: var(--bg-surface-2);
+  }
+  .likert-option.selected {
+    border-color: var(--accent); background: rgba(212,165,116,0.1);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .likert-radio {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--border-light); background: transparent;
+    transition: all 0.2s; flex-shrink: 0;
+  }
+  .likert-option:hover .likert-radio { border-color: var(--accent-dim); }
+  .likert-option.selected .likert-radio {
+    border-color: var(--accent); background: var(--accent);
+    box-shadow: 0 0 8px rgba(212,165,116,0.5);
+  }
+  .likert-label {
+    font-family: var(--mono); font-size: 9px; color: var(--ink-dim);
+    letter-spacing: 0.05em; text-align: center; line-height: 1.3;
+    transition: color 0.2s;
+  }
+  .likert-option:hover .likert-label { color: var(--ink-muted); }
+  .likert-option.selected .likert-label { color: var(--accent); }
+  .likert-key-hint {
+    position: absolute; top: 4px; right: 6px;
+    font-family: var(--mono); font-size: 8px; color: var(--ink-faint);
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .likert-option:hover .likert-key-hint { opacity: 0.6; }
+
+  /* MC items (ICAR) */
+  .mc-option {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; border: 1px solid var(--border);
+    border-radius: 3px; background: var(--bg-surface);
+    cursor: pointer; transition: all 0.2s; margin-bottom: 8px;
+  }
+  .mc-option:hover {
+    border-color: var(--accent-dim); background: var(--bg-surface-2);
+  }
+  .mc-option.selected {
+    border-color: var(--accent); background: rgba(212,165,116,0.1);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+  .mc-radio {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--border-light); flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .mc-option:hover .mc-radio { border-color: var(--accent-dim); }
+  .mc-option.selected .mc-radio {
+    border-color: var(--accent); background: var(--accent);
+  }
+  .mc-text { font-size: 14px; color: var(--ink); }
+
+  /* Context items */
+  .ctx-item { margin-bottom: 28px; }
+  .ctx-label {
+    font-size: 14px; color: var(--ink); margin-bottom: 12px;
+    font-weight: 400;
+  }
+  .ctx-select {
+    width: 100%; padding: 12px 16px; background: var(--bg-surface);
+    border: 1px solid var(--border); border-radius: 3px;
+    color: var(--ink); font-family: var(--sans); font-size: 14px;
+    cursor: pointer; outline: none; transition: border-color 0.2s;
+    -webkit-appearance: none; -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23756657' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+  }
+  .ctx-select:focus { border-color: var(--accent-dim); }
+  .ctx-select option { background: var(--bg-elevated); color: var(--ink); }
+  .ctx-slider-wrap { display: flex; align-items: center; gap: 16px; }
+  .ctx-slider {
+    flex: 1; -webkit-appearance: none; appearance: none;
+    height: 4px; background: var(--border); border-radius: 2px;
+    outline: none; cursor: pointer;
+  }
+  .ctx-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--accent-bright);
+    cursor: grab; box-shadow: 0 0 12px rgba(212,165,116,0.4);
+  }
+  .ctx-slider::-moz-range-thumb {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--accent-bright);
+    cursor: grab; box-shadow: 0 0 12px rgba(212,165,116,0.4);
+  }
+  .ctx-slider-val {
+    font-family: var(--serif); font-size: 20px; color: var(--accent);
+    font-variation-settings: "opsz" 24; min-width: 40px; text-align: center;
+  }
+  .ctx-slider-labels {
+    display: flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 10px; color: var(--ink-dim);
+    margin-top: 8px; letter-spacing: 0.05em;
+  }
+
+  /* Nav buttons */
+  .nav-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border);
+  }
+  .nav-bar-right { display: flex; gap: 12px; }
+
+  /* Resume banner */
+  .resume-banner {
+    margin-bottom: 32px; padding: 16px 20px;
+    background: rgba(123,168,155,0.08); border: 1px solid var(--signal);
+    border-radius: 3px; display: flex; align-items: center;
+    justify-content: space-between; gap: 16px;
+  }
+  .resume-text {
+    font-family: var(--mono); font-size: 11px; color: var(--signal-bright);
+    letter-spacing: 0.05em;
+  }
+
+  /* Section note */
+  .section-note {
+    font-family: var(--mono); font-size: 11px; color: var(--ink-muted);
+    letter-spacing: 0.03em; font-style: italic; margin-top: 8px;
+  }
+
+  /* Completion */
+  .complete-screen { padding-top: 40px; }
+  .complete-title {
+    font-family: var(--serif); font-size: 42px; font-weight: 400;
+    color: var(--ink); font-variation-settings: "opsz" 60;
+    margin-bottom: 12px; letter-spacing: -0.01em;
+  }
+  .complete-desc {
+    font-size: 15px; color: var(--ink-muted); line-height: 1.7;
+    max-width: 560px; margin-bottom: 48px;
+  }
+  .results-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    margin-bottom: 40px;
+  }
+  .result-card {
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: 4px; padding: 24px;
+  }
+  .result-card-title {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-dim); margin-bottom: 16px;
+  }
+  .result-card-name {
+    font-family: var(--serif); font-size: 16px; font-weight: 500;
+    color: var(--ink); font-variation-settings: "opsz" 24;
+    margin-bottom: 16px;
+  }
+  .sd3-bars { display: flex; flex-direction: column; gap: 14px; }
+  .sd3-bar-row { display: flex; align-items: center; gap: 12px; }
+  .sd3-bar-label {
+    font-family: var(--sans); font-size: 12px; color: var(--ink-muted);
+    width: 120px; flex-shrink: 0;
+  }
+  .sd3-bar-track {
+    flex: 1; height: 8px; background: var(--bg-surface-2);
+    border-radius: 4px; overflow: hidden;
+  }
+  .sd3-bar-fill {
+    height: 100%; border-radius: 4px;
+    transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  }
+  .sd3-bar-val {
+    font-family: var(--mono); font-size: 11px; color: var(--accent);
+    min-width: 36px; text-align: right;
+  }
+  .icar-score {
+    font-family: var(--serif); font-size: 36px; color: var(--accent);
+    font-variation-settings: "opsz" 40;
+  }
+  .icar-sub {
+    font-family: var(--mono); font-size: 11px; color: var(--ink-dim);
+    letter-spacing: 0.05em; margin-top: 4px;
+  }
+  .complete-note {
+    padding: 20px 24px; background: linear-gradient(135deg, rgba(212,165,116,0.06), rgba(123,168,155,0.04));
+    border: 1px solid var(--border); border-left: 2px solid var(--accent);
+    border-radius: 4px; margin-bottom: 40px; max-width: 580px;
+  }
+  .complete-note-text {
+    font-family: var(--serif); font-size: 15px; color: var(--ink);
+    line-height: 1.6; font-variation-settings: "opsz" 24;
+  }
+  .radar-chart-wrap { display: flex; justify-content: center; }
+  .radar-chart-wrap svg { max-width: 320px; }
+
+  /* Review mode */
+  .review-screen { padding-top: 20px; }
+  .review-section { margin-bottom: 32px; }
+  .review-section-title {
+    font-family: var(--serif); font-size: 18px; font-weight: 500;
+    color: var(--ink); font-variation-settings: "opsz" 24;
+    margin-bottom: 12px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .review-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    gap: 16px;
+  }
+  .review-item-text {
+    font-size: 13px; color: var(--ink-muted); flex: 1;
+  }
+  .review-item-answer {
+    font-family: var(--mono); font-size: 11px; color: var(--accent);
+    flex-shrink: 0;
+  }
+  .review-item-unanswered {
+    font-family: var(--mono); font-size: 11px; color: var(--danger);
+    flex-shrink: 0;
+  }
+  .review-item-edit {
+    font-family: var(--mono); font-size: 10px; color: var(--ink-dim);
+    cursor: pointer; flex-shrink: 0; transition: color 0.2s;
+  }
+  .review-item-edit:hover { color: var(--accent); }
+
+  @media (max-width: 700px) {
+    .wizard-container { padding: 40px 20px 60px; }
+    .welcome-title { font-size: 36px; }
+    .complete-title { font-size: 32px; }
+    .results-grid { grid-template-columns: 1fr; }
+    .likert-scale { flex-direction: column; }
+    .likert-option { flex: none; flex-direction: row; justify-content: flex-start; padding: 10px 14px; }
+    .likert-label { text-align: left; }
+    .section-title { font-size: 22px; }
+    .nav-bar { flex-direction: column-reverse; gap: 16px; }
+    .nav-bar-right { width: 100%; justify-content: space-between; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+<div class="wizard-container" id="wizard">
+  <div class="screen active" id="screen-welcome">
+    <div class="welcome-screen">
+      <div class="welcome-label">Baseline Assessment</div>
+      <h1 class="welcome-title">Your Baseline</h1>
+      <p class="welcome-desc">This is a one-time assessment that takes about 25 minutes. It captures your personality, cognitive patterns, and motivational drivers as they are right now. Your answers become the starting point — future check-ins will show how you change over time.</p>
+      <div class="welcome-points">
+        <div class="welcome-point"><span class="welcome-point-num">01</span><span class="welcome-point-text">There are no right or wrong answers.</span></div>
+        <div class="welcome-point"><span class="welcome-point-num">02</span><span class="welcome-point-text">You can pause and come back — your progress saves automatically.</span></div>
+        <div class="welcome-point"><span class="welcome-point-num">03</span><span class="welcome-point-text">Answer as you honestly are now, not as you wish to be.</span></div>
+      </div>
+      <div class="welcome-meta">168 items &middot; ~25 minutes &middot; <span>One-time</span></div>
+      <button class="btn btn-primary" onclick="startWizard()">Begin</button>
+    </div>
+  </div>
+  <div class="screen" id="screen-assessment"></div>
+  <div class="screen" id="screen-review"></div>
+  <div class="screen" id="screen-complete"></div>
+</div>
+<script>
+
+// ============ EMBEDDED DATA ============
+const ASSESSMENT_DATA = {"ipip_neo_120":{"title":"IPIP-NEO-120 Personality Inventory","description":"120 statements about your typical behavior. Rate how accurately each describes you.","scale":[{"value":1,"label":"Very Inaccurate"},{"value":2,"label":"Moderately Inaccurate"},{"value":3,"label":"Neither Accurate nor Inaccurate"},{"value":4,"label":"Moderately Accurate"},{"value":5,"label":"Very Accurate"}],"items":[{"id":1,"text":"Worry about things.","trait":"N","facet":"Anxiety","reverse":false},{"id":2,"text":"Make friends easily.","trait":"E","facet":"Friendliness","reverse":false},{"id":3,"text":"Have a vivid imagination.","trait":"O","facet":"Imagination","reverse":false},{"id":4,"text":"Trust others.","trait":"A","facet":"Trust","reverse":false},{"id":5,"text":"Complete tasks successfully.","trait":"C","facet":"Self-efficacy","reverse":false},{"id":6,"text":"Get angry easily.","trait":"N","facet":"Anger","reverse":false},{"id":7,"text":"Love large parties.","trait":"E","facet":"Gregariousness","reverse":false},{"id":8,"text":"Believe in the importance of art.","trait":"O","facet":"Artistic","reverse":false},{"id":9,"text":"Use others for my own ends.","trait":"A","facet":"Morality","reverse":true},{"id":10,"text":"Like to tidy up.","trait":"C","facet":"Orderliness","reverse":false},{"id":11,"text":"Often feel blue.","trait":"N","facet":"Depression","reverse":false},{"id":12,"text":"Take charge.","trait":"E","facet":"Assertiveness","reverse":false},{"id":13,"text":"Experience my emotions intensely.","trait":"O","facet":"Emotionality","reverse":false},{"id":14,"text":"Love to help others.","trait":"A","facet":"Altruism","reverse":false},{"id":15,"text":"Keep my promises.","trait":"C","facet":"Dutifulness","reverse":false},{"id":16,"text":"Find it difficult to approach others.","trait":"N","facet":"Self-consciousness","reverse":false},{"id":17,"text":"Am always busy.","trait":"E","facet":"Activity","reverse":false},{"id":18,"text":"Prefer variety to routine.","trait":"O","facet":"Adventurousness","reverse":false},{"id":19,"text":"Love a good fight.","trait":"A","facet":"Cooperation","reverse":true},{"id":20,"text":"Work hard.","trait":"C","facet":"Achievement-striving","reverse":false},{"id":21,"text":"Go on binges.","trait":"N","facet":"Immoderation","reverse":false},{"id":22,"text":"Love excitement.","trait":"E","facet":"Excitement-seeking","reverse":false},{"id":23,"text":"Love to read challenging material.","trait":"O","facet":"Intellect","reverse":false},{"id":24,"text":"Believe that I am better than others.","trait":"A","facet":"Modesty","reverse":true},{"id":25,"text":"Am always prepared.","trait":"C","facet":"Self-discipline","reverse":false},{"id":26,"text":"Panic easily.","trait":"N","facet":"Vulnerability","reverse":false},{"id":27,"text":"Radiate joy.","trait":"E","facet":"Cheerfulness","reverse":false},{"id":28,"text":"Tend to vote for liberal political candidates.","trait":"O","facet":"Liberalism","reverse":false},{"id":29,"text":"Sympathise with the homeless.","trait":"A","facet":"Sympathy","reverse":false},{"id":30,"text":"Jump into things without thinking.","trait":"C","facet":"Cautiousness","reverse":true},{"id":31,"text":"Fear for the worst.","trait":"N","facet":"Anxiety","reverse":false},{"id":32,"text":"Feel comfortable around people.","trait":"E","facet":"Friendliness","reverse":false},{"id":33,"text":"Enjoy wild flights of fantasy.","trait":"O","facet":"Imagination","reverse":false},{"id":34,"text":"Believe that others have good intentions.","trait":"A","facet":"Trust","reverse":false},{"id":35,"text":"Excel in what I do.","trait":"C","facet":"Self-efficacy","reverse":false},{"id":36,"text":"Get irritated easily.","trait":"N","facet":"Anger","reverse":false},{"id":37,"text":"Talk to a lot of different people at parties.","trait":"E","facet":"Gregariousness","reverse":false},{"id":38,"text":"See beauty in things that others might not notice.","trait":"O","facet":"Artistic","reverse":false},{"id":39,"text":"Cheat to get ahead.","trait":"A","facet":"Morality","reverse":true},{"id":40,"text":"Often forget to put things back in their proper place.","trait":"C","facet":"Orderliness","reverse":true},{"id":41,"text":"Dislike myself.","trait":"N","facet":"Depression","reverse":false},{"id":42,"text":"Try to lead others.","trait":"E","facet":"Assertiveness","reverse":false},{"id":43,"text":"Feel others' emotions.","trait":"O","facet":"Emotionality","reverse":false},{"id":44,"text":"Am concerned about others.","trait":"A","facet":"Altruism","reverse":false},{"id":45,"text":"Tell the truth.","trait":"C","facet":"Dutifulness","reverse":false},{"id":46,"text":"Am afraid to draw attention to myself.","trait":"N","facet":"Self-consciousness","reverse":false},{"id":47,"text":"Am always on the go.","trait":"E","facet":"Activity","reverse":false},{"id":48,"text":"Prefer to stick with things that I know.","trait":"O","facet":"Adventurousness","reverse":true},{"id":49,"text":"Yell at people.","trait":"A","facet":"Cooperation","reverse":true},{"id":50,"text":"Do more than what's expected of me.","trait":"C","facet":"Achievement-striving","reverse":false},{"id":51,"text":"Rarely overindulge.","trait":"N","facet":"Immoderation","reverse":true},{"id":52,"text":"Seek adventure.","trait":"E","facet":"Excitement-seeking","reverse":false},{"id":53,"text":"Avoid philosophical discussions.","trait":"O","facet":"Intellect","reverse":true},{"id":54,"text":"Think highly of myself.","trait":"A","facet":"Modesty","reverse":true},{"id":55,"text":"Carry out my plans.","trait":"C","facet":"Self-discipline","reverse":false},{"id":56,"text":"Become overwhelmed by events.","trait":"N","facet":"Vulnerability","reverse":false},{"id":57,"text":"Have a lot of fun.","trait":"E","facet":"Cheerfulness","reverse":false},{"id":58,"text":"Believe that there is no absolute right or wrong.","trait":"O","facet":"Liberalism","reverse":false},{"id":59,"text":"Feel sympathy for those who are worse off than myself.","trait":"A","facet":"Sympathy","reverse":false},{"id":60,"text":"Make rash decisions.","trait":"C","facet":"Cautiousness","reverse":true},{"id":61,"text":"Am afraid of many things.","trait":"N","facet":"Anxiety","reverse":false},{"id":62,"text":"Avoid contact with others.","trait":"E","facet":"Friendliness","reverse":true},{"id":63,"text":"Love to daydream.","trait":"O","facet":"Imagination","reverse":false},{"id":64,"text":"Trust what people say.","trait":"A","facet":"Trust","reverse":false},{"id":65,"text":"Handle tasks smoothly.","trait":"C","facet":"Self-efficacy","reverse":false},{"id":66,"text":"Lose my temper.","trait":"N","facet":"Anger","reverse":false},{"id":67,"text":"Prefer to be alone.","trait":"E","facet":"Gregariousness","reverse":true},{"id":68,"text":"Do not like poetry.","trait":"O","facet":"Artistic","reverse":true},{"id":69,"text":"Take advantage of others.","trait":"A","facet":"Morality","reverse":true},{"id":70,"text":"Leave a mess in my room.","trait":"C","facet":"Orderliness","reverse":true},{"id":71,"text":"Am often down in the dumps.","trait":"N","facet":"Depression","reverse":false},{"id":72,"text":"Take control of things.","trait":"E","facet":"Assertiveness","reverse":false},{"id":73,"text":"Rarely notice my emotional reactions.","trait":"O","facet":"Emotionality","reverse":true},{"id":74,"text":"Am indifferent to the feelings of others.","trait":"A","facet":"Altruism","reverse":true},{"id":75,"text":"Break rules.","trait":"C","facet":"Dutifulness","reverse":true},{"id":76,"text":"Only feel comfortable with friends.","trait":"N","facet":"Self-consciousness","reverse":false},{"id":77,"text":"Do a lot in my spare time.","trait":"E","facet":"Activity","reverse":false},{"id":78,"text":"Dislike changes.","trait":"O","facet":"Adventurousness","reverse":true},{"id":79,"text":"Insult people.","trait":"A","facet":"Cooperation","reverse":true},{"id":80,"text":"Do just enough work to get by.","trait":"C","facet":"Achievement-striving","reverse":true},{"id":81,"text":"Easily resist temptations.","trait":"N","facet":"Immoderation","reverse":true},{"id":82,"text":"Enjoy being reckless.","trait":"E","facet":"Excitement-seeking","reverse":false},{"id":83,"text":"Have difficulty understanding abstract ideas.","trait":"O","facet":"Intellect","reverse":true},{"id":84,"text":"Have a high opinion of myself.","trait":"A","facet":"Modesty","reverse":true},{"id":85,"text":"Waste my time.","trait":"C","facet":"Self-discipline","reverse":true},{"id":86,"text":"Feel that I'm unable to deal with things.","trait":"N","facet":"Vulnerability","reverse":false},{"id":87,"text":"Love life.","trait":"E","facet":"Cheerfulness","reverse":false},{"id":88,"text":"Tend to vote for conservative political candidates.","trait":"O","facet":"Liberalism","reverse":true},{"id":89,"text":"Am not interested in other people's problems.","trait":"A","facet":"Sympathy","reverse":true},{"id":90,"text":"Rush into things.","trait":"C","facet":"Cautiousness","reverse":true},{"id":91,"text":"Get stressed out easily.","trait":"N","facet":"Anxiety","reverse":false},{"id":92,"text":"Keep others at a distance.","trait":"E","facet":"Friendliness","reverse":true},{"id":93,"text":"Like to get lost in thought.","trait":"O","facet":"Intellect","reverse":false},{"id":94,"text":"Distrust people.","trait":"A","facet":"Trust","reverse":true},{"id":95,"text":"Know how to get things done.","trait":"C","facet":"Self-efficacy","reverse":false},{"id":96,"text":"Am not easily annoyed.","trait":"N","facet":"Anger","reverse":true},{"id":97,"text":"Avoid crowds.","trait":"E","facet":"Gregariousness","reverse":true},{"id":98,"text":"Do not enjoy going to art museums.","trait":"O","facet":"Artistic","reverse":true},{"id":99,"text":"Obstruct others' plans.","trait":"A","facet":"Morality","reverse":true},{"id":100,"text":"Leave my belongings around.","trait":"C","facet":"Orderliness","reverse":true},{"id":101,"text":"Feel comfortable with myself.","trait":"N","facet":"Depression","reverse":true},{"id":102,"text":"Wait for others to lead the way.","trait":"E","facet":"Assertiveness","reverse":true},{"id":103,"text":"Don't understand people who get emotional.","trait":"O","facet":"Emotionality","reverse":true},{"id":104,"text":"Take no time for others.","trait":"A","facet":"Altruism","reverse":true},{"id":105,"text":"Break my promises.","trait":"C","facet":"Dutifulness","reverse":true},{"id":106,"text":"Am not bothered by difficult social situations.","trait":"N","facet":"Self-consciousness","reverse":true},{"id":107,"text":"Like to take it easy.","trait":"E","facet":"Activity","reverse":true},{"id":108,"text":"Am attached to conventional ways.","trait":"O","facet":"Adventurousness","reverse":true},{"id":109,"text":"Get back at others.","trait":"A","facet":"Cooperation","reverse":true},{"id":110,"text":"Put little time and effort into my work.","trait":"C","facet":"Achievement-striving","reverse":true},{"id":111,"text":"Am able to control my cravings.","trait":"N","facet":"Immoderation","reverse":true},{"id":112,"text":"Act wild and crazy.","trait":"E","facet":"Excitement-seeking","reverse":false},{"id":113,"text":"Am not interested in theoretical discussions.","trait":"O","facet":"Intellect","reverse":true},{"id":114,"text":"Boast about my virtues.","trait":"A","facet":"Modesty","reverse":true},{"id":115,"text":"Have difficulty starting tasks.","trait":"C","facet":"Self-discipline","reverse":true},{"id":116,"text":"Remain calm under pressure.","trait":"N","facet":"Vulnerability","reverse":true},{"id":117,"text":"Look at the bright side of life.","trait":"E","facet":"Cheerfulness","reverse":false},{"id":118,"text":"Believe that we should be tough on crime.","trait":"O","facet":"Liberalism","reverse":true},{"id":119,"text":"Try not to think about the needy.","trait":"A","facet":"Sympathy","reverse":true},{"id":120,"text":"Act without thinking.","trait":"C","facet":"Cautiousness","reverse":true}],"source":"ipip.ori.org - Public Domain","citation":"Johnson, J. A. (2014). Measuring thirty facets of the five factor model with a 120-item public domain inventory: Development of the IPIP-NEO-120. Journal of Research in Personality, 51, 78-89."},"icar_16":{"title":"ICAR-16 Cognitive Ability Assessment","description":"16 questions testing different cognitive abilities. Take your time - there is no time limit.","items":[{"id":1,"type":"series","text":"What comes next in the sequence? A, C, E, G, ?","options":["H","I","J","K"],"correct":1},{"id":2,"type":"series","text":"What comes next in the sequence? 2, 6, 12, 20, 30, ?","options":["40","42","44","46"],"correct":1},{"id":3,"type":"series","text":"What comes next in the sequence? B, D, G, K, ?","options":["M","N","O","P"],"correct":3},{"id":4,"type":"series","text":"What comes next in the sequence? 1, 4, 9, 16, 25, ?","options":["30","36","49","64"],"correct":1},{"id":5,"type":"verbal","text":"Which word does NOT belong with the others?","options":["Happy","Joyful","Sad","Cheerful"],"correct":2},{"id":6,"type":"verbal","text":"Which word does NOT belong with the others?","options":["Run","Walk","Sit","Jump"],"correct":2},{"id":7,"type":"verbal","text":"Which word does NOT belong with the others?","options":["Oak","Pine","Rose","Maple"],"correct":2},{"id":8,"type":"verbal","text":"Which word does NOT belong with the others?","options":["Red","Blue","Circle","Green"],"correct":2},{"id":9,"type":"matrix","text":"Complete the pattern: If A=1, B=2, C=3, then E=?","options":["4","5","6","7"],"correct":1},{"id":10,"type":"matrix","text":"If all cats are animals, and all animals are living things, then all cats are...?","options":["Not living things","Living things","Plants","Minerals"],"correct":1},{"id":11,"type":"matrix","text":"In a certain code, CAT is written as 3120. How would DOG be written?","options":["4157","4156","4147","3157"],"correct":0},{"id":12,"type":"matrix","text":"Which number completes the analogy? 2 is to 8 as 3 is to...?","options":["9","12","15","27"],"correct":3},{"id":13,"type":"rotation","text":"If you rotate the letter 'F' 180 degrees clockwise, which letter does it most resemble?","options":["F (upside down)","L","T","E"],"correct":0},{"id":14,"type":"rotation","text":"A cube has faces painted red, blue, green, yellow, white, and black. If red is on top and blue is in front, which color is on the bottom?","options":["Green","Yellow","White","Cannot determine"],"correct":3},{"id":15,"type":"rotation","text":"If you fold a square paper in half diagonally, then in half again, how many layers thick is the folded paper?","options":["2","4","6","8"],"correct":1},{"id":16,"type":"rotation","text":"Which shape has the most lines of symmetry?","options":["Equilateral triangle","Square","Circle","Rectangle"],"correct":2}],"source":"icar-project.org - Public Domain","citation":"Condon, D.M. & Revelle, W. (2014). The International Cognitive Ability Resource: Development and initial validation of a public-domain measure. Intelligence, 43, 52-64."},"sd3":{"title":"Short Dark Triad (SD3)","description":"27 statements about your attitudes and behaviors. Rate how much you agree with each.","scale":[{"value":1,"label":"Strongly Disagree"},{"value":2,"label":"Disagree"},{"value":3,"label":"Neither Agree nor Disagree"},{"value":4,"label":"Agree"},{"value":5,"label":"Strongly Agree"}],"items":[{"id":1,"text":"It's not wise to tell your secrets.","trait":"M","facet":"Machiavellianism"},{"id":2,"text":"People see me as a natural leader.","trait":"N","facet":"Narcissism"},{"id":3,"text":"I like to get revenge on authorities.","trait":"P","facet":"Psychopathy"},{"id":4,"text":"I like to use clever manipulation to get my way.","trait":"M","facet":"Machiavellianism"},{"id":5,"text":"I hate being the center of attention.","trait":"N","facet":"Narcissism","reverse":true},{"id":6,"text":"I avoid dangerous situations.","trait":"P","facet":"Psychopathy","reverse":true},{"id":7,"text":"Whatever it takes, you must get the important people on your side.","trait":"M","facet":"Machiavellianism"},{"id":8,"text":"Many group activities tend to be dull without me.","trait":"N","facet":"Narcissism"},{"id":9,"text":"Payback needs to be quick and nasty.","trait":"P","facet":"Psychopathy"},{"id":10,"text":"Avoid direct conflict with others because they may be useful in the future.","trait":"M","facet":"Machiavellianism"},{"id":11,"text":"I know that I am special because everyone keeps telling me so.","trait":"N","facet":"Narcissism"},{"id":12,"text":"People often say I'm out of control.","trait":"P","facet":"Psychopathy"},{"id":13,"text":"It's wise to keep track of information that you can use against people later.","trait":"M","facet":"Machiavellianism"},{"id":14,"text":"I like to get acquainted with important people.","trait":"N","facet":"Narcissism"},{"id":15,"text":"It's true that I can be mean to others.","trait":"P","facet":"Psychopathy"},{"id":16,"text":"You should wait for the right time to get back at people.","trait":"M","facet":"Machiavellianism"},{"id":17,"text":"I feel embarrassed if someone compliments me.","trait":"N","facet":"Narcissism","reverse":true},{"id":18,"text":"People who mess with me always regret it.","trait":"P","facet":"Psychopathy"},{"id":19,"text":"There are things you should hide from other people because they don't need to know.","trait":"M","facet":"Machiavellianism"},{"id":20,"text":"I have been compared to famous people.","trait":"N","facet":"Narcissism"},{"id":21,"text":"I have never gotten into trouble with the law.","trait":"P","facet":"Psychopathy","reverse":true},{"id":22,"text":"Make sure your plans benefit you, not others.","trait":"M","facet":"Machiavellianism"},{"id":23,"text":"I am an average person.","trait":"N","facet":"Narcissism","reverse":true},{"id":24,"text":"I enjoy having sex with people I hardly know.","trait":"P","facet":"Psychopathy"},{"id":25,"text":"Most people can be manipulated.","trait":"M","facet":"Machiavellianism"},{"id":26,"text":"I insist on getting the respect I deserve.","trait":"N","facet":"Narcissism"},{"id":27,"text":"I'll say anything to get what I want.","trait":"P","facet":"Psychopathy"}],"source":"Jones & Paulhus (2014) - CC BY-NC-SA 4.0","citation":"Jones, D. N., & Paulhus, D. L. (2014). Introducing the Short Dark Triad (SD3): A brief measure of dark personality traits. Assessment, 21(1), 28-41."},"context":{"title":"Your Current Context","description":"A few quick questions about your current life situation. This helps interpret your baseline.","items":[{"id":"current_role","text":"What best describes your current work situation?","type":"select","options":["Employed full-time","Employed part-time","Self-employed / Freelance","Between roles / Job searching","Student","Other"]},{"id":"life_event","text":"Have you experienced any significant life events in the past 3 months?","type":"select","options":["No significant events","Job change or transition","Relocation","Family change (marriage, birth, loss)","Health challenge","Other"]},{"id":"stress_level","text":"How would you rate your current stress level?","type":"scale","min":1,"max":10,"labels":{"1":"Very low","5":"Moderate","10":"Very high"}},{"id":"energy_level","text":"How would you rate your current energy level?","type":"scale","min":1,"max":10,"labels":{"1":"Exhausted","5":"Moderate","10":"Very high"}},{"id":"primary_context","text":"Where do you spend most of your waking hours?","type":"select","options":["Office / Workplace","Home office","Studying / School","Home / Family","Traveling / Variable","Other"]}]}};
+
+// ============ CONSTANTS ============
+const IPIP_SCALE = [
+  { value: 1, label: "Very Inaccurate" },
+  { value: 2, label: "Moderately Inaccurate" },
+  { value: 3, label: "Neither Accurate nor Inaccurate" },
+  { value: 4, label: "Moderately Accurate" },
+  { value: 5, label: "Very Accurate" }
+];
+const SD3_SCALE = [
+  { value: 1, label: "Strongly Disagree" },
+  { value: 2, label: "Disagree" },
+  { value: 3, label: "Neither Agree nor Disagree" },
+  { value: 4, label: "Agree" },
+  { value: 5, label: "Strongly Agree" }
+];
+
+const TRAIT_INFO = {
+  O: { name: "Openness", desc: "Your curiosity, imagination, and openness to new experiences." },
+  C: { name: "Conscientiousness", desc: "How you organize, persist, and pursue goals." },
+  E: { name: "Extraversion", desc: "Your energy, sociability, and engagement with the world." },
+  A: { name: "Agreeableness", desc: "How you relate to others — trust, cooperation, and warmth." },
+  N: { name: "Emotional Stability", desc: "How you experience and manage emotional reactions." }
+};
+
+const TRAIT_COLORS = {
+  openness: '#d4a574',
+  conscientiousness: '#7ba89b',
+  extraversion: '#c4a96a',
+  agreeableness: '#a07c5c',
+  stability: '#9ec9b8'
+};
+
+// ============ STATE ============
+let responses = {};
+let currentScreenIdx = 0;
+let screens = [];
+let inReviewMode = false;
+
+const STORAGE_KEY = 'baseline_assessment_v1';
+
+// ============ HELPERS ============
+function capitalizeFirst(str) {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function saveProgress() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      responses: responses,
+      currentScreenIdx: currentScreenIdx,
+      timestamp: Date.now()
+    }));
+  } catch(e) { console.warn('Save failed', e); }
+}
+
+function loadProgress() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return null;
+    return JSON.parse(saved);
+  } catch(e) { return null; }
+}
+
+function clearProgress() {
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+function getTotalAnswered() {
+  return Object.keys(responses).length;
+}
+
+function getTotalItems() {
+  return 120 + 16 + 27 + 5; // 168
+}
+
+function updateProgress() {
+  const pct = Math.round((getTotalAnswered() / getTotalItems()) * 100);
+  const el = document.getElementById('progressFill');
+  if (el) el.style.width = pct + '%';
+}
+
+// ============ SCREEN BUILDING ============
+function buildScreens() {
+  screens = [];
+  const ipipItems = ASSESSMENT_DATA.ipip_neo_120.items;
+  const icarItems = ASSESSMENT_DATA.icar_16.items;
+  const sd3Items = ASSESSMENT_DATA.sd3.items;
+  const ctxItems = ASSESSMENT_DATA.context.items;
+
+  // Group IPIP by trait: O, C, E, A, N -> 5 sections x 4 screens x 6 items
+  const traitOrder = ['O', 'C', 'E', 'A', 'N'];
+  traitOrder.forEach((trait, sIdx) => {
+    const traitItems = ipipItems.filter(i => i.trait === trait);
+    const info = TRAIT_INFO[trait];
+    const sectionNum = sIdx + 1;
+    // 4 screens of 6 items each
+    for (let i = 0; i < 4; i++) {
+      const chunk = traitItems.slice(i * 6, (i + 1) * 6);
+      const startItem = 1 + sIdx * 24 + i * 6;
+      const endItem = startItem + 5;
+      screens.push({
+        type: 'ipip',
+        sectionNum: sectionNum,
+        sectionName: info.name,
+        sectionDesc: info.desc,
+        itemRange: { start: startItem, end: endItem },
+        items: chunk
+      });
+    }
+  });
+
+  // Section 6: ICAR - 4 screens x 4 items
+  for (let i = 0; i < 4; i++) {
+    const chunk = icarItems.slice(i * 4, (i + 1) * 4);
+    const startItem = 121 + i * 4;
+    const endItem = startItem + 3;
+    screens.push({
+      type: 'icar',
+      sectionNum: 6,
+      sectionName: "Cognitive Patterns",
+      sectionDesc: "For these questions, select the best answer. There is no time limit.",
+      itemRange: { start: startItem, end: endItem },
+      items: chunk
+    });
+  }
+
+  // Section 7: SD3 - 4 screens: 7+7+7+6
+  const sd3Chunks = [7, 7, 7, 6];
+  let sd3Start = 0;
+  for (let i = 0; i < 4; i++) {
+    const count = sd3Chunks[i];
+    const chunk = sd3Items.slice(sd3Start, sd3Start + count);
+    const startItem = 137 + sd3Start;
+    const endItem = startItem + count - 1;
+    screens.push({
+      type: 'sd3',
+      sectionNum: 7,
+      sectionName: "Motivational Drivers",
+      sectionDesc: "These items explore how you navigate social dynamics and pursue goals.",
+      itemRange: { start: startItem, end: endItem },
+      items: chunk
+    });
+    sd3Start += count;
+  }
+
+  // Section 8: Context - 1 screen
+  screens.push({
+    type: 'context',
+    sectionNum: 8,
+    sectionName: "Your Current Context",
+    sectionDesc: "A few quick questions about your current life situation.",
+    itemRange: { start: 164, end: 168 },
+    items: ctxItems
+  });
+}
+
+// ============ RENDERING ============
+function renderScreen(idx) {
+  if (idx < 0 || idx >= screens.length) return;
+  currentScreenIdx = idx;
+  const scr = screens[idx];
+  const screenEl = document.getElementById('screen-assessment');
+
+  let html = '';
+
+  // Section header
+  html += '<div class="section-header">';
+  html += `<div class="section-progress">Section ${scr.sectionNum} of 8 · Items ${scr.itemRange.start}–${scr.itemRange.end} of 168</div>`;
+  html += `<div class="section-title">${scr.sectionName}</div>`;
+  html += `<div class="section-desc">${scr.sectionDesc}</div>`;
+  if (scr.type === 'sd3') {
+    html += `<div class="section-note">Rate how much you agree with each statement.</div>`;
+  }
+  html += '</div>';
+
+  // Items
+  if (scr.type === 'ipip') {
+    html += '<div class="item-list">';
+    scr.items.forEach((item, i) => {
+      html += renderLikertItem(item, 'ipip', i, IPIP_SCALE);
+    });
+    html += '</div>';
+  } else if (scr.type === 'sd3') {
+    html += '<div class="item-list">';
+    scr.items.forEach((item, i) => {
+      const sd3Item = { ...item, text: item.text };
+      html += renderLikertItem(sd3Item, 'sd3', i, SD3_SCALE);
+    });
+    html += '</div>';
+  } else if (scr.type === 'icar') {
+    scr.items.forEach((item, i) => {
+      html += renderMCItem(item, i, scr);
+    });
+  } else if (scr.type === 'context') {
+    scr.items.forEach((item, i) => {
+      html += renderContextItem(item, i);
+    });
+  }
+
+  // Nav bar
+  html += '<div class="nav-bar">';
+  html += '<button class="btn btn-secondary" onclick="goBack()">Back</button>';
+  html += '<div class="nav-bar-right">';
+  // Review button on last assessment screen
+  if (idx === screens.length - 1) {
+    html += '<button class="btn btn-secondary" onclick="enterReview()">Review answers</button>';
+  }
+  const nextLabel = idx === screens.length - 1 ? 'Complete' : 'Next';
+  html += `<button class="btn btn-primary" id="nextBtn" onclick="goNext()" disabled>${nextLabel}</button>`;
+  html += '</div>';
+  html += '</div>';
+
+  screenEl.innerHTML = html;
+
+  // Attach interactions
+  attachInteractions(scr);
+  updateNextButton(scr);
+  updateProgress();
+  saveProgress();
+
+  // GSAP transition
+  gsap.fromTo('#screen-assessment', { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.4, ease: 'power2.out' });
+}
+
+function renderLikertItem(item, type, idx, scale) {
+  const key = type + '_' + item.id;
+  const text = capitalizeFirst(item.text);
+  let html = `<div class="item" data-item-key="${key}" data-item-idx="${idx}">`;
+  html += `<div class="item-text"><span class="item-key">${idx + 1}.</span>${text}</div>`;
+  html += '<div class="likert-scale">';
+  scale.forEach((opt, i) => {
+    const sel = responses[key] === opt.value ? 'selected' : '';
+    const hint = type === 'ipip' ? i + 1 : i + 1;
+    html += `<div class="likert-option ${sel}" data-value="${opt.value}" data-key="${key}" data-idx="${idx}" onclick="selectLikert('${key}', ${opt.value}, ${idx})">`;
+    html += `<div class="likert-radio"></div>`;
+    html += `<div class="likert-label">${opt.label}</div>`;
+    html += `<div class="likert-key-hint">${hint}</div>`;
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
+function renderMCItem(item, idx, scr) {
+  const key = 'icar_' + item.id;
+  let html = `<div class="item" data-item-key="${key}" data-item-idx="${idx}">`;
+  html += `<div class="item-text"><span class="item-key">${idx + 1}.</span>${item.text}</div>`;
+  item.options.forEach((opt, i) => {
+    const sel = responses[key] === i ? 'selected' : '';
+    html += `<div class="mc-option ${sel}" data-value="${i}" data-key="${key}" onclick="selectMC('${key}', ${i})">`;
+    html += `<div class="mc-radio"></div>`;
+    html += `<div class="mc-text">${opt}</div>`;
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderContextItem(item, idx) {
+  const key = 'ctx_' + item.id;
+  let html = `<div class="ctx-item" data-item-key="${key}">`;
+  html += `<div class="ctx-label">${item.text}</div>`;
+  if (item.type === 'select') {
+    html += `<select class="ctx-select" data-key="${key}" onchange="selectContext('${key}', this.value)">`;
+    html += '<option value="">— Select —</option>';
+    item.options.forEach(opt => {
+      const sel = responses[key] === opt ? 'selected' : '';
+      html += `<option value="${opt}" ${sel}>${opt}</option>`;
+    });
+    html += '</select>';
+  } else if (item.type === 'scale') {
+    const val = responses[key] || 5;
+    html += '<div class="ctx-slider-wrap">';
+    html += `<input type="range" class="ctx-slider" min="${item.min}" max="${item.max}" value="${val}" data-key="${key}" oninput="slideContext('${key}', this.value)" />`;
+    html += `<div class="ctx-slider-val" id="slider-val-${key}">${val}</div>`;
+    html += '</div>';
+    html += '<div class="ctx-slider-labels">';
+    if (item.labels) {
+      Object.entries(item.labels).forEach(([k, v]) => {
+        html += `<span>${v}</span>`;
+      });
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+// ============ INTERACTIONS ============
+function selectLikert(key, value, itemIdx) {
+  responses[key] = value;
+  // Update UI
+  const itemEl = document.querySelector(`[data-item-key="${key}"]`);
+  if (itemEl) {
+    itemEl.querySelectorAll('.likert-option').forEach(el => {
+      el.classList.toggle('selected', parseInt(el.dataset.value) === value);
+    });
+  }
+  saveProgress();
+  updateProgress();
+  const scr = screens[currentScreenIdx];
+  updateNextButton(scr);
+  // Advance focus: highlight next item
+  advanceFocus(itemIdx);
+}
+
+function selectMC(key, value) {
+  responses[key] = value;
+  const itemEl = document.querySelector(`[data-item-key="${key}"]`);
+  if (itemEl) {
+    itemEl.querySelectorAll('.mc-option').forEach(el => {
+      el.classList.toggle('selected', parseInt(el.dataset.value) === value);
+    });
+  }
+  saveProgress();
+  updateProgress();
+  const scr = screens[currentScreenIdx];
+  updateNextButton(scr);
+}
+
+function selectContext(key, value) {
+  if (!value) {
+    delete responses[key];
+  } else {
+    responses[key] = value;
+  }
+  saveProgress();
+  updateProgress();
+  const scr = screens[currentScreenIdx];
+  updateNextButton(scr);
+}
+
+function slideContext(key, value) {
+  responses[key] = parseInt(value);
+  const valEl = document.getElementById('slider-val-' + key);
+  if (valEl) valEl.textContent = value;
+  saveProgress();
+  updateProgress();
+  const scr = screens[currentScreenIdx];
+  updateNextButton(scr);
+}
+
+function advanceFocus(itemIdx) {
+  const scr = screens[currentScreenIdx];
+  if (scr.type !== 'ipip' && scr.type !== 'sd3') return;
+  const items = document.querySelectorAll('#screen-assessment .item');
+  if (itemIdx + 1 < items.length) {
+    const next = items[itemIdx + 1];
+    if (next) {
+      next.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+}
+
+function updateNextButton(scr) {
+  const btn = document.getElementById('nextBtn');
+  if (!btn) return;
+  let allAnswered = true;
+  scr.items.forEach((item, i) => {
+    let key;
+    if (scr.type === 'ipip') key = 'ipip_' + item.id;
+    else if (scr.type === 'sd3') key = 'sd3_' + item.id;
+    else if (scr.type === 'icar') key = 'icar_' + item.id;
+    else if (scr.type === 'context') key = 'ctx_' + item.id;
+    if (responses[key] === undefined || responses[key] === null || responses[key] === '') {
+      allAnswered = false;
+    }
+  });
+  btn.disabled = !allAnswered;
+}
+
+function attachInteractions(scr) {
+  // Keyboard support for Likert
+  if (scr.type === 'ipip' || scr.type === 'sd3') {
+    document.addEventListener('keydown', keydownHandler);
+  } else {
+    document.removeEventListener('keydown', keydownHandler);
+  }
+}
+
+let keydownHandler = function(e) {
+  const scr = screens[currentScreenIdx];
+  if (!scr || (scr.type !== 'ipip' && scr.type !== 'sd3')) return;
+
+  if (e.key >= '1' && e.key <= '5') {
+    e.preventDefault();
+    const val = parseInt(e.key);
+    // Find first unanswered item, or the item currently in focus
+    const items = document.querySelectorAll('#screen-assessment .item');
+    let targetIdx = -1;
+    for (let i = 0; i < items.length; i++) {
+      const key = items[i].dataset.itemKey;
+      if (responses[key] === undefined) {
+        targetIdx = i;
+        break;
+      }
+    }
+    if (targetIdx === -1) targetIdx = 0; // all answered, default to first
+
+    const key = items[targetIdx].dataset.itemKey;
+    selectLikert(key, val, targetIdx);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const btn = document.getElementById('nextBtn');
+    if (btn && !btn.disabled) goNext();
+  }
+};
+
+// ============ NAVIGATION ============
+function startWizard() {
+  buildScreens();
+  currentScreenIdx = 0;
+  showScreen('assessment');
+  renderScreen(0);
+}
+
+function goNext() {
+  if (currentScreenIdx < screens.length - 1) {
+    renderScreen(currentScreenIdx + 1);
+  } else {
+    // Last screen - complete
+    enterReview();
+  }
+}
+
+function goBack() {
+  if (inReviewMode) {
+    inReviewMode = false;
+    showScreen('assessment');
+    renderScreen(currentScreenIdx);
+    return;
+  }
+  if (currentScreenIdx > 0) {
+    renderScreen(currentScreenIdx - 1);
+  } else {
+    // Back to welcome
+    showScreen('welcome');
+    updateProgress();
+  }
+}
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('screen-' + name);
+  if (el) el.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============ REVIEW MODE ============
+function enterReview() {
+  inReviewMode = true;
+  document.removeEventListener('keydown', keydownHandler);
+  const reviewEl = document.getElementById('screen-review');
+  let html = '<div class="review-screen">';
+  html += '<div class="section-header">';
+  html += '<div class="section-progress">Review your answers before finalizing</div>';
+  html += '<div class="section-title">Review Answers</div>';
+  html += '<div class="section-desc">You can go back to any section to change your answers. When you\'re ready, finalize your baseline.</div>';
+  html += '</div>';
+
+  // Group by section
+  screens.forEach((scr, sIdx) => {
+    html += `<div class="review-section">`;
+    html += `<div class="review-section-title">${scr.sectionName} — Items ${scr.itemRange.start}–${scr.itemRange.end}</div>`;
+    scr.items.forEach(item => {
+      let key, text, answer;
+      if (scr.type === 'ipip') {
+        key = 'ipip_' + item.id;
+        text = capitalizeFirst(item.text);
+        const val = responses[key];
+        answer = val !== undefined ? IPIP_SCALE[val - 1]?.label || val : null;
+      } else if (scr.type === 'sd3') {
+        key = 'sd3_' + item.id;
+        text = item.text;
+        const val = responses[key];
+        answer = val !== undefined ? SD3_SCALE[val - 1]?.label || val : null;
+      } else if (scr.type === 'icar') {
+        key = 'icar_' + item.id;
+        text = item.text;
+        const val = responses[key];
+        answer = val !== undefined ? item.options[val] : null;
+      } else if (scr.type === 'context') {
+        key = 'ctx_' + item.id;
+        text = item.text;
+        answer = responses[key] !== undefined ? String(responses[key]) : null;
+      }
+      html += '<div class="review-item">';
+      html += `<div class="review-item-text">${text}</div>`;
+      if (answer !== null && answer !== undefined && answer !== '') {
+        html += `<div class="review-item-answer">${answer}</div>`;
+      } else {
+        html += '<div class="review-item-unanswered">Not answered</div>';
+      }
+      html += `<div class="review-item-edit" onclick="jumpToScreen(${sIdx})">Edit</div>`;
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+
+  html += '<div class="nav-bar">';
+  html += '<button class="btn btn-secondary" onclick="goBackFromReview()">Back</button>';
+  html += '<button class="btn btn-primary" onclick="finalizeBaseline()">Finalize Baseline</button>';
+  html += '</div>';
+  html += '</div>';
+
+  reviewEl.innerHTML = html;
+  showScreen('review');
+  gsap.fromTo('#screen-review', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' });
+}
+
+function jumpToScreen(sIdx) {
+  inReviewMode = false;
+  showScreen('assessment');
+  renderScreen(sIdx);
+}
+
+function goBackFromReview() {
+  inReviewMode = false;
+  showScreen('assessment');
+  renderScreen(screens.length - 1);
+}
+
+// ============ SCORING ============
+function computeScores() {
+  const scores = {
+    bigFive: {},
+    facets: {},
+    sd3: {},
+    icar: { correct: 0, total: 16, percent: 0 },
+    context: {}
+  };
+
+  // IPIP scoring
+  const traits = { O: 'openness', C: 'conscientiousness', E: 'extraversion', A: 'agreeableness', N: 'neuroticism' };
+  const ipipItems = ASSESSMENT_DATA.ipip_neo_120.items;
+
+  Object.entries(traits).forEach(([code, name]) => {
+    const traitItems = ipipItems.filter(i => i.trait === code);
+    const itemScores = traitItems.map(item => {
+      const key = 'ipip_' + item.id;
+      const val = responses[key];
+      if (val === undefined) return null;
+      return item.reverse ? (6 - val) : val;
+    }).filter(s => s !== null);
+
+    if (itemScores.length > 0) {
+      const mean = itemScores.reduce((a, b) => a + b, 0) / itemScores.length;
+      let score = mean * 20;
+      if (code === 'N') {
+        score = 100 - score; // invert to Emotional Stability
+      }
+      scores.bigFive[code === 'N' ? 'emotional_stability' : name] = Math.round(score * 10) / 10;
+    }
+  });
+
+  // Facet scores
+  const facetMap = {};
+  ipipItems.forEach(item => {
+    const fk = item.trait + '_' + item.facet;
+    if (!facetMap[fk]) facetMap[fk] = { trait: item.trait, facet: item.facet, items: [] };
+    facetMap[fk].items.push(item);
+  });
+  Object.entries(facetMap).forEach(([fk, info]) => {
+    const itemScores = info.items.map(item => {
+      const key = 'ipip_' + item.id;
+      const val = responses[key];
+      if (val === undefined) return null;
+      return item.reverse ? (6 - val) : val;
+    }).filter(s => s !== null);
+    if (itemScores.length > 0) {
+      const mean = itemScores.reduce((a, b) => a + b, 0) / itemScores.length;
+      scores.facets[fk] = Math.round(mean * 20 * 10) / 10;
+    }
+  });
+
+  // SD3 scoring
+  const sd3Items = ASSESSMENT_DATA.sd3.items;
+  const sd3Traits = { M: 'Machiavellianism', N: 'Narcissism', P: 'Psychopathy' };
+  Object.entries(sd3Traits).forEach(([code, name]) => {
+    const traitItems = sd3Items.filter(i => i.trait === code);
+    const itemScores = traitItems.map(item => {
+      const key = 'sd3_' + item.id;
+      const val = responses[key];
+      if (val === undefined) return null;
+      return item.reverse ? (6 - val) : val;
+    }).filter(s => s !== null);
+    if (itemScores.length > 0) {
+      const mean = itemScores.reduce((a, b) => a + b, 0) / itemScores.length;
+      scores.sd3[name] = Math.round(mean * 20 * 10) / 10;
+    }
+  });
+
+  // ICAR scoring
+  const icarItems = ASSESSMENT_DATA.icar_16.items;
+  let correct = 0;
+  icarItems.forEach(item => {
+    const key = 'icar_' + item.id;
+    const val = responses[key];
+    if (val !== undefined && val === item.correct) correct++;
+  });
+  scores.icar.correct = correct;
+  scores.icar.percent = Math.round((correct / 16) * 100);
+
+  // Context
+  ASSESSMENT_DATA.context.items.forEach(item => {
+    const key = 'ctx_' + item.id;
+    scores.context[item.id] = responses[key];
+  });
+
+  return scores;
+}
+
+// ============ COMPLETION ============
+function finalizeBaseline() {
+  const scores = computeScores();
+  const result = {
+    timestamp: new Date().toISOString(),
+    responses: responses,
+    scores: scores
+  };
+  localStorage.setItem('baseline_results_v1', JSON.stringify(result));
+  clearProgress();
+  showCompletion(scores);
+}
+
+function showCompletion(scores) {
+  const el = document.getElementById('screen-complete');
+  let html = '<div class="complete-screen">';
+  html += '<div class="welcome-label">Baseline Assessment</div>';
+  html += '<h1 class="complete-title">Baseline Complete</h1>';
+  html += '<p class="complete-desc">Your baseline is saved. Here is your first snapshot.</p>';
+
+  // Results grid
+  html += '<div class="results-grid">';
+
+  // Radar chart card
+  html += '<div class="result-card">';
+  html += '<div class="result-card-title">Big Five Profile</div>';
+  html += '<div class="result-card-name">Your Personality Shape</div>';
+  html += '<div class="radar-chart-wrap" id="radarChartWrap"></div>';
+  html += '</div>';
+
+  // Right column: SD3 + ICAR
+  html += '<div class="result-card">';
+  html += '<div class="result-card-title">Motivational Drivers</div>';
+  html += '<div class="result-card-name">Social Dynamics</div>';
+  html += '<div class="sd3-bars">';
+  const sd3Colors = { Machiavellianism: '#d4a574', Narcissism: '#c97757', Psychopathy: '#7ba89b' };
+  ['Machiavellianism', 'Narcissism', 'Psychopathy'].forEach(name => {
+    const val = scores.sd3[name] || 0;
+    html += '<div class="sd3-bar-row">';
+    html += `<div class="sd3-bar-label">${name}</div>`;
+    html += `<div class="sd3-bar-track"><div class="sd3-bar-fill" style="width:0%; background:${sd3Colors[name]}" data-target="${val}"></div></div>`;
+    html += `<div class="sd3-bar-val">${val.toFixed(0)}</div>`;
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // ICAR
+  html += '<div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">';
+  html += '<div class="result-card-title">Cognitive Patterns</div>';
+  html += `<div class="icar-score">${scores.icar.correct} / 16</div>`;
+  html += `<div class="icar-sub">${scores.icar.percent}% correct</div>`;
+  html += '</div>';
+
+  html += '</div>'; // end right card
+  html += '</div>'; // end results-grid
+
+  // Note
+  html += '<div class="complete-note">';
+  html += '<div class="complete-note-text">This is your starting point. Your weekly pulses will build on this baseline, showing how your personality shifts over time.</div>';
+  html += '</div>';
+
+  // Button
+  html += '<a href="personality-dashboard-prototype.html" class="btn btn-primary" style="text-decoration:none; display:inline-block;">View Dashboard</a>';
+
+  html += '</div>';
+
+  el.innerHTML = html;
+  showScreen('complete');
+  updateProgress();
+
+  // Draw radar chart
+  drawRadarChart(scores);
+
+  // Animate SD3 bars
+  setTimeout(() => {
+    document.querySelectorAll('.sd3-bar-fill').forEach(el => {
+      el.style.width = el.dataset.target + '%';
+    });
+  }, 300);
+
+  gsap.fromTo('#screen-complete', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
+}
+
+function drawRadarChart(scores) {
+  const wrap = document.getElementById('radarChartWrap');
+  if (!wrap) return;
+
+  const data = [
+    { label: 'Openness', value: scores.bigFive.openness || 0, color: '#d4a574' },
+    { label: 'Conscientiousness', value: scores.bigFive.conscientiousness || 0, color: '#7ba89b' },
+    { label: 'Extraversion', value: scores.bigFive.extraversion || 0, color: '#c4a96a' },
+    { label: 'Agreeableness', value: scores.bigFive.agreeableness || 0, color: '#a07c5c' },
+    { label: 'Stability', value: scores.bigFive.emotional_stability || 0, color: '#9ec9b8' }
+  ];
+
+  const size = 300;
+  const margin = 50;
+  const radius = (size - margin * 2) / 2;
+  const center = size / 2;
+
+  const svg = d3.select(wrap).append('svg')
+    .attr('width', size).attr('height', size).attr('viewBox', `0 0 ${size} ${size}`);
+
+  const g = svg.append('g').attr('transform', `translate(${center},${center})`);
+
+  const angle = d3.scaleLinear().domain([0, data.length]).range([0, 2 * Math.PI]);
+  const r = d3.scaleLinear().domain([0, 100]).range([0, radius]);
+
+  // Grid circles
+  [20, 40, 60, 80, 100].forEach(val => {
+    g.append('circle')
+      .attr('r', r(val))
+      .attr('fill', 'none')
+      .attr('stroke', '#3a2f25')
+      .attr('stroke-width', 1)
+      .attr('stroke-dasharray', val === 100 ? 'none' : '2,3');
+  });
+
+  // Axes and labels
+  data.forEach((d, i) => {
+    const a = angle(i) - Math.PI / 2;
+    g.append('line')
+      .attr('x1', 0).attr('y1', 0)
+      .attr('x2', r(100) * Math.cos(a))
+      .attr('y2', r(100) * Math.sin(a))
+      .attr('stroke', '#3a2f25').attr('stroke-width', 1);
+
+    const lx = (r(100) + 18) * Math.cos(a);
+    const ly = (r(100) + 18) * Math.sin(a);
+    g.append('text')
+      .attr('x', lx).attr('y', ly)
+      .attr('text-anchor', 'middle').attr('dy', '0.35em')
+      .attr('fill', '#a89a87')
+      .attr('font-family', 'IBM Plex Mono, monospace')
+      .attr('font-size', '9px')
+      .attr('letter-spacing', '0.05em')
+      .text(d.label.toUpperCase());
+  });
+
+  // Data polygon
+  const lineData = data.map((d, i) => {
+    const a = angle(i) - Math.PI / 2;
+    return [r(d.value) * Math.cos(a), r(d.value) * Math.sin(a)];
+  });
+  lineData.push(lineData[0]); // close
+
+  g.append('path')
+    .attr('d', d3.line()(lineData))
+    .attr('fill', 'rgba(212,165,116,0.15)')
+    .attr('stroke', '#d4a574')
+    .attr('stroke-width', 2);
+
+  // Data points
+  data.forEach((d, i) => {
+    const a = angle(i) - Math.PI / 2;
+    g.append('circle')
+      .attr('cx', r(d.value) * Math.cos(a))
+      .attr('cy', r(d.value) * Math.sin(a))
+      .attr('r', 4)
+      .attr('fill', d.color)
+      .attr('stroke', '#18120e')
+      .attr('stroke-width', 1.5);
+  });
+}
+
+// ============ INIT ============
+window.addEventListener('load', function() {
+  const saved = loadProgress();
+  if (saved && saved.responses && Object.keys(saved.responses).length > 0) {
+    responses = saved.responses;
+    // Show resume option on welcome
+    const welcomeEl = document.getElementById('screen-welcome');
+    const banner = document.createElement('div');
+    banner.className = 'resume-banner';
+    banner.innerHTML = `<span class="resume-text">You have saved progress (${Object.keys(responses).length} of ${getTotalItems()} items answered). Continue where you left off?</span>`;
+    const btnContainer = document.createElement('div');
+    btnContainer.style.display = 'flex';
+    btnContainer.style.gap = '8px';
+    const resumeBtn = document.createElement('button');
+    resumeBtn.className = 'btn btn-primary';
+    resumeBtn.textContent = 'Resume';
+    resumeBtn.onclick = function() {
+      buildScreens();
+      currentScreenIdx = saved.currentScreenIdx || 0;
+      if (currentScreenIdx >= screens.length) currentScreenIdx = 0;
+      showScreen('assessment');
+      renderScreen(currentScreenIdx);
+    };
+    const restartBtn = document.createElement('button');
+    restartBtn.className = 'btn btn-secondary';
+    restartBtn.textContent = 'Start Over';
+    restartBtn.onclick = function() {
+      responses = {};
+      clearProgress();
+      banner.remove();
+      updateProgress();
+    };
+    btnContainer.appendChild(restartBtn);
+    btnContainer.appendChild(resumeBtn);
+    banner.appendChild(btnContainer);
+    const welcomeScreen = welcomeEl.querySelector('.welcome-screen');
+    welcomeScreen.insertBefore(banner, welcomeScreen.firstChild);
+  }
+  updateProgress();
+});
+
+</script>
+</body>
+</html>
