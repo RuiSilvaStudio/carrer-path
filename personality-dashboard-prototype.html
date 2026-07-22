@@ -1057,7 +1057,7 @@ function renderDistributionView() {
     const vals = traitValues(trait.key, VALID_DATA);
     const distData = computeDensity(vals, 0, 100, 25);
     const card = document.createElement('div');
-    card.className = 'card dist-card fade-in';
+    card.className = 'card dist-card';
     card.dataset.trait = trait.key;
 
     const isStability = trait.key === 'stability';
@@ -1549,7 +1549,7 @@ function renderRadialCharts() {
 
   TRAITS.forEach((trait, idx) => {
     const card = document.createElement('div');
-    card.className = 'card fade-in';
+    card.className = 'card';
     card.innerHTML =
       '<div class="radial-chart-wrap">' +
         '<div class="chart-container" id="radial-' + trait.key + '"></div>' +
