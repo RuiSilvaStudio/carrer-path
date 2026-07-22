@@ -310,7 +310,7 @@
   <!-- Trajectory View -->
   <div class="view-panel active" id="view-trajectory">
     <div class="grid grid-trajectory">
-      <div class="card fade-in" id="trajectoryCard">
+      <div class="card" id="trajectoryCard">
         <div class="card-header">
           <div>
             <div class="card-label">View 01 / Trajectory</div>
@@ -372,7 +372,7 @@
 
   <!-- Distribution View -->
   <div class="view-panel" id="view-distribution">
-    <div class="card fade-in" style="margin-bottom: 20px;">
+    <div class="card" style="margin-bottom: 20px;">
       <div class="card-header">
         <div>
           <div class="card-label">View 02 / Distribution</div>
@@ -393,7 +393,7 @@
 
   <!-- Context View -->
   <div class="view-panel" id="view-context">
-    <div class="card fade-in" style="margin-bottom: 20px;">
+    <div class="card" style="margin-bottom: 20px;">
       <div class="card-header">
         <div>
           <div class="card-label">View 03 / Context</div>
@@ -408,7 +408,7 @@
     </div>
 
     <!-- Raw Context Tags -->
-    <div class="card fade-in" style="margin-bottom: 20px;">
+    <div class="card" style="margin-bottom: 20px;">
       <div class="card-header">
         <div>
           <div class="card-label">Raw Situation Tags</div>
@@ -423,7 +423,7 @@
     </div>
 
     <div class="grid grid-context">
-      <div class="card fade-in">
+      <div class="card">
         <div class="card-header">
           <div>
             <div class="card-label">Context Variance</div>
@@ -432,7 +432,7 @@
         </div>
         <div class="chart-container" id="varianceChart"></div>
       </div>
-      <div class="card fade-in">
+      <div class="card">
         <div class="card-header">
           <div>
             <div class="card-label">Stress Response Profile</div>
@@ -444,7 +444,7 @@
     </div>
 
     <!-- DIAMONDS Section -->
-    <div class="card fade-in" style="margin-top: 20px;">
+    <div class="card" style="margin-top: 20px;">
       <div class="card-header">
         <div>
           <div class="card-label">Situational Dimensions &middot; DIAMONDS</div>
@@ -466,7 +466,7 @@
 
   <!-- Rhythm View (NEW) -->
   <div class="view-panel" id="view-rhythm">
-    <div class="card fade-in" style="margin-bottom: 20px;">
+    <div class="card" style="margin-bottom: 20px;">
       <div class="card-header">
         <div>
           <div class="card-label">View 04 / Rhythm</div>
@@ -479,7 +479,7 @@
       </p>
     </div>
     <div class="grid rhythm-grid" id="rhythmRadialGrid"></div>
-    <div class="card fade-in" style="margin-top: 20px;">
+    <div class="card" style="margin-top: 20px;">
       <div class="card-header">
         <div>
           <div class="card-label">Emotion Heatmap</div>
@@ -2042,7 +2042,7 @@ function restoreDemoPanelStructure() {
   // Trajectory panel
   document.getElementById('view-trajectory').innerHTML =
     '<div class="grid grid-trajectory">' +
-      '<div class="card fade-in" id="trajectoryCard">' +
+      '<div class="card" id="trajectoryCard">' +
         '<div class="card-header">' +
           '<div>' +
             '<div class="card-label">View 01 / Trajectory</div>' +
@@ -2102,7 +2102,7 @@ function restoreDemoPanelStructure() {
 
   // Distribution panel
   document.getElementById('view-distribution').innerHTML =
-    '<div class="card fade-in" style="margin-bottom: 20px;">' +
+    '<div class="card" style="margin-bottom: 20px;">' +
       '<div class="card-header">' +
         '<div>' +
           '<div class="card-label">View 02 / Distribution</div>' +
@@ -2122,7 +2122,7 @@ function restoreDemoPanelStructure() {
 
   // Context panel
   document.getElementById('view-context').innerHTML =
-    '<div class="card fade-in" style="margin-bottom: 20px;">' +
+    '<div class="card" style="margin-bottom: 20px;">' +
       '<div class="card-header">' +
         '<div>' +
           '<div class="card-label">View 03 / Context</div>' +
@@ -2135,7 +2135,7 @@ function restoreDemoPanelStructure() {
       '</p>' +
       '<div class="context-heatmap" id="contextHeatmap"></div>' +
     '</div>' +
-    '<div class="card fade-in" style="margin-bottom: 20px;">' +
+    '<div class="card" style="margin-bottom: 20px;">' +
       '<div class="card-header">' +
         '<div>' +
           '<div class="card-label">Raw Situation Tags</div>' +
@@ -2149,7 +2149,7 @@ function restoreDemoPanelStructure() {
       '<div class="raw-tag-desc" id="rawTagDesc" style="margin-top: 12px;"></div>' +
     '</div>' +
     '<div class="grid grid-context">' +
-      '<div class="card fade-in">' +
+      '<div class="card">' +
         '<div class="card-header">' +
           '<div>' +
             '<div class="card-label">Context Variance</div>' +
@@ -2158,7 +2158,7 @@ function restoreDemoPanelStructure() {
         '</div>' +
         '<div class="chart-container" id="varianceChart"></div>' +
       '</div>' +
-      '<div class="card fade-in">' +
+      '<div class="card">' +
         '<div class="card-header">' +
           '<div>' +
             '<div class="card-label">Stress Response Profile</div>' +
@@ -2168,7 +2168,7 @@ function restoreDemoPanelStructure() {
         '<div class="chart-container" id="stressChart"></div>' +
       '</div>' +
     '</div>' +
-    '<div class="card fade-in" style="margin-top: 20px;">' +
+    '<div class="card" style="margin-top: 20px;">' +
       '<div class="card-header">' +
         '<div>' +
           '<div class="card-label">Situational Dimensions &middot; DIAMONDS</div>' +
@@ -2188,7 +2188,7 @@ function restoreDemoPanelStructure() {
 
   // Rhythm panel
   document.getElementById('view-rhythm').innerHTML =
-    '<div class="card fade-in" style="margin-bottom: 20px;">' +
+    '<div class="card" style="margin-bottom: 20px;">' +
       '<div class="card-header">' +
         '<div>' +
           '<div class="card-label">View 04 / Rhythm</div>' +
@@ -2201,7 +2201,7 @@ function restoreDemoPanelStructure() {
       '</p>' +
     '</div>' +
     '<div class="grid rhythm-grid" id="rhythmRadialGrid"></div>' +
-    '<div class="card fade-in" style="margin-top: 20px;">' +
+    '<div class="card" style="margin-top: 20px;">' +
       '<div class="card-header">' +
         '<div>' +
           '<div class="card-label">Emotion Heatmap</div>' +
@@ -2314,7 +2314,7 @@ function renderBaselineTrajectoryView() {
   const bigFive = bd.scores.bigFive;
 
   panel.innerHTML =
-    '<div class="card fade-in" style="margin-bottom: 20px;">' +
+    '<div class="card" style="margin-bottom: 20px;">' +
       '<div class="card-header">' +
         '<div>' +
           '<div class="card-label">View 01 / Trajectory</div>' +
@@ -2359,7 +2359,7 @@ function renderBaselineDistributionView() {
   const bigFive = bd.scores.bigFive;
 
   panel.innerHTML =
-    '<div class="card fade-in" style="margin-bottom: 20px;">' +
+    '<div class="card" style="margin-bottom: 20px;">' +
       '<div class="card-header">' +
         '<div>' +
           '<div class="card-label">View 02 / Distribution</div>' +
@@ -2441,7 +2441,7 @@ function renderBaselineContextView() {
   }
 
   panel.innerHTML =
-    '<div class="card fade-in" style="margin-bottom: 20px;">' +
+    '<div class="card" style="margin-bottom: 20px;">' +
       '<div class="card-header">' +
         '<div>' +
           '<div class="card-label">View 03 / Context</div>' +
@@ -2464,7 +2464,7 @@ function renderBaselineContextView() {
 function renderBaselineRhythmView() {
   const panel = document.getElementById('view-rhythm');
   panel.innerHTML =
-    '<div class="card fade-in" style="margin-bottom: 20px;">' +
+    '<div class="card" style="margin-bottom: 20px;">' +
       '<div class="card-header">' +
         '<div>' +
           '<div class="card-label">View 04 / Rhythm</div>' +
@@ -2509,7 +2509,7 @@ function addSD3AndICARToPanel(panel, scores) {
   const icarPct = icar.percent || Math.round((icarCorrect / icarTotal) * 100);
 
   const sd3IcarHTML =
-    '<div class="card fade-in" style="margin-bottom: 20px;">' +
+    '<div class="card" style="margin-bottom: 20px;">' +
       '<div class="card-header">' +
         '<div>' +
           '<div class="card-label">Motivational Drivers</div>' +
@@ -2521,7 +2521,7 @@ function addSD3AndICARToPanel(panel, scores) {
         '<div class="sd3-note">These reflect your motivational drivers. They are not "dark" traits — they describe how you navigate social dynamics and pursue goals.</div>' +
       '</div>' +
     '</div>' +
-    '<div class="card fade-in" style="margin-bottom: 20px;">' +
+    '<div class="card" style="margin-bottom: 20px;">' +
       '<div class="card-header">' +
         '<div>' +
           '<div class="card-label">Cognitive Snapshot</div>' +
