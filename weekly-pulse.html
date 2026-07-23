@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Pulse — Personality Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+  :root {
+    --bg: #18120e;
+    --bg-elevated: #1f1813;
+    --bg-surface: #251d17;
+    --bg-surface-2: #2c241c;
+    --border: #3a2f25;
+    --border-light: #4a3d31;
+    --ink: #e8dfd3;
+    --ink-muted: #a89a87;
+    --ink-dim: #756657;
+    --ink-faint: #4a3f36;
+    --accent: #d4a574;
+    --accent-bright: #e8b884;
+    --accent-dim: #8a6f4e;
+    --signal: #7ba89b;
+    --signal-bright: #9ec9b8;
+    --danger: #c97757;
+    --danger-bright: #d98a6a;
+    --warn: #c4a96a;
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'IBM Plex Sans', system-ui, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+  body {
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 0%, rgba(212,165,116,0.04), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(123,168,155,0.03), transparent),
+      var(--bg);
+  }
+  ::selection { background: rgba(212,165,116,0.25); }
+  .app { max-width: 760px; margin: 0 auto; padding: 48px 32px 80px; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* Header */
+  .header-label { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); opacity: 0.8; }
+  .header-title { font-family: var(--serif); font-size: 38px; font-weight: 400; line-height: 1.1; color: var(--ink); letter-spacing: -0.01em; font-variation-settings: "opsz" 60; margin-top: 6px; }
+  .header-sub { font-family: var(--serif); font-size: 17px; color: var(--ink-muted); margin-top: 8px; font-variation-settings: "opsz" 24; line-height: 1.5; }
+
+  /* Screens */
+  .screen { display: none; flex: 1; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* Welcome */
+  .welcome-meta { margin-top: 28px; padding: 18px 22px; background: var(--bg-elevated); border: 1px solid var(--border); border-left: 2px solid var(--accent); border-radius: 4px; }
+  .welcome-meta-row { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+  .welcome-meta-row + .welcome-meta-row { margin-top: 10px; }
+  .welcome-meta-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim); }
+  .welcome-meta-val { font-family: var(--serif); font-size: 15px; color: var(--ink); font-variation-settings: "opsz" 24; }
+
+  .streak-note { margin-top: 20px; font-family: var(--mono); font-size: 11px; color: var(--ink-muted); letter-spacing: 0.03em; line-height: 1.6; }
+
+  /* Buttons */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--sans); font-size: 14px; font-weight: 500; padding: 14px 28px; border-radius: 4px; border: 1px solid var(--border-light); background: var(--bg-surface); color: var(--ink); cursor: pointer; transition: all 0.2s ease; text-decoration: none; letter-spacing: 0.02em; }
+  .btn:hover { border-color: var(--accent-dim); background: var(--bg-surface-2); }
+  .btn-primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+  .btn-primary:hover { background: var(--accent-bright); border-color: var(--accent-bright); }
+  .btn-primary:disabled { background: var(--bg-surface); color: var(--ink-faint); border-color: var(--border); cursor: not-allowed; }
+  .btn-ghost { background: none; border-color: var(--border); color: var(--ink-muted); }
+  .btn-ghost:hover { color: var(--ink); border-color: var(--border-light); }
+  .btn-row { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  /* Items screen */
+  .items-progress { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .progress-count { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+  .progress-bar { height: 2px; background: var(--bg-surface); border-radius: 1px; overflow: hidden; margin: 14px 0 24px; }
+  .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
+
+  .item { padding: 18px 0; border-bottom: 1px solid var(--border); }
+  .item:first-child { padding-top: 4px; }
+  .item-text { font-family: var(--serif); font-size: 17px; color: var(--ink); font-variation-settings: "opsz" 28; line-height: 1.45; margin-bottom: 14px; }
+  .item-text .state-prefix { color: var(--accent); font-style: italic; }
+  .item-facet { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: 6px; }
+
+  .likert { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .likert-btn { font-family: var(--sans); font-size: 12px; font-weight: 500; padding: 14px 4px 10px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 4px; color: var(--ink-muted); cursor: pointer; transition: all 0.18s ease; display: flex; flex-direction: column; align-items: center; gap: 4px; line-height: 1.2; }
+  .likert-btn:hover { border-color: var(--accent-dim); color: var(--ink); background: var(--bg-surface-2); }
+  .likert-btn .lk-num { font-family: var(--mono); font-size: 14px; color: var(--ink-dim); font-weight: 600; transition: color 0.18s; }
+  .likert-btn .lk-lab { font-size: 10px; letter-spacing: 0.03em; }
+  .likert-btn.selected { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .likert-btn.selected .lk-num { color: var(--bg); }
+  .likert-btn.focused { box-shadow: 0 0 0 2px var(--accent-bright); }
+  .likert-btn:active { transform: scale(0.97); }
+
+  .items-foot { margin-top: 28px; display: flex; justify-content: flex-end; }
+
+  /* Context screen */
+  .section-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .section-title { font-family: var(--serif); font-size: 20px; font-weight: 400; color: var(--ink); font-variation-settings: "opsz" 32; margin-bottom: 16px; line-height: 1.3; }
+  .ctx-block { margin-bottom: 32px; }
+
+  .ctx-buttons { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .ctx-btn { font-family: var(--sans); font-size: 13px; font-weight: 500; padding: 22px 6px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 6px; color: var(--ink-muted); cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .ctx-btn:hover { border-color: var(--accent-dim); color: var(--ink); background: var(--bg-surface-2); transform: translateY(-1px); }
+  .ctx-btn.selected { background: var(--accent-dim); border-color: var(--accent); color: var(--ink); }
+  .ctx-btn .ctx-icon { font-size: 20px; line-height: 1; }
+
+  .emo-buttons { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .emo-btn { font-family: var(--sans); font-size: 12px; font-weight: 500; padding: 12px 4px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 20px; color: var(--ink-muted); cursor: pointer; transition: all 0.18s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .emo-btn:hover { border-color: var(--accent-dim); color: var(--ink); }
+  .emo-btn.selected { background: var(--accent-dim); border-color: var(--accent); color: var(--ink); }
+  .emo-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  .note-input { width: 100%; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 4px; color: var(--ink); font-family: var(--sans); font-size: 14px; padding: 14px 16px; resize: vertical; min-height: 80px; transition: border-color 0.2s; }
+  .note-input:focus { outline: none; border-color: var(--accent-dim); }
+  .note-input::placeholder { color: var(--ink-dim); }
+
+  .skip-hint { font-family: var(--mono); font-size: 10px; color: var(--ink-dim); letter-spacing: 0.05em; margin-top: 8px; }
+
+  /* Completion */
+  .complete-title { font-family: var(--serif); font-size: 34px; font-weight: 400; color: var(--ink); font-variation-settings: "opsz" 60; line-height: 1.1; }
+  .complete-sub { font-family: var(--serif); font-size: 17px; color: var(--ink-muted); margin-top: 8px; font-variation-settings: "opsz" 24; }
+  .complete-points { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-top: 18px; }
+  .complete-radar { display: flex; justify-content: center; margin: 24px 0 8px; }
+  .complete-delta { margin-top: 16px; padding: 16px 20px; background: var(--bg-elevated); border: 1px solid var(--border); border-left: 2px solid var(--signal); border-radius: 4px; }
+  .complete-delta .delta-text { font-family: var(--serif); font-size: 15px; color: var(--ink); line-height: 1.5; font-variation-settings: "opsz" 24; }
+  .complete-delta .delta-text .up { color: var(--signal-bright); font-weight: 500; }
+  .complete-delta .delta-text .down { color: var(--danger-bright); font-weight: 500; }
+  .complete-delta .delta-text .flat { color: var(--ink-muted); font-weight: 500; }
+
+  .radar-legend { display: flex; gap: 18px; justify-content: center; margin-top: 4px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
+  .radar-legend .lg-sw { display: inline-block; width: 18px; height: 2px; border-radius: 1px; margin-right: 6px; vertical-align: middle; }
+
+  /* Resume banner */
+  .resume-banner { margin-top: 20px; padding: 14px 18px; background: rgba(212,165,116,0.06); border: 1px solid var(--accent-dim); border-radius: 4px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .resume-text { font-family: var(--sans); font-size: 13px; color: var(--ink-muted); }
+  .resume-text strong { color: var(--accent); }
+
+  /* fade helpers */
+  .fade-in { opacity: 0; transform: translateY(8px); }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .app { padding: 32px 18px 60px; }
+    .header-title { font-size: 30px; }
+    .ctx-buttons { grid-template-columns: repeat(2, 1fr); }
+    .emo-buttons { grid-template-columns: repeat(2, 1fr); }
+    .likert { gap: 4px; }
+    .likert-btn { padding: 12px 2px 8px; }
+    .likert-btn .lk-lab { font-size: 9px; }
+    .complete-title { font-size: 28px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="header-label" id="hdrLabel">Weekly Pulse</div>
+  <h1 class="header-title" id="hdrTitle">Weekly Pulse</h1>
+  <p class="header-sub" id="hdrSub"></p>
+
+  <div class="screen active" id="screen-welcome"></div>
+  <div class="screen" id="screen-items"></div>
+  <div class="screen" id="screen-context"></div>
+  <div class="screen" id="screen-complete"></div>
+</div>
+<script id="build">/*SCRIPT*/
+window.__IPIP_ITEMS = [
+{id:1,text:"Worry about things.",trait:"N",facet:"Anxiety",reverse:false},
+{id:2,text:"Make friends easily.",trait:"E",facet:"Friendliness",reverse:false},
+{id:3,text:"Have a vivid imagination.",trait:"O",facet:"Imagination",reverse:false},
+{id:4,text:"Trust others.",trait:"A",facet:"Trust",reverse:false},
+{id:5,text:"Complete tasks successfully.",trait:"C",facet:"Self-efficacy",reverse:false},
+{id:6,text:"Get angry easily.",trait:"N",facet:"Anger",reverse:false},
+{id:7,text:"Love large parties.",trait:"E",facet:"Gregariousness",reverse:false},
+{id:8,text:"Believe in the importance of art.",trait:"O",facet:"Artistic",reverse:false},
+{id:9,text:"Use others for my own ends.",trait:"A",facet:"Morality",reverse:true},
+{id:10,text:"Like to tidy up.",trait:"C",facet:"Orderliness",reverse:false},
+{id:11,text:"Often feel blue.",trait:"N",facet:"Depression",reverse:false},
+{id:12,text:"Take charge.",trait:"E",facet:"Assertiveness",reverse:false},
+{id:13,text:"Experience my emotions intensely.",trait:"O",facet:"Emotionality",reverse:false},
+{id:14,text:"Love to help others.",trait:"A",facet:"Altruism",reverse:false},
+{id:15,text:"Keep my promises.",trait:"C",facet:"Dutifulness",reverse:false},
+{id:16,text:"Find it difficult to approach others.",trait:"N",facet:"Self-consciousness",reverse:false},
+{id:17,text:"Am always busy.",trait:"E",facet:"Activity",reverse:false},
+{id:18,text:"Prefer variety to routine.",trait:"O",facet:"Adventurousness",reverse:false},
+{id:19,text:"Love a good fight.",trait:"A",facet:"Cooperation",reverse:true},
+{id:20,text:"Work hard.",trait:"C",facet:"Achievement-striving",reverse:false},
+{id:21,text:"Go on binges.",trait:"N",facet:"Immoderation",reverse:false},
+{id:22,text:"Love excitement.",trait:"E",facet:"Excitement-seeking",reverse:false},
+{id:23,text:"Love to read challenging material.",trait:"O",facet:"Intellect",reverse:false},
+{id:24,text:"Believe that I am better than others.",trait:"A",facet:"Modesty",reverse:true},
+{id:25,text:"Am always prepared.",trait:"C",facet:"Self-discipline",reverse:false},
+{id:26,text:"Panic easily.",trait:"N",facet:"Vulnerability",reverse:false},
+{id:27,text:"Radiate joy.",trait:"E",facet:"Cheerfulness",reverse:false},
+{id:28,text:"Tend to vote for liberal political candidates.",trait:"O",facet:"Liberalism",reverse:false},
+{id:29,text:"Sympathise with the homeless.",trait:"A",facet:"Sympathy",reverse:false},
+{id:30,text:"Jump into things without thinking.",trait:"C",facet:"Cautiousness",reverse:true},
+{id:31,text:"Fear for the worst.",trait:"N",facet:"Anxiety",reverse:false},
+{id:32,text:"Feel comfortable around people.",trait:"E",facet:"Friendliness",reverse:false},
+{id:33,text:"Enjoy wild flights of fantasy.",trait:"O",facet:"Imagination",reverse:false},
+{id:34,text:"Believe that others have good intentions.",trait:"A",facet:"Trust",reverse:false},
+{id:35,text:"Excel in what I do.",trait:"C",facet:"Self-efficacy",reverse:false},
+{id:36,text:"Get irritated easily.",trait:"N",facet:"Anger",reverse:false},
+{id:37,text:"Talk to a lot of different people at parties.",trait:"E",facet:"Gregariousness",reverse:false},
+{id:38,text:"See beauty in things that others might not notice.",trait:"O",facet:"Artistic",reverse:false},
+{id:39,text:"Cheat to get ahead.",trait:"A",facet:"Morality",reverse:true},
+{id:40,text:"Often forget to put things back in their proper place.",trait:"C",facet:"Orderliness",reverse:true},
+{id:41,text:"Dislike myself.",trait:"N",facet:"Depression",reverse:false},
+{id:42,text:"Try to lead others.",trait:"E",facet:"Assertiveness",reverse:false},
+{id:43,text:"Feel others' emotions.",trait:"O",facet:"Emotionality",reverse:false},
+{id:44,text:"Am concerned about others.",trait:"A",facet:"Altruism",reverse:false},
+{id:45,text:"Tell the truth.",trait:"C",facet:"Dutifulness",reverse:false},
+{id:46,text:"Am afraid to draw attention to myself.",trait:"N",facet:"Self-consciousness",reverse:false},
+{id:47,text:"Am always on the go.",trait:"E",facet:"Activity",reverse:false},
+{id:48,text:"Prefer to stick with things that I know.",trait:"O",facet:"Adventurousness",reverse:true},
+{id:49,text:"Yell at people.",trait:"A",facet:"Cooperation",reverse:true},
+{id:50,text:"Do more than what's expected of me.",trait:"C",facet:"Achievement-striving",reverse:false},
+{id:51,text:"Rarely overindulge.",trait:"N",facet:"Immoderation",reverse:true},
+{id:52,text:"Seek adventure.",trait:"E",facet:"Excitement-seeking",reverse:false},
+{id:53,text:"Avoid philosophical discussions.",trait:"O",facet:"Intellect",reverse:true},
+{id:54,text:"Think highly of myself.",trait:"A",facet:"Modesty",reverse:true},
+{id:55,text:"Carry out my plans.",trait:"C",facet:"Self-discipline",reverse:false},
+{id:56,text:"Become overwhelmed by events.",trait:"N",facet:"Vulnerability",reverse:false},
+{id:57,text:"Have a lot of fun.",trait:"E",facet:"Cheerfulness",reverse:false},
+{id:58,text:"Believe that there is no absolute right or wrong.",trait:"O",facet:"Liberalism",reverse:false},
+{id:59,text:"Feel sympathy for those who are worse off than myself.",trait:"A",facet:"Sympathy",reverse:false},
+{id:60,text:"Make rash decisions.",trait:"C",facet:"Cautiousness",reverse:true},
+{id:61,text:"Am afraid of many things.",trait:"N",facet:"Anxiety",reverse:false},
+{id:62,text:"Avoid contact with others.",trait:"E",facet:"Friendliness",reverse:true},
+{id:63,text:"Love to daydream.",trait:"O",facet:"Imagination",reverse:false},
+{id:64,text:"Trust what people say.",trait:"A",facet:"Trust",reverse:false},
+{id:65,text:"Handle tasks smoothly.",trait:"C",facet:"Self-efficacy",reverse:false},
+{id:66,text:"Lose my temper.",trait:"N",facet:"Anger",reverse:false},
+{id:67,text:"Prefer to be alone.",trait:"E",facet:"Gregariousness",reverse:true},
+{id:68,text:"Do not like poetry.",trait:"O",facet:"Artistic",reverse:true},
+{id:69,text:"Take advantage of others.",trait:"A",facet:"Morality",reverse:true},
+{id:70,text:"Leave a mess in my room.",trait:"C",facet:"Orderliness",reverse:true},
+{id:71,text:"Am often down in the dumps.",trait:"N",facet:"Depression",reverse:false},
+{id:72,text:"Take control of things.",trait:"E",facet:"Assertiveness",reverse:false},
+{id:73,text:"Rarely notice my emotional reactions.",trait:"O",facet:"Emotionality",reverse:true},
+{id:74,text:"Am indifferent to the feelings of others.",trait:"A",facet:"Altruism",reverse:true},
+{id:75,text:"Break rules.",trait:"C",facet:"Dutifulness",reverse:true},
+{id:76,text:"Only feel comfortable with friends.",trait:"N",facet:"Self-consciousness",reverse:false},
+{id:77,text:"Do a lot in my spare time.",trait:"E",facet:"Activity",reverse:false},
+{id:78,text:"Dislike changes.",trait:"O",facet:"Adventurousness",reverse:true},
+{id:79,text:"Insult people.",trait:"A",facet:"Cooperation",reverse:true},
+{id:80,text:"Do just enough work to get by.",trait:"C",facet:"Achievement-striving",reverse:true},
+{id:81,text:"Easily resist temptations.",trait:"N",facet:"Immoderation",reverse:true},
+{id:82,text:"Enjoy being reckless.",trait:"E",facet:"Excitement-seeking",reverse:false},
+{id:83,text:"Have difficulty understanding abstract ideas.",trait:"O",facet:"Intellect",reverse:true},
+{id:84,text:"Have a high opinion of myself.",trait:"A",facet:"Modesty",reverse:true},
+{id:85,text:"Waste my time.",trait:"C",facet:"Self-discipline",reverse:true},
+{id:86,text:"Feel that I'm unable to deal with things.",trait:"N",facet:"Vulnerability",reverse:false},
+{id:87,text:"Love life.",trait:"E",facet:"Cheerfulness",reverse:false},
+{id:88,text:"Tend to vote for conservative political candidates.",trait:"O",facet:"Liberalism",reverse:true},
+{id:89,text:"Am not interested in other people's problems.",trait:"A",facet:"Sympathy",reverse:true},
+{id:90,text:"Rush into things.",trait:"C",facet:"Cautiousness",reverse:true},
+{id:91,text:"Get stressed out easily.",trait:"N",facet:"Anxiety",reverse:false},
+{id:92,text:"Keep others at a distance.",trait:"E",facet:"Friendliness",reverse:true},
+{id:93,text:"Like to get lost in thought.",trait:"O",facet:"Intellect",reverse:false},
+{id:94,text:"Distrust people.",trait:"A",facet:"Trust",reverse:true},
+{id:95,text:"Know how to get things done.",trait:"C",facet:"Self-efficacy",reverse:false},
+{id:96,text:"Am not easily annoyed.",trait:"N",facet:"Anger",reverse:true},
+{id:97,text:"Avoid crowds.",trait:"E",facet:"Gregariousness",reverse:true},
+{id:98,text:"Do not enjoy going to art museums.",trait:"O",facet:"Artistic",reverse:true},
+{id:99,text:"Obstruct others' plans.",trait:"A",facet:"Morality",reverse:true},
+{id:100,text:"Leave my belongings around.",trait:"C",facet:"Orderliness",reverse:true},
+{id:101,text:"Feel comfortable with myself.",trait:"N",facet:"Depression",reverse:true},
+{id:102,text:"Wait for others to lead the way.",trait:"E",facet:"Assertiveness",reverse:true},
+{id:103,text:"Don't understand people who get emotional.",trait:"O",facet:"Emotionality",reverse:true},
+{id:104,text:"Take no time for others.",trait:"A",facet:"Altruism",reverse:true},
+{id:105,text:"Break my promises.",trait:"C",facet:"Dutifulness",reverse:true},
+{id:106,text:"Am not bothered by difficult social situations.",trait:"N",facet:"Self-consciousness",reverse:true},
+{id:107,text:"Like to take it easy.",trait:"E",facet:"Activity",reverse:true},
+{id:108,text:"Am attached to conventional ways.",trait:"O",facet:"Adventurousness",reverse:true},
+{id:109,text:"Get back at others.",trait:"A",facet:"Cooperation",reverse:true},
+{id:110,text:"Put little time and effort into my work.",trait:"C",facet:"Achievement-striving",reverse:true},
+{id:111,text:"Am able to control my cravings.",trait:"N",facet:"Immoderation",reverse:true},
+{id:112,text:"Act wild and crazy.",trait:"E",facet:"Excitement-seeking",reverse:false},
+{id:113,text:"Am not interested in theoretical discussions.",trait:"O",facet:"Intellect",reverse:true},
+{id:114,text:"Boast about my virtues.",trait:"A",facet:"Modesty",reverse:true},
+{id:115,text:"Have difficulty starting tasks.",trait:"C",facet:"Self-discipline",reverse:true},
+{id:116,text:"Remain calm under pressure.",trait:"N",facet:"Vulnerability",reverse:true},
+{id:117,text:"Look at the bright side of life.",trait:"E",facet:"Cheerfulness",reverse:false},
+{id:118,text:"Believe that we should be tough on crime.",trait:"O",facet:"Liberalism",reverse:true},
+{id:119,text:"Try not to think about the needy.",trait:"A",facet:"Sympathy",reverse:true},
+{id:120,text:"Act without thinking.",trait:"C",facet:"Cautiousness",reverse:true}
+];
+window.__ITEMS_BY_ID = {};
+window.__IPIP_ITEMS.forEach(function(it){ window.__ITEMS_BY_ID[it.id] = it; });
+
+/* ============================================================
+   CONFIG & CONSTANTS
+   ============================================================ */
+var PULSE_KEY = 'pulse_data_v1';
+var BASELINE_KEY = 'baseline_results_v1';
+var DRAFT_KEY = 'pulse_draft_v1';
+var LIKERT = [
+  { value: 1, label: 'Not at all' },
+  { value: 2, label: 'Slightly' },
+  { value: 3, label: 'Moderately' },
+  { value: 4, label: 'Very' },
+  { value: 5, label: 'Extremely' }
+];
+var TRAITS = [
+  { code: 'O', name: 'Openness', short: 'O' },
+  { code: 'C', name: 'Conscientiousness', short: 'C' },
+  { code: 'E', name: 'Extraversion', short: 'E' },
+  { code: 'A', name: 'Agreeableness', short: 'A' },
+  { code: 'N', name: 'Emotional Stability', short: 'S' } // N inverted to stability
+];
+// Canonical facet order per trait (index 0..5) — used for maintenance rotation
+var FACET_ORDER = {
+  O: ['Imagination','Artistic','Emotionality','Adventurousness','Intellect','Liberalism'],
+  C: ['Self-efficacy','Orderliness','Dutifulness','Achievement-striving','Self-discipline','Cautiousness'],
+  E: ['Friendliness','Gregariousness','Assertiveness','Activity','Excitement-seeking','Cheerfulness'],
+  A: ['Trust','Morality','Altruism','Cooperation','Modesty','Sympathy'],
+  N: ['Anxiety','Anger','Depression','Self-consciousness','Immoderation','Vulnerability']
+};
+var CONTEXTS = [
+  { id: 'work', label: 'Work', icon: '💼' },
+  { id: 'home', label: 'Home', icon: '🏠' },
+  { id: 'social', label: 'Social', icon: '👥' },
+  { id: 'stressed', label: 'Stressed', icon: '⚡' },
+  { id: 'leisure', label: 'Leisure', icon: '🌿' }
+];
+var EMOTIONS = [
+  { id: 'happy', label: 'Happy', color: '#d4a574' },
+  { id: 'content', label: 'Content', color: '#7ba89b' },
+  { id: 'excited', label: 'Excited', color: '#c4a96a' },
+  { id: 'proud', label: 'Proud', color: '#e8b884' },
+  { id: 'purposeful', label: 'Purposeful', color: '#9ec9b8' },
+  { id: 'attentive', label: 'Attentive', color: '#a07c5c' },
+  { id: 'guilty', label: 'Guilty', color: '#c97757' },
+  { id: 'angry', label: 'Angry', color: '#d98a6a' },
+  { id: 'afraid', label: 'Afraid', color: '#8a6f4e' },
+  { id: 'goal-directed', label: 'Goal-directed', color: '#9ec9b8' }
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+var state = {
+  phase: 'loading',      // 'loading' | 'maintenance'
+  week: 1,                // 1-based week number for this pulse
+  items: [],              // array of {item, ...} selected for this pulse
+  responses: {},          // { ipip_<id>: value 1..5 }
+  contexts: [],           // selected context ids
+  emotions: [],            // selected emotion ids
+  note: '',
+  pulseNumber: 1,         // 1-based count including this one
+  focusedIndex: 0,        // for keyboard auto-advance
+  isResume: false
+};
+
+/* ============================================================
+   STORAGE HELPERS
+   ============================================================ */
+function loadPulses() {
+  try { return JSON.parse(localStorage.getItem(PULSE_KEY) || '[]'); }
+  catch (e) { return []; }
+}
+function savePulses(arr) {
+  localStorage.setItem(PULSE_KEY, JSON.stringify(arr));
+}
+function loadBaseline() {
+  try {
+    var raw = localStorage.getItem(BASELINE_KEY);
+    if (!raw) return null;
+    var p = JSON.parse(raw);
+    return (p && p.scores && p.scores.bigFive) ? p : null;
+  } catch (e) { return null; }
+}
+function loadDraft() {
+  try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); }
+  catch (e) { return null; }
+}
+function saveDraft() {
+  localStorage.setItem(DRAFT_KEY, JSON.stringify({
+    week: state.week, phase: state.phase, items: state.items.map(function(x){return x.id;}),
+    responses: state.responses, pulseNumber: state.pulseNumber, ts: Date.now()
+  }));
+}
+function clearDraft() { localStorage.removeItem(DRAFT_KEY); }
+
+/* ============================================================
+   ITEM SELECTION (rotation logic)
+   ============================================================ */
+function pickItemForFacet(traitCode, facetName) {
+  // Pick first item in IPIP order matching trait+facet
+  for (var i = 0; i < window.__IPIP_ITEMS.length; i++) {
+    var it = window.__IPIP_ITEMS[i];
+    if (it.trait === traitCode && it.facet === facetName) return it;
+  }
+  return null;
+}
+
+function selectItemsForPulse(pulseNumber) {
+  // pulseNumber is 1-based
+  var selected = [];
+  if (pulseNumber <= 3) {
+    // LOADING phase: 2 items per trait, covering facets per spec
+    var weekFacets = {
+      1: { O:['Imagination','Artistic'], C:['Self-efficacy','Orderliness'], E:['Friendliness','Gregariousness'], A:['Trust','Morality'], N:['Anxiety','Anger'] },
+      2: { O:['Emotionality','Adventurousness'], C:['Dutifulness','Achievement-striving'], E:['Assertiveness','Activity'], A:['Altruism','Cooperation'], N:['Depression','Self-consciousness'] },
+      3: { O:['Intellect','Liberalism'], C:['Self-discipline','Cautiousness'], E:['Excitement-seeking','Cheerfulness'], A:['Modesty','Sympathy'], N:['Immoderation','Vulnerability'] }
+    };
+    var w = weekFacets[pulseNumber] || weekFacets[1];
+    ['O','C','E','A','N'].forEach(function(t){
+      w[t].forEach(function(f){
+        var it = pickItemForFacet(t, f);
+        if (it) selected.push(it);
+      });
+    });
+  } else {
+    // MAINTENANCE: 1 item per trait, cycling facets 1..6, one facet per week
+    // pulse 4 -> facet index 0, pulse 5 -> 1, ... pulse 9 -> 5, pulse 10 -> 0
+    var facetIdx = (pulseNumber - 4) % 6;
+    ['O','C','E','A','N'].forEach(function(t){
+      var facetName = FACET_ORDER[t][facetIdx];
+      var it = pickItemForFacet(t, facetName);
+      if (it) selected.push(it);
+    });
+  }
+  return selected;
+}
+
+/* ============================================================
+   SCORING (state snapshot)
+   ============================================================ */
+function scorePulse(responses) {
+  // returns { O, C, E, A, S(emotional stability) } 0-100 state scores
+  var traitGroups = { O: [], C: [], E: [], A: [], N: [] };
+  Object.keys(responses).forEach(function(key){
+    var m = key.match(/^ipip_(\d+)$/);
+    if (!m) return;
+    var id = parseInt(m[1], 10);
+    var item = window.__ITEMS_BY_ID[id];
+    if (!item) return;
+    var raw = responses[key];
+    var scored = item.reverse ? (6 - raw) : raw;
+    traitGroups[item.trait].push(scored);
+  });
+  var out = { O: null, C: null, E: null, A: null, S: null };
+  Object.keys(traitGroups).forEach(function(code){
+    var arr = traitGroups[code];
+    if (arr.length === 0) return;
+    var mean = arr.reduce(function(a,b){return a+b;},0) / arr.length;
+    var s = mean * 20; // 0-100
+    if (code === 'N') s = 100 - s; // invert to emotional stability
+    var key = (code === 'N') ? 'S' : code;
+    out[key] = Math.round(s * 10) / 10;
+  });
+  return out;
+}
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  var el = document.getElementById(id);
+  el.classList.add('active');
+  if (window.gsap) gsap.fromTo(el, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' });
+}
+function daysBetween(ts1, ts2) {
+  return Math.round(Math.abs(ts1 - ts2) / 86400000);
+}
+function weeksBetween(ts1, ts2) {
+  return Math.floor(daysBetween(ts1, ts2) / 7);
+}
+function fmtDate(iso) {
+  try { return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
+  catch (e) { return ''; }
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+  });
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function init() {
+  var pulses = loadPulses();
+  var draft = loadDraft();
+  var nextPulseNumber = pulses.length + 1;
+
+  // Determine week/phase
+  state.pulseNumber = nextPulseNumber;
+  if (nextPulseNumber <= 3) {
+    state.phase = 'loading';
+    state.week = nextPulseNumber;
+  } else {
+    state.phase = 'maintenance';
+    state.week = nextPulseNumber;
+  }
+
+  // Compute items for this pulse
+  state.items = selectItemsForPulse(nextPulseNumber);
+
+  // Check: already completed a pulse this week?
+  var now = Date.now();
+  var alreadyThisWeek = false;
+  if (pulses.length > 0) {
+    var lastPulse = pulses[pulses.length - 1];
+    var lastTs = new Date(lastPulse.timestamp).getTime();
+    if (daysBetween(now, lastTs) < 7) alreadyThisWeek = true;
+  }
+
+  renderWelcome(alreadyThisWeek, draft, pulses);
+}
+
+/* ============================================================
+   WELCOME SCREEN
+   ============================================================ */
+function renderWelcome(alreadyThisWeek, draft, pulses) {
+  var el = document.getElementById('screen-welcome');
+  var sub = document.getElementById('hdrSub');
+
+  var phaseLabel;
+  if (state.phase === 'loading') phaseLabel = 'Loading phase — Week ' + state.week + ' of 3';
+  else phaseLabel = 'Maintenance pulse';
+
+  sub.textContent = phaseLabel + ' · ' + state.items.length + ' items · ~2 minutes';
+
+  var html = '';
+
+  // Streak / pulse count
+  var weeksActive = 0;
+  if (pulses.length > 0) {
+    var firstTs = new Date(pulses[0].timestamp).getTime();
+    var lastTs = new Date(pulses[pulses.length - 1].timestamp).getTime();
+    weeksActive = weeksBetween(firstTs, lastTs) + 1;
+  }
+
+  // Meta block
+  html += '<div class="welcome-meta">';
+  if (pulses.length > 0) {
+    var lastPulse = pulses[pulses.length - 1];
+    var daysAgo = daysBetween(Date.now(), new Date(lastPulse.timestamp).getTime());
+    html += '<div class="welcome-meta-row"><span class="welcome-meta-label">Last pulse</span><span class="welcome-meta-val">' + (daysAgo === 0 ? 'Today' : daysAgo + ' day' + (daysAgo === 1 ? '' : 's') + ' ago') + '</span></div>';
+    html += '<div class="welcome-meta-row"><span class="welcome-meta-label">Pulses completed</span><span class="welcome-meta-val">' + pulses.length + '</span></div>';
+    if (weeksActive > 1) html += '<div class="welcome-meta-row"><span class="welcome-meta-label">Tracking span</span><span class="welcome-meta-val">' + weeksActive + ' weeks</span></div>';
+  } else {
+    html += '<div class="welcome-meta-row"><span class="welcome-meta-label">Status</span><span class="welcome-meta-val">First pulse — let us begin</span></div>';
+    html += '<div class="welcome-meta-row"><span class="welcome-meta-label">This week</span><span class="welcome-meta-val">10 items · 2 minutes</span></div>';
+  }
+  html += '</div>';
+
+  if (weeksActive > 1) {
+    html += '<div class="streak-note">This is your ' + (pulses.length + 1) + 'th pulse. You\'ve been tracking for ' + weeksActive + ' weeks.</div>';
+  }
+
+  if (alreadyThisWeek) {
+    html += '<div style="margin-top:24px;" class="complete-delta"><div class="delta-text">You\'ve already completed this week\'s pulse. Come back next week.</div></div>';
+    html += '<div class="btn-row" style="margin-top:24px;">';
+    html += '<a class="btn btn-primary" href="personality-dashboard-prototype.html">View Dashboard</a>';
+    html += '</div>';
+  } else {
+    html += '<div class="btn-row" style="margin-top:28px;">';
+    html += '<button class="btn btn-primary" id="btnBegin">Begin</button>';
+    html += '</div>';
+  }
+
+  // Resume banner
+  if (draft && draft.responses && Object.keys(draft.responses).length > 0 && !alreadyThisWeek) {
+    state.isResume = true;
+    html += '<div class="resume-banner" id="resumeBanner">';
+    html += '<div class="resume-text">You have a <strong>partial pulse</strong> in progress (' + Object.keys(draft.responses).length + ' of ' + state.items.length + ' answered).</div>';
+    html += '<div class="btn-row"><button class="btn btn-ghost" id="btnDiscard">Discard</button><button class="btn btn-primary" id="btnResume">Resume</button></div>';
+    html += '</div>';
+  }
+
+  el.innerHTML = html;
+
+  // Wire buttons
+  var beginBtn = document.getElementById('btnBegin');
+  if (beginBtn) beginBtn.addEventListener('click', function(){ startPulse(false); });
+  var resumeBtn = document.getElementById('btnResume');
+  if (resumeBtn) resumeBtn.addEventListener('click', function(){ startPulse(true); });
+  var discardBtn = document.getElementById('btnDiscard');
+  if (discardBtn) discardBtn.addEventListener('click', function(){
+    clearDraft();
+    state.isResume = false;
+    renderWelcome(false, null, loadPulses());
+  });
+}
+
+function startPulse(resume) {
+  if (resume) {
+    var draft = loadDraft();
+    if (draft && draft.responses) {
+      state.responses = draft.responses;
+      // restore item order from stored ids
+      if (draft.items && draft.items.length === state.items.length) {
+        state.items = draft.items.map(function(id){ return window.__ITEMS_BY_ID[id]; });
+      }
+    }
+  } else {
+    state.responses = {};
+    state.contexts = [];
+    state.emotions = [];
+    state.note = '';
+    state.focusedIndex = 0;
+  }
+  renderItems();
+  showScreen('screen-items');
+}
+
+/* ============================================================
+   ITEMS SCREEN
+   ============================================================ */
+function renderItems() {
+  var el = document.getElementById('screen-items');
+  var total = state.items.length;
+
+  var html = '';
+  html += '<div class="items-progress">';
+  html += '<span class="progress-count" id="progCount">Item 1 of ' + total + '</span>';
+  html += '<span class="progress-count" id="progAnswered" style="color:var(--ink-dim);">0 answered</span>';
+  html += '</div>';
+  html += '<div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>';
+
+  html += '<div id="itemsList">';
+  state.items.forEach(function(it, idx){
+    html += renderItemRow(it, idx);
+  });
+  html += '</div>';
+
+  html += '<div class="items-foot">';
+  html += '<button class="btn btn-primary" id="btnNextItems" disabled>Next</button>';
+  html += '</div>';
+
+  el.innerHTML = html;
+
+  // Wire likert buttons
+  state.items.forEach(function(it, idx){
+    LIKERT.forEach(function(lk){
+      var btnId = 'lk_' + it.id + '_' + lk.value;
+      var btn = document.getElementById(btnId);
+      if (btn) btn.addEventListener('click', function(){ setResponse(idx, lk.value); });
+    });
+  });
+
+  document.getElementById('btnNextItems').addEventListener('click', function(){
+    if (allAnswered()) goToContext();
+  });
+
+  // Restore existing responses (resume)
+  state.items.forEach(function(it, idx){
+    var key = 'ipip_' + it.id;
+    if (state.responses[key] !== undefined) markSelected(idx, state.responses[key]);
+  });
+
+  // Set initial focus to first unanswered
+  state.focusedIndex = firstUnanswered();
+  updateFocus();
+  updateProgress();
+
+  // Scroll first item into view
+  if (state.focusedIndex > 0) {
+    var row = document.getElementById('item_row_' + state.focusedIndex);
+    if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function renderItemRow(it, idx) {
+  var html = '<div class="item" id="item_row_' + idx + '">';
+  html += '<div class="item-facet">' + traitName(it.trait) + ' · ' + it.facet + (it.reverse ? ' (reverse)' : '') + '</div>';
+  html += '<div class="item-text"><span class="state-prefix">Right now, I</span> ' + esc(it.text.charAt(0).toLowerCase() + it.text.slice(1)) + '</div>';
+  html += '<div class="likert">';
+  LIKERT.forEach(function(lk){
+    var sel = (state.responses['ipip_' + it.id] === lk.value) ? ' selected' : '';
+    html += '<button class="likert-btn' + sel + '" id="lk_' + it.id + '_' + lk.value + '" data-item="' + idx + '" data-val="' + lk.value + '">';
+    html += '<span class="lk-num">' + lk.value + '</span>';
+    html += '<span class="lk-lab">' + lk.label + '</span>';
+    html += '</button>';
+  });
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
+function traitName(code) {
+  var map = { O: 'Openness', C: 'Conscientiousness', E: 'Extraversion', A: 'Agreeableness', N: 'Neuroticism' };
+  return map[code] || code;
+}
+
+function setResponse(idx, val) {
+  var it = state.items[idx];
+  state.responses['ipip_' + it.id] = val;
+  markSelected(idx, val);
+  // Auto-advance
+  state.focusedIndex = idx + 1;
+  if (state.focusedIndex >= state.items.length) state.focusedIndex = idx;
+  updateFocus();
+  updateProgress();
+  saveDraft();
+  // Auto-scroll to focused
+  var row = document.getElementById('item_row_' + state.focusedIndex);
+  if (row && idx !== state.focusedIndex) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function markSelected(idx, val) {
+  var it = state.items[idx];
+  LIKERT.forEach(function(lk){
+    var btn = document.getElementById('lk_' + it.id + '_' + lk.value);
+    if (btn) btn.classList.toggle('selected', lk.value === val);
+  });
+}
+
+function firstUnanswered() {
+  for (var i = 0; i < state.items.length; i++) {
+    if (state.responses['ipip_' + state.items[i].id] === undefined) return i;
+  }
+  return state.items.length - 1;
+}
+
+function allAnswered() {
+  for (var i = 0; i < state.items.length; i++) {
+    if (state.responses['ipip_' + state.items[i].id] === undefined) return false;
+  }
+  return true;
+}
+
+function updateFocus() {
+  document.querySelectorAll('.likert-btn').forEach(function(b){ b.classList.remove('focused'); });
+  var it = state.items[state.focusedIndex];
+  if (!it) return;
+  LIKERT.forEach(function(lk){
+    var btn = document.getElementById('lk_' + it.id + '_' + lk.value);
+    if (btn) btn.classList.add('focused');
+  });
+}
+
+function updateProgress() {
+  var total = state.items.length;
+  var answered = 0;
+  state.items.forEach(function(it){ if (state.responses['ipip_' + it.id] !== undefined) answered++; });
+  var pc = document.getElementById('progCount');
+  var pa = document.getElementById('progAnswered');
+  var pf = document.getElementById('progFill');
+  if (pc) pc.textContent = 'Item ' + (state.focusedIndex + 1) + ' of ' + total;
+  if (pa) pa.textContent = answered + ' answered';
+  if (pf) pf.style.width = (total === 0 ? 0 : Math.round((answered / total) * 100)) + '%';
+  var btn = document.getElementById('btnNextItems');
+  if (btn) btn.disabled = !allAnswered();
+}
+
+/* Keyboard: 1-5 to answer focused item, Enter to advance screen */
+document.addEventListener('keydown', function(e){
+  if (!document.getElementById('screen-items').classList.contains('active')) return;
+  // ignore if typing in a field
+  var tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+  if (tag === 'textarea' || tag === 'input') return;
+  if (e.key >= '1' && e.key <= '5') {
+    var val = parseInt(e.key, 10);
+    if (state.focusedIndex < state.items.length) {
+      e.preventDefault();
+      setResponse(state.focusedIndex, val);
+    }
+  } else if (e.key === 'Enter') {
+    if (allAnswered()) {
+      e.preventDefault();
+      goToContext();
+    }
+  } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+    e.preventDefault();
+    state.focusedIndex = Math.min(state.focusedIndex + 1, state.items.length - 1);
+    updateFocus(); updateProgress();
+    var row = document.getElementById('item_row_' + state.focusedIndex);
+    if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+    e.preventDefault();
+    state.focusedIndex = Math.max(state.focusedIndex - 1, 0);
+    updateFocus(); updateProgress();
+    var row2 = document.getElementById('item_row_' + state.focusedIndex);
+    if (row2) row2.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+});
+
+function goToContext() {
+  saveDraft();
+  renderContext();
+  showScreen('screen-context');
+}
+
+/* ============================================================
+   CONTEXT SCREEN
+   ============================================================ */
+function renderContext() {
+  var el = document.getElementById('screen-context');
+  var html = '';
+
+  html += '<div class="ctx-block">';
+  html += '<div class="section-label">Where are you right now?</div>';
+  html += '<div class="ctx-buttons">';
+  CONTEXTS.forEach(function(c){
+    var sel = (state.contexts.indexOf(c.id) !== -1) ? ' selected' : '';
+    html += '<button class="ctx-btn' + sel + '" id="ctx_' + c.id + '" data-id="' + c.id + '">';
+    html += '<span class="ctx-icon">' + c.icon + '</span>';
+    html += '<span>' + c.label + '</span>';
+    html += '</button>';
+  });
+  html += '</div>';
+  html += '</div>';
+
+  html += '<div class="ctx-block">';
+  html += '<div class="section-label">How are you feeling right now?</div>';
+  html += '<div class="emo-buttons">';
+  EMOTIONS.forEach(function(em){
+    var sel = (state.emotions.indexOf(em.id) !== -1) ? ' selected' : '';
+    html += '<button class="emo-btn' + sel + '" id="emo_' + em.id + '" data-id="' + em.id + '">';
+    html += '<span class="emo-dot" style="background:' + em.color + '"></span>';
+    html += '<span>' + em.label + '</span>';
+    html += '</button>';
+  });
+  html += '</div>';
+  html += '<div class="skip-hint">Pick all that apply, or skip</div>';
+  html += '</div>';
+
+  html += '<div class="ctx-block">';
+  html += '<div class="section-label">Anything on your mind?</div>';
+  html += '<textarea class="note-input" id="noteInput" placeholder="Optional — a word, a thought, anything..." maxlength="500">' + esc(state.note) + '</textarea>';
+  html += '<div class="skip-hint">Optional, can skip</div>';
+  html += '</div>';
+
+  html += '<div class="btn-row" style="margin-top:8px;">';
+  html += '<button class="btn btn-ghost" id="btnBackCtx">Back</button>';
+  html += '<button class="btn btn-primary" id="btnComplete">Complete Pulse</button>';
+  html += '</div>';
+
+  el.innerHTML = html;
+
+  // Wire context buttons (single-select toggle within the group)
+  CONTEXTS.forEach(function(c){
+    var btn = document.getElementById('ctx_' + c.id);
+    if (btn) btn.addEventListener('click', function(){ toggleContext(c.id); });
+  });
+  EMOTIONS.forEach(function(em){
+    var btn = document.getElementById('emo_' + em.id);
+    if (btn) btn.addEventListener('click', function(){ toggleEmotion(em.id); });
+  });
+
+  var noteEl = document.getElementById('noteInput');
+  if (noteEl) noteEl.addEventListener('input', function(){ state.note = noteEl.value; saveDraft(); });
+
+  document.getElementById('btnBackCtx').addEventListener('click', function(){
+    renderItems(); showScreen('screen-items');
+  });
+  document.getElementById('btnComplete').addEventListener('click', function(){ completePulse(); });
+}
+
+function toggleContext(id) {
+  var i = state.contexts.indexOf(id);
+  if (i === -1) state.contexts.push(id); else state.contexts.splice(i, 1);
+  var btn = document.getElementById('ctx_' + id);
+  if (btn) btn.classList.toggle('selected');
+  saveDraft();
+}
+function toggleEmotion(id) {
+  var i = state.emotions.indexOf(id);
+  if (i === -1) state.emotions.push(id); else state.emotions.splice(i, 1);
+  var btn = document.getElementById('emo_' + id);
+  if (btn) btn.classList.toggle('selected');
+  saveDraft();
+}
+
+/* ============================================================
+   COMPLETION: SAVE PULSE
+   ============================================================ */
+function completePulse() {
+  var pulses = loadPulses();
+  var newId = (pulses.length === 0) ? 1 : (pulses[pulses.length - 1].id + 1);
+
+  var responses = {};
+  state.items.forEach(function(it){
+    var key = 'ipip_' + it.id;
+    if (state.responses[key] !== undefined) responses[key] = state.responses[key];
+  });
+
+  var pulse = {
+    id: newId,
+    timestamp: new Date().toISOString(),
+    week: state.week,
+    phase: state.phase,
+    responses: responses,
+    contexts: state.contexts.slice(),
+    emotions: state.emotions.slice(),
+    note: state.note || ''
+  };
+
+  pulses.push(pulse);
+  savePulses(pulses);
+  clearDraft();
+
+  renderComplete(pulse, pulses);
+  showScreen('screen-complete');
+}
+
+/* ============================================================
+   COMPLETION SCREEN
+   ============================================================ */
+function renderComplete(pulse, pulses) {
+  var el = document.getElementById('screen-complete');
+  var sub = document.getElementById('hdrSub');
+
+  // header
+  document.getElementById('hdrLabel').textContent = 'Pulse Complete';
+  document.getElementById('hdrTitle').textContent = 'Pulse Complete';
+  sub.textContent = '';
+
+  var stateScores = scorePulse(pulse.responses);
+  var baseline = loadBaseline();
+  var prevPulse = (pulses.length >= 2) ? pulses[pulses.length - 2] : null;
+  var prevScores = prevPulse ? scorePulse(prevPulse.responses) : null;
+
+  var html = '';
+  html += '<div class="complete-points">Your trajectory now has ' + pulses.length + ' data point' + (pulses.length === 1 ? '' : 's') + '</div>';
+
+  // Radar comparison
+  if (baseline && baseline.scores && baseline.scores.bigFive) {
+    html += '<div class="complete-radar"><div id="radarWrap"></div></div>';
+    html += '<div class="radar-legend">';
+    html += '<span><span class="lg-sw" style="background:#d4a574;"></span>Baseline</span>';
+    html += '<span><span class="lg-sw" style="background:#9ec9b8;"></span>This pulse (state)</span>';
+    html += '</div>';
+  } else {
+    html += '<div class="complete-radar"><div id="radarWrap"></div></div>';
+    html += '<div class="radar-legend"><span><span class="lg-sw" style="background:#9ec9b8;"></span>This pulse (state)</span></div>';
+  }
+
+  // Delta message
+  html += '<div class="complete-delta" id="deltaBox"><div class="delta-text" id="deltaText"></div></div>';
+
+  // Buttons
+  html += '<div class="btn-row" style="margin-top:24px;">';
+  html += '<a class="btn btn-primary" href="personality-dashboard-prototype.html">View Dashboard</a>';
+  html += '<button class="btn btn-ghost" id="btnDone">Done</button>';
+  html += '</div>';
+
+  el.innerHTML = html;
+
+  // Draw radar
+  drawCompletionRadar(stateScores, baseline, prevScores);
+
+  // Delta text
+  var deltaEl = document.getElementById('deltaText');
+  if (prevScores) {
+    var lines = [];
+    TRAITS.forEach(function(t){
+      var cur = stateScores[t.short];
+      var prev = prevScores[t.short];
+      if (cur === null || prev === null) return;
+      var diff = cur - prev;
+      if (Math.abs(diff) < 0.5) return;
+      var dir = diff > 0 ? 'up' : 'down';
+      var sign = diff > 0 ? '+' : '';
+      lines.push('Your ' + t.name.toLowerCase() + ' is <span class="' + dir + '">' + dir + ' ' + Math.abs(Math.round(diff)) + ' points</span> from last week.');
+    });
+    if (lines.length === 0) {
+      deltaEl.innerHTML = 'Your state is <span class="flat">steady</span> compared to last week.';
+    } else {
+      deltaEl.innerHTML = lines.slice(0, 2).join('<br>');
+    }
+  } else {
+    deltaEl.innerHTML = 'This is your first pulse — next week you\'ll start seeing trends.';
+  }
+
+  var doneBtn = document.getElementById('btnDone');
+  if (doneBtn) doneBtn.addEventListener('click', function(){
+    // reset header + reload welcome
+    document.getElementById('hdrLabel').textContent = 'Weekly Pulse';
+    document.getElementById('hdrTitle').textContent = 'Weekly Pulse';
+    init();
+    showScreen('screen-welcome');
+  });
+}
+
+/* ============================================================
+   RADAR (D3)
+   ============================================================ */
+function drawCompletionRadar(stateScores, baseline, prevScores) {
+  var wrap = document.getElementById('radarWrap');
+  if (!wrap) return;
+
+  var data = [
+    { label: 'Openness', value: stateScores.O, key: 'openness' },
+    { label: 'Consc.', value: stateScores.C, key: 'conscientiousness' },
+    { label: 'Extra.', value: stateScores.E, key: 'extraversion' },
+    { label: 'Agree.', value: stateScores.A, key: 'agreeableness' },
+    { label: 'Stab.', value: stateScores.S, key: 'emotional_stability' }
+  ];
+
+  var baselineData = null;
+  if (baseline && baseline.scores && baseline.scores.bigFive) {
+    var bf = baseline.scores.bigFive;
+    baselineData = data.map(function(d){
+      return { label: d.label, value: bf[d.key] || 0 };
+    });
+  }
+
+  var size = 280;
+  var margin = 46;
+  var radius = (size - margin * 2) / 2;
+  var center = size / 2;
+
+  var svg = d3.select(wrap).append('svg')
+    .attr('width', size).attr('height', size)
+    .attr('viewBox', '0 0 ' + size + ' ' + size);
+  var g = svg.append('g').attr('transform', 'translate(' + center + ',' + center + ')');
+
+  var angle = d3.scaleLinear().domain([0, data.length]).range([0, 2 * Math.PI]);
+  var r = d3.scaleLinear().domain([0, 100]).range([0, radius]);
+
+  // Grid circles
+  [20, 40, 60, 80, 100].forEach(function(val){
+    g.append('circle')
+      .attr('r', r(val))
+      .attr('fill', 'none')
+      .attr('stroke', '#3a2f25')
+      .attr('stroke-width', 1)
+      .attr('stroke-dasharray', val === 100 ? 'none' : '2,3');
+  });
+
+  // Axes + labels
+  data.forEach(function(d, i){
+    var a = angle(i) - Math.PI / 2;
+    g.append('line')
+      .attr('x1', 0).attr('y1', 0)
+      .attr('x2', r(100) * Math.cos(a))
+      .attr('y2', r(100) * Math.sin(a))
+      .attr('stroke', '#3a2f25').attr('stroke-width', 1);
+    var lx = (r(100) + 18) * Math.cos(a);
+    var ly = (r(100) + 18) * Math.sin(a);
+    g.append('text')
+      .attr('x', lx).attr('y', ly)
+      .attr('text-anchor', 'middle').attr('dy', '0.35em')
+      .attr('fill', '#a89a87')
+      .attr('font-family', 'IBM Plex Mono, monospace')
+      .attr('font-size', '9px')
+      .attr('letter-spacing', '0.05em')
+      .text(d.label.toUpperCase());
+  });
+
+  // Baseline polygon (amber, dashed)
+  if (baselineData) {
+    var blLine = baselineData.map(function(d, i){
+      var a = angle(i) - Math.PI / 2;
+      return [r(d.value) * Math.cos(a), r(d.value) * Math.sin(a)];
+    });
+    blLine.push(blLine[0]);
+    g.append('path')
+      .attr('d', d3.line()(blLine))
+      .attr('fill', 'rgba(212,165,116,0.08)')
+      .attr('stroke', '#d4a574')
+      .attr('stroke-width', 1.5)
+      .attr('stroke-dasharray', '3,3');
+  }
+
+  // State polygon (signal green) — animate from 0
+  var stLine = data.map(function(d, i){
+    var a = angle(i) - Math.PI / 2;
+    return [r(d.value || 0) * Math.cos(a), r(d.value || 0) * Math.sin(a)];
+  });
+  stLine.push(stLine[0]);
+
+  var pathNode = g.append('path')
+    .attr('d', d3.line()([ [0,0],[0,0],[0,0],[0,0],[0,0],[0,0] ]))
+    .attr('fill', 'rgba(123,168,155,0.18)')
+    .attr('stroke', '#9ec9b8')
+    .attr('stroke-width', 2);
+
+  if (window.gsap) {
+    var startLine = data.map(function(){ return [0,0]; });
+    startLine.push([0,0]);
+    var obj = { t: 0 };
+    gsap.to(obj, { t: 1, duration: 0.9, ease: 'power2.out', onUpdate: function(){
+      var interp = stLine.map(function(pt, i){
+        return [ pt[0] * obj.t, pt[1] * obj.t ];
+      });
+      pathNode.attr('d', d3.line()(interp));
+    }});
+  } else {
+    pathNode.attr('d', d3.line()(stLine));
+  }
+
+  // State data points
+  data.forEach(function(d, i){
+    var a = angle(i) - Math.PI / 2;
+    g.append('circle')
+      .attr('cx', r(d.value || 0) * Math.cos(a))
+      .attr('cy', r(d.value || 0) * Math.sin(a))
+      .attr('r', 4)
+      .attr('fill', '#9ec9b8')
+      .attr('stroke', '#18120e')
+      .attr('stroke-width', 1.5);
+  });
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
