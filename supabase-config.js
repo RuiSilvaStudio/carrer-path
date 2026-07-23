@@ -4,7 +4,7 @@
    ============================================================ */
 
 const SUPABASE_URL = 'https://ncwtmagvjtpqnwroyuha.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jd3RtYWd2anRwcW53cm95dWhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3OTY5MzIsImV4cCI6MjEwMDM3MjkzMn0.6IgnKQZHy5_E1xQO1SAkZpbOJafAv9mfcGXWKg2cUQ4';
+const SUPABASE_ANON_KEY = 'sb_publishable_MtH4laIgqpmwU1a5XpWmPg_-eOrrSxE';
 
 // supabaseClient is created once the @supabase/supabase-js CDN loads.
 // We use a global variable + a ready promise so other scripts can await it.
