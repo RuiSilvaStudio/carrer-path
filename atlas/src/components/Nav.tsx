@@ -6,17 +6,20 @@ interface NavProps {
   onNavigate: (page: string) => void;
 }
 
+// Rui's user ID — only he sees the Cockpit link
+const RUI_USER_ID = '37d25257-5fcf-4318-b1b6-5bdb48288a71';
+
 const NAV_LINKS = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'baseline', label: 'Baseline' },
   { id: 'pulse', label: 'Pulse' },
-  { id: 'cockpit', label: 'Cockpit' },
   { id: 'docs', label: 'Docs' },
 ];
 
 export function Nav({ currentPage, onNavigate }: NavProps) {
   const { theme, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const isRui = user?.id === RUI_USER_ID;
 
   return (
     <nav style={{
@@ -42,6 +45,22 @@ export function Nav({ currentPage, onNavigate }: NavProps) {
           {link.label}
         </button>
       ))}
+
+      {/* Cockpit — only visible to Rui */}
+      {isRui && (
+        <a
+          href="/cockpit.html"
+          style={{
+            color: currentPage === 'cockpit' ? 'var(--color-accent)' : 'var(--color-text-dim)',
+            borderBottom: currentPage === 'cockpit' ? '1px solid var(--color-accent)' : '1px solid transparent',
+            paddingBottom: '2px', fontFamily: 'var(--font-mono)',
+            fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em',
+            textDecoration: 'none', transition: 'color 0.2s ease',
+          }}
+        >
+          Cockpit
+        </a>
+      )}
 
       <div style={{ flex: 1 }} />
 

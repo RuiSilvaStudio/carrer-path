@@ -128,6 +128,7 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
   const [hoveredIndex, setHoveredIndex] = useState<number>(-1);
   const [dragging, setDragging] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [smoothing, setSmoothing] = useState<'raw' | 'daily' | 'weekly'>('daily');
   const infoRef = useRef<HTMLSpanElement>(null);
 
   // Read CSS variables on mount / theme change
@@ -168,6 +169,43 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
     [],
   );
 
+  // ── Smoothing: aggregate data by day or week ──────────────────
+  const smoothedData = useMemo(() => {
+    if (smoothing === 'raw' || data.length <= 1) return data;
+
+    // Group by date (daily) or by week (weekly)
+    const groups: Record<string, TrajectoryPoint[]> = {};
+    data.forEach(d => {
+      let groupKey: string;
+      if (smoothing === 'daily') {
+        groupKey = d.date;
+      } else {
+        // Weekly: group by ISO week
+        const dt = new Date(d.date);
+        const week = Math.floor(dt.getTime() / (7 * 24 * 60 * 60 * 1000));
+        groupKey = 'w' + week;
+      }
+      if (!groups[groupKey]) groups[groupKey] = [];
+      groups[groupKey].push(d);
+    });
+
+    // Average each group
+    return Object.entries(groups).map(([_key, points]) => {
+      const avgScores: any = {};
+      for (const t of TRAITS) {
+        const vals = points.map(p => p.scores[t.key]).filter(v => v != null && !isNaN(v));
+        avgScores[t.key] = vals.length > 0 ? vals.reduce((a: number, b: number) => a + b, 0) / vals.length : null;
+      }
+      return {
+        type: points[0].type,
+        date: points[0].date,
+        scores: avgScores,
+        contexts: points.flatMap(p => p.contexts ?? []),
+        emotions: points.flatMap(p => p.emotions ?? []),
+      } as TrajectoryPoint;
+    });
+  }, [data, smoothing]);
+
   // ── Line generators (traits) ──────────────────────────────────
   const traitLineGens = useMemo(() => {
     const gens: Partial<Record<keyof BigFiveScores, d3.Line<TrajectoryPoint>>> = {};
@@ -199,19 +237,19 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
     const result: Partial<Record<keyof BigFiveScores, string>> = {};
     for (const t of TRAITS) {
       const gen = traitLineGens[t.key];
-      if (gen) result[t.key] = gen(data) ?? '';
+      if (gen) result[t.key] = gen(smoothedData) ?? '';
     }
     return result;
-  }, [traitLineGens, data]);
+  }, [traitLineGens, smoothedData]);
 
   const emotionPaths = useMemo(() => {
     const result: Partial<Record<string, string>> = {};
     for (const e of EMOTIONS) {
       const gen = emotionLineGens[e.key];
-      if (gen) result[e.key] = gen(data) ?? '';
+      if (gen) result[e.key] = gen(smoothedData) ?? '';
     }
     return result;
-  }, [emotionLineGens, data]);
+  }, [emotionLineGens, smoothedData]);
 
   // ── Y-axis ticks ─────────────────────────────────────────────
   const yTicks = useMemo(() => yScale.ticks(5), [yScale]);
@@ -384,8 +422,8 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
     };
   }, [dragging, pctToIndex, onScrub, setScrubIndex]);
 
-  const scrubberPct = currentScrubIndex >= 0 && data.length > 1
-    ? (currentScrubIndex / (data.length - 1)) * 100
+  const scrubberPct = currentScrubIndex >= 0 && smoothedData.length > 1
+    ? (currentScrubIndex / (smoothedData.length - 1)) * 100
     : 0;
 
   // ── Active series for current mode ───────────────────────────
@@ -481,25 +519,51 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
         </div>
 
         {/* ── Traits / Emotions pill toggle ────────────────── */}
-        <div style={{
-          display: 'flex', gap: 0,
-          border: '1px solid var(--color-border)', borderRadius: '3px', overflow: 'hidden',
-        }}>
-          {(['traits', 'emotions'] as const).map(mode => (
-            <button
-              key={mode}
-              onClick={() => setTrajectoryMode(mode)}
-              style={{
-                background: trajectoryMode === mode ? 'var(--color-accent)' : 'var(--color-surface)',
-                color: trajectoryMode === mode ? 'var(--color-bg)' : 'var(--color-text-dim)',
-                border: 'none', fontFamily: 'var(--font-mono)', fontSize: '10px',
-                letterSpacing: '0.08em', textTransform: 'uppercase', padding: '5px 12px',
-                cursor: 'pointer', transition: 'all 0.2s',
-              }}
-            >
-              {mode === 'traits' ? 'Traits' : 'Emotions'}
-            </button>
-          ))}
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{
+            display: 'flex', gap: 0,
+            border: '1px solid var(--color-border)', borderRadius: '3px', overflow: 'hidden',
+          }}>
+            {(['traits', 'emotions'] as const).map(mode => (
+              <button
+                key={mode}
+                onClick={() => setTrajectoryMode(mode)}
+                style={{
+                  background: trajectoryMode === mode ? 'var(--color-accent)' : 'var(--color-surface)',
+                  color: trajectoryMode === mode ? 'var(--color-bg)' : 'var(--color-text-dim)',
+                  border: 'none', fontFamily: 'var(--font-mono)', fontSize: '10px',
+                  letterSpacing: '0.08em', textTransform: 'uppercase', padding: '5px 12px',
+                  cursor: 'pointer', transition: 'all 0.2s',
+                }}
+              >
+                {mode === 'traits' ? 'Traits' : 'Emotions'}
+              </button>
+            ))}
+          </div>
+
+          {/* ── Smoothing toggle ─────────────────────────────── */}
+          {data.length > 10 && (
+            <div style={{
+              display: 'flex', gap: 0,
+              border: '1px solid var(--color-border)', borderRadius: '3px', overflow: 'hidden',
+            }}>
+              {(['raw', 'daily', 'weekly'] as const).map(sm => (
+                <button
+                  key={sm}
+                  onClick={() => setSmoothing(sm)}
+                  style={{
+                    background: smoothing === sm ? 'var(--color-accent)' : 'var(--color-surface)',
+                    color: smoothing === sm ? 'var(--color-bg)' : 'var(--color-text-dim)',
+                    border: 'none', fontFamily: 'var(--font-mono)', fontSize: '10px',
+                    letterSpacing: '0.08em', textTransform: 'uppercase', padding: '5px 10px',
+                    cursor: 'pointer', transition: 'all 0.2s',
+                  }}
+                >
+                  {sm === 'raw' ? 'Raw' : sm === 'daily' ? 'Daily Avg' : 'Weekly Avg'}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -547,14 +611,14 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
         {/* ── Phase background bands ──────────────────────── */}
         <g>
           {phases.map((phase, i) => {
-            const hasDays = data.every(d => d.day !== undefined);
+            const hasDays = smoothedData.every(d => d.day !== undefined);
             let x1: number, x2: number;
             if (hasDays && data.length > 10) {
               // Use day-based positioning via xScale
-              const start = data.find(d => (d.day ?? 0) >= phase.startDay);
-              const end = data.find(d => (d.day ?? 0) >= phase.endDay);
-              x1 = start ? xScale(data.indexOf(start)) : 0;
-              x2 = end ? xScale(data.indexOf(end)) : INNER_W;
+              const start = smoothedData.find(d => (d.day ?? 0) >= phase.startDay);
+              const end = smoothedData.find(d => (d.day ?? 0) >= phase.endDay);
+              x1 = start ? xScale(smoothedData.indexOf(start)) : 0;
+              x2 = end ? xScale(smoothedData.indexOf(end)) : INNER_W;
             } else {
               // For baseline / few points: single phase spans full width
               x1 = 0;
@@ -605,7 +669,7 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
               textAnchor="middle"
               fill="var(--color-text-dim)" fontSize={10} fontFamily="var(--font-mono)"
             >
-              {data[tick] ? fmtDate(new Date(data[tick].date)) : ''}
+              {smoothedData[tick] ? fmtDate(new Date(smoothedData[tick].date)) : ''}
             </text>
           );
         })}
@@ -650,8 +714,8 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
         </g>
 
         {/* ── Point markers ─────────────────────────────────── */}
-        {data.map((pt, idx) => {
-          const x = xScale(data.indexOf(pt)) + MARGIN.left;
+        {smoothedData.map((pt, idx) => {
+          const x = xScale(smoothedData.indexOf(pt)) + MARGIN.left;
           const isBaseline = pt.type === 'baseline';
           return (
             <g
@@ -809,7 +873,7 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
         borderRadius: '3px', overflow: 'hidden', border: '1px solid var(--color-border)',
       }}>
         {phases.map((phase, i) => {
-          const hasDays = data.every(d => d.day !== undefined);
+          const hasDays = smoothedData.every(d => d.day !== undefined);
           let widthPct: number;
           if (hasDays && data.length > 10) {
             widthPct = ((phase.endDay - phase.startDay + 1) / (DEMO_PHASES[DEMO_PHASES.length - 1].endDay + 1)) * 100;
@@ -818,7 +882,7 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
           }
           const isActive = currentScrubIndex >= 0 && (() => {
             if (hasDays && data.length > 10) {
-              const day = data[currentScrubIndex]?.day ?? 0;
+              const day = smoothedData[currentScrubIndex]?.day ?? 0;
               return day >= phase.startDay && day <= phase.endDay;
             }
             return i === 0;
@@ -847,7 +911,7 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
       </div>
 
       {/* ── Scrubber (below phase bar) ──────────────────────── */}
-      {data.length > 1 && (
+      {smoothedData.length > 1 && (
         <div style={{ marginTop: '12px' }}>
           {/* Scrubber header */}
           <div style={{
@@ -865,7 +929,7 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
               fontVariationSettings: '"opsz" 20', fontWeight: 500,
             }}>
               {currentScrubIndex >= 0
-                ? `${fmtDateLong(new Date(data[currentScrubIndex].date))} · ${data[currentScrubIndex].type}`
+                ? `${fmtDateLong(new Date(smoothedData[currentScrubIndex].date))} · ${smoothedData[currentScrubIndex].type}`
                 : '—'}
             </span>
           </div>
@@ -893,8 +957,8 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
               transition: 'width 0.1s ease',
             }} />
             {/* Date marks */}
-            {data.map((d, i) => {
-              const pct = data.length === 1 ? 50 : (i / (data.length - 1)) * 100;
+            {smoothedData.map((d, i) => {
+              const pct = smoothedData.length === 1 ? 50 : (i / (smoothedData.length - 1)) * 100;
               const isBaseline = d.type === 'baseline';
               return (
                 <div

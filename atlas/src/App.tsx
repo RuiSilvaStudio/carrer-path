@@ -6,7 +6,6 @@ import { DashboardProvider } from './state/DashboardContext';
 import { DashboardPage } from './pages/DashboardPage';
 import { BaselinePage } from './pages/BaselinePage';
 import { PulsePage } from './pages/PulsePage';
-import { CockpitPage } from './pages/CockpitPage';
 import { DocsPage } from './pages/DocsPage';
 
 export default function App() {
@@ -39,7 +38,6 @@ export default function App() {
         {page === 'dashboard' && <DashboardPage onNavigate={setPage} />}
         {page === 'baseline' && <BaselinePage onNavigate={setPage} />}
         {page === 'pulse' && <PulsePage onNavigate={setPage} />}
-        {page === 'cockpit' && <CockpitPage onNavigate={setPage} />}
       </div>
     </DashboardProvider>
   );
