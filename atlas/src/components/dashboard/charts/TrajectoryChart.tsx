@@ -88,13 +88,7 @@ const LINE_OPACITY = 0.85;
 const BASELINE_DIAMOND = 4;
 const PULSE_RADIUS = 3;
 
-// ── Tooltip state ────────────────────────────────────────────────
-interface TooltipState {
-  x: number;
-  y: number;
-  index: number;
-  point: TrajectoryPoint;
-}
+// ── Tooltip state removed — no hover tooltips, click-only interaction ──
 
 // ── Phase info (derived from data) ───────────────────────────────
 function derivePhases(data: TrajectoryPoint[]): Phase[] {
@@ -127,30 +121,28 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
   const [visibleEmotions, setVisibleEmotions] = useState<Set<string>>(
     new Set(EMOTIONS.map(e => e.key)),
   );
-  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number>(-1);
-  const [dragging, setDragging] = useState(false);
-  const [infoOpen, setInfoOpen] = useState(false);
-  const infoRef = useRef<HTMLSpanElement>(null);
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; index: number; point: TrajectoryPoint } | null>(null);
 
-  // Read CSS variables on mount / theme change
+  // Read CSS variables on mount + observe theme changes
   useEffect(() => {
-    const c: Record<string, string> = {};
-    for (const t of TRAITS) c[t.key] = cssVar(t.cssVar);
-    setColors(c);
-  }, []);
-
-  // Close info popover on outside click
-  useEffect(() => {
-    if (!infoOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (infoRef.current && !infoRef.current.contains(e.target as Node)) {
-        setInfoOpen(false);
-      }
+    const readColors = () => {
+      const c: Record<string, string> = {};
+      for (const t of TRAITS) c[t.key] = cssVar(t.cssVar);
+      setColors(c);
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [infoOpen]);
+    readColors();
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.type === 'attributes' && m.attributeName === 'data-theme') {
+          readColors();
+          break;
+        }
+      }
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
 
   // ── Determine active series (traits or emotions) ──────────────
   const isEmotions = trajectoryMode === 'emotions';
@@ -277,7 +269,7 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
     [data, xScale],
   );
 
-  // ── Mouse handlers (tooltip + click-to-scrub) ─────────────────
+  // ── Mouse handlers (click-to-scrub + hover tooltip) ──────────
   const handleMouseMove = useCallback(
     (evt: React.MouseEvent<SVGSVGElement>) => {
       const svg = evt.currentTarget;
@@ -289,7 +281,7 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
       const idx = findNearestIndex(mx);
       if (idx >= 0) {
         const pt = data[idx];
-        const ptIdx = data.indexOf(pt); const px = xScale(ptIdx);
+        const px = xScale(idx);
         setTooltip({ x: px + MARGIN.left, y: my + MARGIN.top, index: idx, point: pt });
         setHoveredIndex(idx);
       }
@@ -348,7 +340,7 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   }, []);
 
-  // ── Scrubber drag handlers ───────────────────────────────────
+  // ── Scrubber click handler (no drag — click checkpoints only) ──
   const scrubberTrackRef = useRef<HTMLDivElement>(null);
 
   const pctToIndex = useCallback((pct: number): number => {
@@ -364,26 +356,6 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
     setScrubIndex(idx);
   }, [pctToIndex, setScrubIndex]);
 
-  // Document-level drag listeners
-  useEffect(() => {
-    if (!dragging) return;
-    const handleMove = (e: MouseEvent) => {
-      const track = scrubberTrackRef.current;
-      if (!track) return;
-      const rect = track.getBoundingClientRect();
-      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      const idx = pctToIndex(pct);
-      setScrubIndex(idx);
-    };
-    const handleUp = () => setDragging(false);
-    document.addEventListener('mousemove', handleMove);
-    document.addEventListener('mouseup', handleUp);
-    return () => {
-      document.removeEventListener('mousemove', handleMove);
-      document.removeEventListener('mouseup', handleUp);
-    };
-  }, [dragging, pctToIndex, setScrubIndex]);
-
   const scrubberPct = currentScrubIndex >= 0 && data.length > 1
     ? (currentScrubIndex / (data.length - 1)) * 100
     : 0;
@@ -393,27 +365,6 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
 
   // ── Get color for a series key ────────────────────────────────
   // (restored for future use — currently using inline maps)
-
-  // ── Tooltip content: all trait scores or all emotion scores ──
-  const tooltipEntries = useMemo(() => {
-    if (!tooltip) return [];
-    const fmtVal = (v: number | null | undefined): string => {
-      if (v == null) return '—';
-      return typeof v === 'number' && !isNaN(v) ? v.toFixed(0) : '—';
-    };
-    if (isEmotions) {
-      return EMOTIONS.map(e => ({
-        short: e.short,
-        color: e.color,
-        value: fmtVal(tooltip.point.emotionScores?.[e.key]),
-      }));
-    }
-    return TRAITS.map(t => ({
-      short: t.short,
-      color: colors[t.key] || cssVar(t.cssVar) || '#888',
-      value: fmtVal(tooltip.point.scores[t.key] as number | null | undefined),
-    }));
-  }, [tooltip, isEmotions, colors]);
 
   return (
     <div ref={containerRef} className="trajectory-chart-container w-full">
@@ -428,59 +379,6 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
             letterSpacing: '0.12em', color: 'var(--color-text-dim)',
           }}>
             {isEmotions ? 'Emotion Trajectory' : 'Trait Trajectory'}
-          </span>
-          <span ref={infoRef} style={{ position: 'relative', display: 'inline-flex' }}>
-            <button
-              onClick={() => setInfoOpen(o => !o)}
-              aria-label="Chart info"
-              style={{
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: '16px', height: '16px', borderRadius: '50%',
-                border: '1px solid var(--color-border)', background: 'var(--color-surface)',
-                color: 'var(--color-text-dim)', fontSize: '10px', cursor: 'pointer',
-                padding: 0, lineHeight: 1, fontFamily: 'var(--font-sans)',
-                transition: 'border-color 0.2s, color 0.2s',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.borderColor = 'var(--color-accent)';
-                e.currentTarget.style.color = 'var(--color-accent)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.borderColor = 'var(--color-border)';
-                e.currentTarget.style.color = 'var(--color-text-dim)';
-              }}
-            >
-              ⓘ
-            </button>
-            {infoOpen && (
-              <span style={{
-                position: 'absolute', bottom: 'calc(100% + 8px)', left: '50%',
-                transform: 'translateX(-50%)',
-                background: 'var(--color-surface-elevated)', border: '1px solid var(--color-border)',
-                borderRadius: '6px', padding: '10px 14px', maxWidth: '260px',
-                fontFamily: 'var(--font-sans)', fontSize: '11px', lineHeight: 1.5,
-                color: 'var(--color-text-muted)', boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
-                zIndex: 100, whiteSpace: 'normal', textAlign: 'left',
-              }}>
-                <p style={{ marginBottom: '6px' }}>
-                  {isEmotions
-                    ? 'Lines show daily emotion scores across the timeline. Each emotion is tracked independently.'
-                    : 'Lines show Big Five trait scores over time. Colors map to traits (see legend).'}
-                </p>
-                <p style={{ marginBottom: '6px' }}>
-                  The scrubber below lets you move through time. Phase bands mark natural periods.
-                </p>
-                <p style={{ color: 'var(--color-warning)' }}>
-                  This is descriptive, not a clinical assessment. It shows how traits move over time.
-                </p>
-                <span style={{
-                  position: 'absolute', top: '100%', left: '50%',
-                  transform: 'translateX(-50%)', width: 0, height: 0,
-                  borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
-                  borderTop: '6px solid var(--color-border)',
-                }} />
-              </span>
-            )}
           </span>
         </div>
 
@@ -562,18 +460,19 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
         })}
       </div>
 
-      {/* ── Chart SVG ───────────────────────────────────────── */}
-      <svg
-        ref={svgRef}
-        width="100%"
-        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        onClick={handleClick}
-        role="img"
-        aria-label={isEmotions ? 'Emotion trajectory chart' : 'Big Five personality trajectory chart'}
-        style={{ display: 'block' }}
-      >
+      {/* ── Chart + tooltip overlay ─────────────────────────── */}
+      <div style={{ position: 'relative' }}>
+        <svg
+          ref={svgRef}
+          width="100%"
+          viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          onClick={handleClick}
+          role="img"
+          aria-label={isEmotions ? 'Emotion trajectory chart' : 'Big Five personality trajectory chart'}
+          style={{ display: 'block' }}
+        >
         {/* ── Phase background bands ──────────────────────── */}
         <g>
           {phases.map((phase, i) => {
@@ -777,79 +676,61 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
           />
         )}
 
-        {/* ── Tooltip ──────────────────────────────────────── */}
-        {tooltip && (
-          (() => {
-            const tooltipX = tooltip.x > WIDTH / 2
-              ? tooltip.x - 232  // flip to left
-              : tooltip.x + 12;  // default right
-            // Read computed CSS variable values (foreignObject doesn't inherit :root vars in all browsers)
-            const cs = getComputedStyle(document.documentElement);
-            const bg = cs.getPropertyValue('--color-surface').trim() || '#1f1813';
-            const border = cs.getPropertyValue('--color-border').trim() || '#3a2e24';
-            const text = cs.getPropertyValue('--color-text').trim() || '#e8e0d4';
-            const textDim = cs.getPropertyValue('--color-text-dim').trim() || '#9a8f80';
-            const fontSans = cs.getPropertyValue('--font-sans').trim() || 'IBM Plex Sans, sans-serif';
-            const fontMono = cs.getPropertyValue('--font-mono').trim() || 'IBM Plex Mono, monospace';
-            return (
-              <foreignObject
-                x={Math.max(4, Math.min(tooltipX, WIDTH - 220))}
-                y={Math.max(tooltip.y - 50, 4)}
-                width={220}
-                height={isEmotions ? 200 : 140}
-                style={{ pointerEvents: 'none', overflow: 'visible' }}
-              >
-                <div
-                  style={{
-                    maxWidth: 220,
-                    overflow: 'hidden',
-                    background: bg,
-                    border: `1px solid ${border}`,
-                    borderRadius: 8,
-                    padding: '10px 12px',
-                    fontFamily: fontSans,
-                    fontSize: 12,
-                    color: text,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    lineHeight: 1.5,
-                  }}
-                >
-                  <div style={{
-                    fontWeight: 600, marginBottom: 6,
-                    fontFamily: fontSans, fontSize: 13,
-                    color: text,
-                  }}>
-                    {fmtDateLong(new Date(tooltip.point.date))}
-                  </div>
-                  <div style={{
-                    fontFamily: fontMono, fontSize: 9,
-                    color: textDim, textTransform: 'uppercase',
-                    letterSpacing: '0.08em', marginBottom: 8,
-                  }}>
-                    {tooltip.point.type === 'baseline' ? 'Baseline' : 'Pulse'}
-                  </div>
-                  <div style={{
-                    display: 'flex', flexWrap: 'wrap', gap: '4px 12px',
-                  }}>
-                    {tooltipEntries.map((entry, i) => (
-                      <div
-                        key={i}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 4,
-                        }}
-                      >
-                        <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: entry.color, flexShrink: 0 }} />
-                        <span style={{ fontFamily: fontMono, fontSize: 10, color: textDim }}>{entry.short}</span>
-                        <span style={{ fontFamily: fontMono, fontSize: 11, fontWeight: 600, color: text }}>{entry.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </foreignObject>
-            );
-          })()
-        )}
-      </svg>
+        {/* ── Tooltip (SVG-native, auto-positioned) ─────────── */}
+        {tooltip && (() => {
+          const TOOLTIP_W = 220;
+          const flip = tooltip.x > WIDTH / 2;
+          const tx = flip ? tooltip.x - TOOLTIP_W - 12 : tooltip.x + 12;
+          const ty = Math.max(tooltip.y - 60, MARGIN.top);
+          const entries = isEmotions
+            ? EMOTIONS.map(e => ({
+                short: e.short, color: e.color,
+                value: tooltip.point.emotionScores?.[e.key] ?? null,
+              }))
+            : TRAITS.map(t => ({
+                short: t.short, color: colors[t.key] || cssVar(t.cssVar) || '#888',
+                value: tooltip.point.scores[t.key] ?? null,
+              }));
+          const fmtVal = (v: number | null) => v == null ? '—' : v.toFixed(0);
+          return (
+            <g transform={`translate(${Math.max(4, Math.min(tx, WIDTH - TOOLTIP_W - 4))},${ty})`}>
+              <rect
+                width={TOOLTIP_W}
+                height={entries.length > 5 ? 200 : 120}
+                rx={8}
+                fill="var(--color-surface)"
+                stroke="var(--color-border)"
+                strokeWidth={1}
+                opacity={0.95}
+              />
+              <text x={12} y={22} fill="var(--color-text)" fontSize={13} fontWeight={600} fontFamily="var(--font-sans)">
+                {fmtDateLong(new Date(tooltip.point.date))}
+              </text>
+              <text x={12} y={38} fill="var(--color-text-dim)" fontSize={9} fontFamily="var(--font-mono)" letterSpacing="0.08em">
+                {tooltip.point.type === 'baseline' ? 'BASELINE' : 'PULSE'}
+              </text>
+              {entries.map((entry, i) => {
+                const row = Math.floor(i / 3);
+                const col = i % 3;
+                const ex = 12 + col * 70;
+                const ey = 58 + row * 24;
+                return (
+                  <g key={i} transform={`translate(${ex},${ey})`}>
+                    <rect width={8} height={8} rx={2} fill={entry.color} />
+                    <text x={12} y={8} fill="var(--color-text-dim)" fontSize={10} fontFamily="var(--font-mono)">
+                      {entry.short}
+                    </text>
+                    <text x={38} y={8} fill="var(--color-text)" fontSize={11} fontWeight={600} fontFamily="var(--font-mono)">
+                      {fmtVal(entry.value as number | null)}
+                    </text>
+                  </g>
+                );
+              })}
+            </g>
+          );
+        })()}
+        </svg>
+      </div>
 
       {/* ── Phase bar (below chart, above scrubber) ──────────── */}
       <div style={{
@@ -906,7 +787,7 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
               fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase',
               letterSpacing: '0.12em', color: 'var(--color-text-dim)',
             }}>
-              Timeline · Drag to scrub
+              Timeline · Click a point
             </span>
             <span style={{
               fontFamily: 'var(--font-serif)', fontSize: '13px', color: 'var(--color-accent)',
@@ -940,47 +821,37 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
               transform: 'translateY(-50%)',
               transition: 'width 0.1s ease',
             }} />
-            {/* Date marks */}
+            {/* Date marks — clickable checkpoints */}
             {data.map((d, i) => {
               const pct = data.length === 1 ? 50 : (i / (data.length - 1)) * 100;
               const isBaseline = d.type === 'baseline';
+              const isActive = i === currentScrubIndex;
               return (
-                <div
+                <button
                   key={`mark-${i}`}
+                  onClick={(e) => { e.stopPropagation(); setScrubIndex(i); }}
+                  aria-label={`Go to ${d.date}`}
                   style={{
                     position: 'absolute', top: '50%', left: `${pct}%`,
-                    width: isBaseline ? 2 : 1,
-                    height: isBaseline ? 14 : 8,
-                    background: isBaseline ? 'var(--color-accent)' : 'var(--color-text-dim)',
-                    transform: 'translateY(-50%)',
-                    opacity: 0.6,
+                    width: isBaseline ? 12 : 10,
+                    height: isBaseline ? 12 : 10,
+                    borderRadius: '50%',
+                    background: isActive
+                      ? 'var(--color-accent)'
+                      : isBaseline ? 'var(--color-accent)' : 'var(--color-surface)',
+                    border: `2px solid ${isActive ? 'var(--color-accent-bright)' : isBaseline ? 'var(--color-accent)' : 'var(--color-text-dim)'}`,
+                    transform: 'translate(-50%, -50%)',
+                    opacity: isActive ? 1 : 0.7,
+                    cursor: 'pointer',
+                    padding: 0,
+                    transition: 'transform 0.15s ease, opacity 0.15s ease, background 0.15s ease',
+                    boxShadow: isActive ? '0 0 8px rgba(212,165,116,0.5)' : 'none',
                   }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1.3)'; e.currentTarget.style.opacity = '1'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translate(-50%, -50%)'; e.currentTarget.style.opacity = isActive ? '1' : '0.7'; }}
                 />
               );
             })}
-            {/* Handle */}
-            {currentScrubIndex >= 0 && (
-              <div
-                onMouseDown={(e) => { e.preventDefault(); setDragging(true); }}
-                style={{
-                  position: 'absolute', top: '50%', left: `${scrubberPct}%`,
-                  width: '14px', height: '24px',
-                  background: 'var(--color-accent)', borderRadius: '3px',
-                  transform: 'translate(-50%, -50%)',
-                  cursor: dragging ? 'grabbing' : 'grab',
-                  boxShadow: '0 0 10px rgba(212,165,116,0.5), 0 2px 6px rgba(0,0,0,0.3)',
-                  border: '2px solid var(--color-accent-bright)',
-                  zIndex: 10,
-                  transition: 'left 0.1s ease',
-                }}
-              >
-                <div style={{
-                  position: 'absolute', top: '50%', left: '50%',
-                  width: 2, height: 10, background: 'var(--color-bg)',
-                  borderRadius: 1, transform: 'translate(-50%, -50%)',
-                }} />
-              </div>
-            )}
           </div>
         </div>
       )}

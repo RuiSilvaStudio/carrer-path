@@ -48,11 +48,24 @@ export default function RadarChart({ scores, size = 400, animate = true }: Radar
     emotional_stability: '',
   });
 
-  // Read CSS variables on mount / theme change
+  // Read CSS variables on mount + observe theme changes
   useGSAP(() => {
-    const c: Record<string, string> = {};
-    for (const t of TRAITS) c[t.key] = cssVar(t.cssVar);
-    setColors(c as Record<keyof BigFiveScores, string>);
+    const readColors = () => {
+      const c: Record<string, string> = {};
+      for (const t of TRAITS) c[t.key] = cssVar(t.cssVar);
+      setColors(c as Record<keyof BigFiveScores, string>);
+    };
+    readColors();
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.type === 'attributes' && m.attributeName === 'data-theme') {
+          readColors();
+          break;
+        }
+      }
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
   }, { scope: containerRef });
 
   // ── Geometry ──────────────────────────────────────────────────
@@ -122,10 +135,19 @@ export default function RadarChart({ scores, size = 400, animate = true }: Radar
   // Accent fill color (translucent)
   const accentColor = colors.openness || cssVar('--color-accent') || '#d4a574';
 
-  // ── GSAP entrance ─────────────────────────────────────────────
+  // ── GSAP entrance — animate only on mount or when scores materially change ──
   const animateRef = animate;
+  const prevScoresRef = useRef<BigFiveScores>(scores);
   useGSAP(() => {
     if (!animateRef) return;
+
+    // Only re-animate if scores actually changed by a meaningful amount
+    const prev = prevScoresRef.current;
+    const changed = (Object.keys(scores) as (keyof BigFiveScores)[]).some(
+      k => Math.abs((scores[k] as number) - (prev[k] as number)) > 0.5,
+    );
+    if (!changed && shapeRef.current) return;
+    prevScoresRef.current = scores;
 
     // Shape: scale from 0.5 → 1 around center
     if (shapeRef.current) {

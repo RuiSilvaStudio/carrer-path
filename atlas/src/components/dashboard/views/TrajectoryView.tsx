@@ -10,7 +10,6 @@ import { SD3Bars } from '../charts/SD3Bars';
 import { ICARScore } from '../charts/ICARScore';
 import { Card } from '../../ui/Card';
 import { InsightStrip } from '../../ui/InsightStrip';
-import { InfoTooltip } from '../../ui/InfoTooltip';
 
 interface TrajectoryViewProps {
   demoData: DemoPulse[];
@@ -223,8 +222,7 @@ export function TrajectoryView({ demoData, baseline, pulses }: TrajectoryViewPro
       <div ref={containerRef}>
         {/* Row 1: Full-width trajectory chart */}
         <div style={{ marginBottom: '20px' }} data-anim>
-          <Card label="01 · Trajectory" title="Trait Trajectory — Demo"
-            infoText="Lines show Big Five trait scores over time. Phase bands mark natural periods. The scrubber lets you move through time. This is descriptive, not a clinical assessment.">
+          <Card label="01 · Trajectory" title="Trait Trajectory — Demo">
             <PhaseBar trajectory={smoothedTrajectory} currentIndex={scrubIndex} />
             <TrajectoryChart
               data={smoothedTrajectory}
@@ -318,11 +316,10 @@ export function TrajectoryView({ demoData, baseline, pulses }: TrajectoryViewPro
               padding: '12px 16px', background: 'var(--color-surface-elevated)',
               borderRadius: '8px',
             }}>
-              <InfoTooltip text="A pulse is a short weekly check-in that re-measures your Big Five traits. Over time, pulses build a trajectory showing how your personality moves." />
               <span style={{
                 fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-text-muted)',
               }}>
-                What is a pulse?
+                A pulse is a short weekly check-in that re-measures your Big Five traits. Over time, pulses build a trajectory showing how your personality moves.
               </span>
             </div>
           </Card>
@@ -362,8 +359,7 @@ export function TrajectoryView({ demoData, baseline, pulses }: TrajectoryViewPro
     <div ref={containerRef}>
       {/* Row 1: Full-width trajectory chart */}
       <div style={{ marginBottom: '20px' }} data-anim>
-        <Card label="01 · Trajectory" title="Trait Trajectory"
-          infoText="Lines show Big Five trait scores over time. The scrubber lets you move through time. This is descriptive, not a clinical assessment.">
+        <Card label="01 · Trajectory" title="Trait Trajectory">
           <PhaseBar trajectory={baselineTrajectory} currentIndex={scrubIndex} />
           <TrajectoryChart
             data={baselineTrajectory}
