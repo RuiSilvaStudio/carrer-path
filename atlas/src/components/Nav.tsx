@@ -48,18 +48,19 @@ export function Nav({ currentPage, onNavigate }: NavProps) {
 
       {/* Cockpit — only visible to Rui */}
       {isRui && (
-        <a
-          href="/cockpit.html"
+        <button
+          onClick={() => onNavigate('cockpit')}
           style={{
+            background: 'none', border: 'none', cursor: 'pointer',
             color: currentPage === 'cockpit' ? 'var(--color-accent)' : 'var(--color-text-dim)',
             borderBottom: currentPage === 'cockpit' ? '1px solid var(--color-accent)' : '1px solid transparent',
             paddingBottom: '2px', fontFamily: 'var(--font-mono)',
             fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em',
-            textDecoration: 'none', transition: 'color 0.2s ease',
+            transition: 'color 0.2s ease',
           }}
         >
           Cockpit
-        </a>
+        </button>
       )}
 
       <div style={{ flex: 1 }} />

@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rui Silva — Career Cockpit</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
+<style>
+  :root {
+    --bg: #f8f6f2;
+    --surface: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-faint: #8a8a8a;
+    --accent: #b85c38;
+    --accent-soft: #f4e6df;
+    --line: #e8e4dc;
+    --good: #2d6a4f;
+    --good-soft: #d8f3dc;
+    --warn: #b7791f;
+    --warn-soft: #fef3c7;
+    --bad: #9b2226;
+    --bad-soft: #fde8e8;
+    --sidebar-w: 200px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Source Sans Pro", sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.5;
+    display: flex; flex-direction: column; min-height: 100vh; -webkit-font-smoothing: antialiased;
+  }
+  .cockpit-wrap { display: flex; flex: 1; min-height: 0; }
+  /* SIDEBAR */
+  .sidebar {
+    width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--line);
+    display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; position: sticky; top: 0;
+  }
+  .sidebar-header { padding: 20px 16px 12px; border-bottom: 1px solid var(--line); }
+  .sidebar-header .name { font-family: Georgia, serif; font-size: 17px; font-weight: 600; }
+  .sidebar-header .role { font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+  .sidebar-header .stat { font-size: 11px; color: var(--accent); margin-top: 6px; font-weight: 600; }
+  .sidebar-nav { flex: 1; padding: 12px 8px; display: flex; flex-direction: column; gap: 2px; }
+  .sidebar-nav button {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    border: none; background: transparent; color: var(--ink-soft);
+    font-size: 14px; cursor: pointer; border-radius: 8px; text-align: left;
+    transition: all 0.12s; font-family: inherit; width: 100%;
+  }
+  .sidebar-nav button:hover { background: var(--bg); }
+  .sidebar-nav button.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .sidebar-nav .icon { font-size: 18px; width: 24px; text-align: center; }
+  .sidebar-footer { padding: 12px 16px; border-top: 1px solid var(--line); font-size: 10px; color: var(--ink-faint); }
+
+  /* MAIN */
+  .main { flex: 1; padding: 24px 32px 80px; max-width: 960px; overflow-x: hidden; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-title { font-family: Georgia, serif; font-size: 24px; font-weight: 600; margin-bottom: 4px; }
+  .page-sub { font-size: 13px; color: var(--ink-faint); margin-bottom: 24px; }
+
+  /* CARDS */
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin-bottom: 12px; }
+  .card h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); margin-bottom: 8px; font-weight: 600; }
+
+  /* PILLS */
+  .pill { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; margin-right: 3px; }
+  .pill-good { background: var(--good-soft); color: var(--good); }
+  .pill-warn { background: var(--warn-soft); color: var(--warn); }
+  .pill-bad { background: var(--bad-soft); color: var(--bad); }
+  .pill-accent { background: var(--accent-soft); color: var(--accent); }
+  .pill-commute { background: #d7ede0; color: #1f7a4d; }
+  .pill-commute-far { background: #fbe3e3; color: #b23b3b; }
+
+  /* STATS */
+  .stat-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+  .stat-box { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; min-width: 110px; }
+  .stat-box .num { font-size: 26px; font-weight: 600; color: var(--accent); font-family: Georgia, serif; }
+  .stat-box .lab { font-size: 11px; color: var(--ink-faint); }
+
+  /* ALERTS */
+  .alert { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; }
+  .alert-good { background: var(--good-soft); border-left: 3px solid var(--good); color: #1b4332; }
+  .alert-warn { background: var(--warn-soft); border-left: 3px solid var(--warn); color: #74420a; }
+  .alert-accent { background: var(--accent-soft); border-left: 3px solid var(--accent); color: #7a3a20; }
+
+  /* QUOTE */
+  .quote { border-left: 3px solid var(--accent); padding: 8px 14px; background: var(--bg); border-radius: 0 6px 6px 0; font-size: 14px; color: var(--ink-soft); }
+
+  /* TABLES */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 6px 8px; border-bottom: 2px solid var(--line); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); }
+  td { padding: 8px; border-bottom: 1px solid var(--line); color: var(--ink-soft); vertical-align: top; }
+  td strong { color: var(--ink); }
+
+  /* COMPANY CARDS */
+  .company-card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 10px; cursor: pointer; transition: border-color 0.12s; }
+  .company-card:hover { border-color: var(--accent); }
+  .company-card .cc-head { display: flex; justify-content: space-between; align-items: start; margin-bottom: 6px; }
+  .company-card .cc-name { font-weight: 600; font-size: 15px; }
+  .company-card .cc-loc { font-size: 12px; color: var(--ink-faint); }
+  .company-card .cc-why { font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
+  .company-card .cc-notes { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 12px; color: var(--ink-soft); display: none; }
+  .company-card.expanded .cc-notes { display: block; }
+  .company-card textarea { width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 8px; font-size: 12px; font-family: inherit; resize: vertical; min-height: 50px; }
+
+  /* KANBAN */
+  .kanban { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 12px; min-height: 400px; }
+  .kanban-col { flex: 1; min-width: 200px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+  .kanban-col h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); margin-bottom: 8px; font-weight: 600; }
+  .kanban-item { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px; margin-bottom: 6px; cursor: grab; font-size: 12px; }
+  .kanban-item:hover { border-color: var(--accent); }
+  .kanban-item .ki-co { font-weight: 600; }
+  .kanban-item .ki-role { color: var(--ink-faint); font-size: 11px; }
+  .kanban-item.dragging { opacity: 0.5; }
+  .kanban-col.drag-over { border-color: var(--accent); background: var(--accent-soft); }
+
+  /* FORM */
+  .form-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .form-row input, .form-row select, .form-row textarea {
+    flex: 1; min-width: 120px; padding: 8px 10px; border: 1px solid var(--line);
+    border-radius: 6px; font-size: 13px; font-family: inherit; background: var(--surface);
+  }
+  .btn { padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: 600; }
+  .btn-accent { background: var(--accent); color: white; }
+  .btn-accent:hover { opacity: 0.9; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+  /* CONTACT CARDS */
+  .contact-card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 8px; }
+  .contact-card .ct-head { display: flex; justify-content: space-between; align-items: start; }
+  .contact-card .ct-name { font-weight: 600; font-size: 14px; }
+  .contact-card .ct-co { font-size: 12px; color: var(--ink-faint); }
+  .contact-card .ct-notes { font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
+  .contact-card .ct-actions { margin-top: 8px; display: flex; gap: 6px; }
+
+  /* INTERVIEW CARDS */
+  .iv-card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+  .iv-card .iv-q { padding: 14px 18px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+  .iv-card .iv-q .iv-arrow { color: var(--ink-faint); }
+  .iv-card .iv-a { display: none; padding: 0 18px 14px; font-size: 13px; color: var(--ink-soft); border-top: 1px solid var(--line); }
+  .iv-card.expanded .iv-a { display: block; padding-top: 12px; }
+
+  /* CHECKLIST */
+  .checklist-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; border-bottom: 1px solid var(--line); }
+  .checklist-item:last-child { border-bottom: none; }
+  .checklist-item input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+  .checklist-item.done span { text-decoration: line-through; color: var(--ink-faint); }
+
+  /* FILTER CHIPS */
+  .chip { font-size: 11px; padding: 4px 10px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); cursor: pointer; font-family: inherit; transition: all 0.12s; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: var(--surface); border-radius: 12px; padding: 24px; max-width: 460px; width: 100%; max-height: 80vh; overflow-y: auto; }
+  .modal h3 { font-family: Georgia, serif; font-size: 19px; margin-bottom: 4px; }
+  .modal .modal-loc { font-size: 12px; color: var(--ink-faint); margin-bottom: 12px; }
+  .modal .modal-desc { font-size: 14px; color: var(--ink-soft); margin-bottom: 14px; }
+  .modal .modal-bullets { list-style: none; margin-bottom: 14px; }
+  .modal .modal-bullets li { padding: 4px 0; font-size: 13px; color: var(--ink-soft); border-bottom: 1px solid var(--line); }
+  .modal .modal-bullets li:last-child { border-bottom: none; }
+  .modal .modal-close { background: var(--bg); border: 1px solid var(--line); padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: inherit; }
+  .modal .modal-link { display: inline-block; background: var(--accent); color: white; padding: 6px 14px; border-radius: 6px; font-size: 12px; text-decoration: none; margin-right: 8px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .cockpit-wrap { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: relative; flex-direction: row; overflow-x: auto; }
+    .sidebar-header, .sidebar-footer { display: none; }
+    .sidebar-nav { flex-direction: row; }
+    .main { padding: 16px; }
+  }
+
+  /* ===== Atlas Navigation ===== */
+  .atlas-nav {
+    background: #15100c;
+    border-bottom: 1px solid #3a2f25;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 40px;
+    gap: 0;
+    position: relative;
+    z-index: 100;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    flex-shrink: 0;
+  }
+  .atlas-nav-link {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #756657;
+    text-decoration: none;
+    padding: 8px 14px;
+    transition: color 0.2s ease;
+    border-bottom: 2px solid transparent;
+    line-height: 36px;
+  }
+  .atlas-nav-link:hover { color: #e8dfd3; }
+  .atlas-nav-link.active {
+    color: #d4a574;
+    border-bottom-color: #d4a574;
+  }
+  @media (max-width: 640px) {
+    .atlas-nav { padding: 0 16px; gap: 0; overflow-x: auto; }
+    .atlas-nav-link { padding: 8px 10px; }
+  }
+</style>
+</head>
+<body>
+<nav class="atlas-nav">
+  <a href="personality-dashboard-prototype.html" class="atlas-nav-link">Dashboard</a>
+  <a href="baseline-assessment.html" class="atlas-nav-link">Baseline</a>
+  <a href="weekly-pulse.html" class="atlas-nav-link">Pulse</a>
+  <a href="cockpit.html" class="atlas-nav-link active">Cockpit</a>
+</nav>
+
+<div class="cockpit-wrap">
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="name">Rui Silva</div>
+    <div class="role">Ex-SVP, FARFETCH</div>
+    <div class="stat" id="sidebarStat">0 active</div>
+  </div>
+  <nav class="sidebar-nav" id="nav">
+    <button class="active" data-page="today"><span class="icon">●</span> Today</button>
+    <button data-page="companies"><span class="icon">▣</span> Companies</button>
+    <button data-page="pipeline"><span class="icon">▤</span> Pipeline</button>
+    <button data-page="network"><span class="icon">◉</span> Network</button>
+    <button data-page="kb"><span class="icon">◆</span> Knowledge Base</button>
+    <button data-page="interview"><span class="icon">◈</span> Interview Prep</button>
+  </nav>
+  <div class="sidebar-footer">Career Cockpit · Private · Local</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- PAGE: TODAY -->
+<div class="page active" id="page-today">
+  <div class="page-title">Today</div>
+  <div class="page-sub">Your command center — what to focus on right now</div>
+
+  <div class="alert alert-warn">
+    <strong>Situation:</strong> Unemployed since Feb 2024 (~16 months). Benefits exhausted. Wife also unemployed. 7yo son. Income is the priority.
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-box"><div class="num" id="statApp">0</div><div class="lab">Active applications</div></div>
+    <div class="stat-box"><div class="num" id="statOut">0</div><div class="lab">Outreach sent</div></div>
+    <div class="stat-box"><div class="num" id="statInt">0</div><div class="lab">Interviews</div></div>
+    <div class="stat-box"><div class="num" id="statContacts">4</div><div class="lab">Network contacts</div></div>
+  </div>
+
+  <h3 style="font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-faint);margin-bottom:10px;">Next 3 actions</h3>
+  <div id="todayActions">
+    <div class="checklist-item"><input type="checkbox" id="act1"><span>Message André Eiras (Sword Health) — message drafted in Network page</span></div>
+    <div class="checklist-item"><input type="checkbox" id="act2"><span>Message Michelle Rowe (Fashion Nova) — former direct report</span></div>
+    <div class="checklist-item"><input type="checkbox" id="act3"><span>Export LinkedIn connections → tier A/B (see Network page)</span></div>
+    <div class="checklist-item"><input type="checkbox" id="act4"><span>Fix LinkedIn headline to: Senior Creative Operations Leader | Ex-SVP, FARFETCH | Content Supply Chain & Automation</span></div>
+    <div class="checklist-item"><input type="checkbox" id="act5"><span>Add Henry Stewart DAM video to LinkedIn Featured section</span></div>
+    <div class="checklist-item"><input type="checkbox" id="act6"><span>Set LinkedIn Industry to "Marketing and Advertising"</span></div>
+    <div class="checklist-item"><input type="checkbox" id="act7"><span>Pin 5 skills: Creative Operations, Content Supply Chain, AI/ML Content Automation, Global Operations Leadership, Lean Six Sigma</span></div>
+  </div>
+
+  <h3 style="font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-faint);margin:24px 0 10px;">Headline & positioning</h3>
+  <div class="quote"><strong>Senior Creative Operations Leader | Ex-SVP, FARFETCH | Content Supply Chain & Automation</strong></div>
+
+  <h3 style="font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-faint);margin:24px 0 10px;">Key numbers (consistent everywhere)</h3>
+  <div class="stat-row">
+    <div class="stat-box"><div class="num">600+</div><div class="lab">Full-time team</div></div>
+    <div class="stat-box"><div class="num">€40M+</div><div class="lab">Annual P&L</div></div>
+    <div class="stat-box"><div class="num">10%→1%</div><div class="lab">Op spend % of sales</div></div>
+    <div class="stat-box"><div class="num">3.6M</div><div class="lab">Digital assets/yr</div></div>
+    <div class="stat-box"><div class="num">€60→€30</div><div class="lab">Cost-per-item</div></div>
+    <div class="stat-box"><div class="num">80%</div><div class="lab">Categorisation automated</div></div>
+  </div>
+</div> <!-- end page today -->
+
+<!-- PAGE: COMPANIES -->
+<div class="page" id="page-companies">
+  <div class="page-title">Companies</div>
+  <div class="page-sub">Watchlist — click any card to expand & add notes</div>
+  <div class="alert alert-accent" style="margin-bottom:16px;">
+    <strong>Weekly auto-scan:</strong> Mondays 9am — scanner checks all career pages. Results delivered here.
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+    <div id="filterChips" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+    <select id="sortBy" onchange="renderCompanies()" style="margin-left:auto;padding:6px 10px;border:1px solid var(--line);border-radius:6px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--ink-soft);">
+      <option value="default">Sort: Default</option>
+      <option value="name">Name A→Z</option>
+      <option value="tier">Tier (A first)</option>
+      <option value="status">Status (active first)</option>
+    </select>
+  </div>
+  <div id="companyList"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<!-- PAGE: PIPELINE -->
+<div class="page" id="page-pipeline">
+  <div class="page-title">Pipeline</div>
+  <div class="page-sub">Drag cards across columns. Your data saves automatically.</div>
+  <div class="kanban" id="kanban">
+    <div class="kanban-col" data-col="target"><h4>🎯 Target</h4><div class="kanban-items"></div></div>
+    <div class="kanban-col" data-col="researching"><h4>🔍 Researching</h4><div class="kanban-items"></div></div>
+    <div class="kanban-col" data-col="outreach"><h4>✉️ Outreach</h4><div class="kanban-items"></div></div>
+    <div class="kanban-col" data-col="conversation"><h4>📞 Conversation</h4><div class="kanban-items"></div></div>
+    <div class="kanban-col" data-col="interview"><h4>🎯 Interview</h4><div class="kanban-items"></div></div>
+    <div class="kanban-col" data-col="offer"><h4>✅ Offer</h4><div class="kanban-items"></div></div>
+  </div>
+  <h3 style="font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-faint);margin:20px 0 8px;">Add to pipeline</h3>
+  <div class="form-row">
+    <input type="text" id="newPipeCo" placeholder="Company">
+    <input type="text" id="newPipeRole" placeholder="Role">
+    <select id="newPipeCol"><option value="target">Target</option><option value="researching">Researching</option><option value="outreach">Outreach</option><option value="conversation">Conversation</option><option value="interview">Interview</option><option value="offer">Offer</option></select>
+    <button class="btn btn-accent btn-sm" onclick="addPipeline()">Add</button>
+  </div>
+</div>
+
+<!-- PAGE: NETWORK -->
+<div class="page" id="page-network">
+  <div class="page-title">Network</div>
+  <div class="page-sub">Market intelligence contacts — NOT "networking"</div>
+  <div class="alert alert-good" style="margin-bottom:16px;">
+    <strong>The reframe:</strong> These are "market intelligence conversations" and "reconnecting." Never call it networking. Warm referrals convert at 46% vs 3% for cold — 15x difference.
+  </div>
+  <div class="card" style="border-left:3px solid var(--accent);">
+    <h3>General objectives (every conversation)</h3>
+    <div style="font-size:13px;color:var(--ink-soft);line-height:1.7;">
+      1. <strong>Como vês o mercado?</strong> — sectores activos vs parados<br>
+      2. <strong>Algum novo player?</strong> — deixa que eles tragam a própria empresa à baila, não perguntes diretamente<br>
+      3. <strong>Tens usado headhunters? Alguma boa referência para mim?</strong> — pedido de referral a recruiter, não pedido de emprego
+    </div>
+  </div>
+  <div id="contactList"></div>
+  <h3 style="font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-faint);margin:20px 0 8px;">Add contact</h3>
+  <div class="form-row">
+    <input type="text" id="newContactName" placeholder="Name">
+    <input type="text" id="newContactCo" placeholder="Company">
+    <input type="text" id="newContactRel" placeholder="Relationship">
+    <select id="newContactTier"><option value="A">Tier A</option><option value="B">Tier B</option><option value="C">Tier C</option></select>
+    <button class="btn btn-accent btn-sm" onclick="addContact()">Add</button>
+  </div>
+</div>
+
+<!-- PAGE: KNOWLEDGE BASE -->
+<div class="page" id="page-kb">
+  <div class="page-title">Knowledge Base</div>
+  <div class="page-sub">Your profile, positioning, and leadership profile</div>
+  <div id="kbContent"></div>
+</div>
+
+<!-- PAGE: INTERVIEW PREP -->
+<div class="page" id="page-interview">
+  <div class="page-title">Interview Prep</div>
+  <div class="page-sub">Ready-to-use answers — click to expand</div>
+  <div id="interviewList"></div>
+</div>
+
+</div> <!-- end main -->
+</div> <!-- end cockpit-wrap -->
+
+<script>
+// NAVIGATION
+const navButtons = document.querySelectorAll('#nav button');
+const pages = document.querySelectorAll('.page');
+navButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    navButtons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    pages.forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + btn.dataset.page).classList.add('active');
+  });
+});
+
+// CHECKLIST PERSISTENCE
+document.querySelectorAll('.checklist-item input[type="checkbox"]').forEach((cb, i) => {
+  const key = 'act_' + i;
+  cb.checked = localStorage.getItem(key) === 'true';
+  cb.addEventListener('change', () => {
+    localStorage.setItem(key, cb.checked);
+    cb.parentElement.classList.toggle('done', cb.checked);
+  });
+  if (cb.checked) cb.parentElement.classList.add('done');
+});
+
+// EXPAND CARDS
+function toggleCard(el) {
+  el.classList.toggle('expanded');
+}
+
+// ============ DATA ============
+const COMPANIES = [
+  {name:"Sword Health",loc:"Porto",tier:"A",commute:"54 km / 43 min",why:"Healthtech unicorn ($2B+). Multi-market content needs. Your AI + localization fit. Warm contact: André Eiras.",url:"https://jobs.lever.co/swordhealth",status:"Monitor"},
+  {name:"Salsa Jeans",loc:"Famalicão",tier:"A",commute:"29 km / 26 min",why:"Fashion e-commerce (Sonae Group). FARFETCH creative ops transfers directly. 29 km — inside the 50 km filter.",url:"https://www.salsajeens.com/careers",status:"Monitor"},
+  {name:"Parfois",loc:"Porto HQ",tier:"A",commute:"54 km / 43 min",why:"Fast-fashion accessories, 800+ stores globally. Video Content Creator + Head of Buying posted.",url:"https://www.parfois.com/careers",status:"Monitor"},
+  {name:"Threads Styling",loc:"Porto hub",tier:"A",commute:"54 km / 43 min",why:"⚠️ PIVOTING — acquired by Chalhoub Group (Dubai) 2022, now 'New chapter coming soon,' no open roles, careers page dead. Not actively hiring. Removed from active outreach.",url:"https://www.threadsstyling.com",status:"Inactive"},
+  {name:"Blip",loc:"Porto",tier:"A",commute:"54 km / 43 min",why:"⚠️ SOFTWARE HOUSE — betting/gaming tech (Entain). Their 'ops' = DevOps/platform/sales ops, NOT creative ops. Only 2 roles open (General Interest + Social Specialist), neither creative. Kept for monitoring in case a brand/content role appears, but low priority.",url:"https://boards.greenhouse.io/blip",status:"Low priority"},
+  {name:"Unbabel",loc:"Lisbon",tier:"A",commute:"366 km / ~4h (remote only)",why:"AI-powered language ops — DIRECT overlap with your ML translation 12-language work. Acquired by TransPerfect 2025 — careers page broken (redirects to dead staging subdomain). Contact via LinkedIn or unbabel.com directly.",url:"https://unbabel.com",status:"Monitor"},
+  {name:"Talkdesk",loc:"Lisbon / Porto",tier:"A",commute:"Porto 54 km · Lisbon 366 km",why:"⚠️ SOFTWARE HOUSE — CX/contact-center SaaS. Their 'ops' = RevOps/customer success/DevOps, NOT creative ops. Kept for monitoring in case a brand/marketing ops role appears, but low priority.",url:"https://careers.talkdesk.com/",status:"Low priority"},
+  {name:"Synthesia",loc:"London, remote EU",tier:"A",why:"AI video — your Virtual Model playbook. No creative ops role right now but cold-message founders.",url:"https://jobs.ashbyhq.com/synthesia",status:"No fit now"},
+  {name:"LaLaLand",loc:"Amsterdam",tier:"A",why:"⚠️ ACQUIRED by Browzwear (Jul 2025) — no longer independent. Your exact Virtual Model playbook is now inside Browzwear. Consider approaching Browzwear directly instead.",url:"https://www.browzwear.com",status:"Acquired"},
+  {name:"Prozis",loc:"Maia (Porto)",tier:"A",commute:"48 km / 37 min",why:"⭐ D2C powerhouse — careers page explicitly lists in-house 'photo, video, 3D' content production. Vertically integrated (concept→manufacturing→content). 23 open positions. ~1,000 employees, ~€190M revenue.",url:"https://careers.prozis.com/en",status:"Hiring"},
+  {name:"Sonae MC (Continente)",loc:"Maia (Porto)",tier:"A",commute:"48 km / 37 min",why:"Portugal's largest food retailer. Has a 'Digital & Content Marketing Director' function — established content ops. Massive private-label content needs. ~50,000 employees (Sonae Group).",url:"https://www.sonae.pt/en/people/opportunities-of-career/",status:"Monitor"},
+  {name:"Worten",loc:"Maia (Porto)",tier:"A",commute:"48 km / 37 min",why:"Leading PT electronics marketplace (6M+ monthly visits, 3,000+ sellers). Retail media content production: 'studio-quality 360° photography, infographics, A+ content.' Marketplace content supply chain = direct Farfetch transfer.",url:"https://www.worten.pt/",status:"Monitor"},
+  {name:"Sonae SR (MO/Sport Zone/Zippy)",loc:"Maia (Porto)",tier:"A",commute:"48 km / 37 min",why:"Multi-brand fashion portfolio (MO, Zippy, Sport Zone, Dott) — 500+ stores. E-commerce content production across multiple brands. Direct parallel to Farfetch's multi-brand model. ~€2B+ turnover.",url:"https://www.sonae.pt/en/people/opportunities-of-career/",status:"Monitor"},
+  {name:"Inditex (Zara etc.)",loc:"Lisbon creative hub",tier:"A",commute:"366 km / ~4h (remote/Lisbon only)",why:"World's largest fashion retailer. Confirmed Lisbon creative hub — 'photography and digital production' teams. One of the largest in-house creative content operations globally. 165,000+ employees, €35B+ revenue.",url:"https://talent.inditexpeople.com/en/creatives/",status:"Monitor"},
+  {name:"H&M Group",loc:"Lisbon",tier:"A",commute:"366 km / ~4h (remote/Lisbon only)",why:"Documented 'Creative Production Brand team' with PT hiring. One of the largest in-house creative production operations in fashion. ~120,000 employees, €20B+ revenue.",url:"https://career.hm.com/search/",status:"Monitor"},
+  {name:"Vista Alegre Atlantis",loc:"Ílhavo (Aveiro)",tier:"A",commute:"128 km / 93 min — beyond 50 km filter",why:"200-year heritage brand, global designer collaborations. Premium product content at scale. Actually near Aveiro (~1.5h south), NOT near Porto despite the 'Porto region' label.",url:"https://www.vistaalegre.com/en/careers",status:"Monitor"},
+  {name:"Chalhoub Group",loc:"Dubai / London (Porto hub uncertain)",tier:"A",why:"⭐ WARM CONTACT — you worked with them via Level Shoes at FARFETCH. Largest luxury retail operator in Middle East (~14,000 employees, $3B+ revenue, 750+ stores). Building in-house creative studio 'OneStudio' + AI campaigns. Threads Styling (acquired 2022) in 'new chapter' relaunch under new CEO Mo White. No senior creative ops role posted, but warm contact makes direct conversation viable. Key contacts: Patrick Chalhoub (Exec Chairman, led FARFETCH JV), David Vercruysse (President, oversees Level Shoes), Mo White (Threads CEO).",url:"https://careers.chalhoubgroup.com/jobs",status:"Warm contact"},
+  {name:"The Fabricant",loc:"Amsterdam",tier:"A",why:"3D digital fashion production. Contact founder Kerry Murphy.",url:"https://www.thefabricant.ai",status:"Reach out"},
+  {name:"Bigthinx",loc:"Milan",tier:"A",why:"AI fashion tech. Contact founders directly.",url:"https://www.bigthinx.com",status:"Reach out"},
+  {name:"Vinted",loc:"Berlin/Vilnius",tier:"A",why:"Marketplace creative ops. Posted 'Creative Ops Mgr' before.",url:"https://careers.vinted.com",status:"Monitor"},
+  {name:"Back Market",loc:"Paris",tier:"A",why:"Refurbished electronics marketplace, Series D.",url:"https://www.backmarket.com/careers",status:"Monitor"},
+  {name:"Adobe",loc:"San Jose / remote",tier:"B",why:"Director Content Operations, Content Supply Chain roles.",url:"https://www.adobe.com/careers.html",status:"Monitor"},
+  {name:"Netflix",loc:"EMEA",tier:"B",why:"VP Regional Head of Creative Production EMEA.",url:"https://jobs.netflix.com",status:"Monitor"},
+  {name:"Nike",loc:"remote / EU",tier:"B",why:"Senior Director Creative Operations.",url:"https://jobs.nike.com",status:"Monitor"},
+  {name:"Shopify",loc:"remote",tier:"B",why:"Creative Operations Lead.",url:"https://www.shopify.com/careers",status:"Monitor"},
+];
+
+const CONTACTS = [
+  {name:"Luis Teixeira",co:"FARFETCH",rel:"Former boss — already aware you're job-searching",tier:"A",status:"Aware",goals:"1. Como vês o mercado — sectores activos vs parados\n2. Algum novo player a aparecer?\n3. Tens usado headhunters? Alguma boa referência para mim?\n\nDeixar que ele traga a FARFETCH se houver algo — não perguntar diretamente.",msg:"Olá Luis,\n\nGostava de dar seguimento à nossa conversa — estou agora à procura ativa. Agradecia 20 minutos para ouvir o que tens visto no mercado e se há alguém que me aconselhes a contactar. Sem pedido específico para além disso.\n\nRui"},
+  {name:"Andrew Robb",co:"FARFETCH",rel:"Former boss — already aware you're job-searching",tier:"A",status:"Aware",goals:"1. Como vês o mercado — sectores activos vs parados\n2. Algum novo player a aparecer?\n3. Tens usado headhunters? Alguma boa referência para mim?\n\nDeixar que ele traga a FARFETCH se houver algo — não perguntar diretamente.",msg:"Hi Andrew,\n\nFollowing up on our earlier conversation — I'm actively looking now. I'd appreciate 20 minutes to hear what you're seeing in the market and who you'd suggest I talk to.\n\nRui"},
+  {name:"André Eiras",co:"Sword Health",rel:"Porto Business School (Exec MBA cohort)",tier:"A",status:"Ready",goals:"1. Como vês o mercado — sectores activos vs parados\n2. Algum novo player a aparecer (especialmente em healthtech/PT)?\n3. Tens usado headhunters? Alguma boa referência para mim?\n\nSe ele trouxer a Sword à baila, óptimo. Se não, não forçar.",msg:"Olá André,\n\nEstivemos juntos no mesmo curso de Executive MBA na Porto Business School — acabei por sair a meio porque a FARFETCH precisou de mim a tempo inteiro novamente.\n\nEstou agora a explorar o meu próximo passo após 15 anos na FARFETCH (últimamente como SVP Creative Operations), e agradecia a tua perspetiva sobre o mercado. Terias 20 minutos para uma conversa nas próximas semanas?\n\nRui"},
+  {name:"Michelle Rowe",co:"Fashion Nova",rel:"Former direct report at FARFETCH",tier:"A",status:"Ready",goals:"1. Como foi a transição FARFETCH→Fashion Nova — processo, entrevistas, o que recruiters perguntaram\n2. Como vês o mercado agora — sectores activos vs parados\n3. Tens usado headhunters? Alguma boa referência para mim?\n\nEla já passou pela transição que tu estás a fazer — a experiência dela é a inteligência mais útil que podes recolher.",msg:"Hi Michelle,\n\nIt's been a while since FARFETCH. I'm now exploring my next move after leaving in 2024, and I'd value hearing how you found the transition to Fashion Nova — what the interview process was like, what recruiters screened for, and whether there's anyone you'd suggest I talk to.\n\nWould you have 20 minutes for a catch-up?\n\nRui"},
+  {name:"Patrick Chalhoub",co:"Chalhoub Group",rel:"Executive Chairman — led FARFETCH JV 2018, knew Rui via Level Shoes. WARMEST CONTACT.",tier:"A",status:"Warm contact",goals:"1. Como vês o mercado — especialmente Middle East / luxury retail\n2. Que direcção para creative ops no Grupo (OneStudio, digital)?\n3. Tens usado headhunters? Alguma boa referência para mim?\n\nSe ele trouxer Threads/OneStudio à baila, óptimo. A pergunta sobre a direcção do Grupo é natural — trabalham juntos há anos.",msg:"Hi Patrick,\n\nWe worked together on the Level Shoes partnership during the FARFETCH JV. I left FARFETCH in 2024 after 15 years and I'm now exploring my next role.\n\nI saw Michael's transition to CEO and the work underway with Threads. If you have 20 minutes, I'd value a conversation about the direction of the Group's creative operations — and whether there's a role for someone with my background in what you're building.\n\nRui"},
+  {name:"David Vercruysse",co:"Chalhoub Group",rel:"President, Managed Companies — oversees Level Shoes directly. WARM CONTACT.",tier:"A",status:"Warm contact",goals:"1. Como vês o mercado — especialmente retail/luxury no Middle East\n2. Como pensas creative ops across Managed Companies (Level Shoes, Faces, etc.)?\n3. Tens usado headhunters? Alguma boa referência para mim?\n\nA pergunta sobre creative ops across Managed Companies é natural — é exatamente a área dele.",msg:"Hi David,\n\nWe worked together on Level Shoes during my time at FARFETCH. I left in 2024 after 15 years as SVP Creative Operations and I'm now exploring my next role.\n\nI'd value 20 minutes to hear how you're thinking about creative operations across the Managed Companies — and whether there's a conversation worth having about how I could contribute.\n\nRui"},
+  {name:"Mo White",co:"Chalhoub Group (Threads)",rel:"⚠️ DO NOT approach directly. Go through Patrick/David first.",tier:"B",status:"Indirect",goals:"(Não aplicar antes de introdução por Patrick/David)",msg:"(Do not send. Approach through Patrick Chalhoub or David Vercruysse first. If they introduce you, use this after.)\n\nHi Mo,\n\nPatrick Chalhoub / David Vercruysse suggested I reach out. I'm ex-SVP Creative Operations at FARFETCH (15 years) and I'm exploring my next role. I'd value 20 minutes to hear how you're thinking about the next chapter for Threads.\n\nRui"},
+];
+
+const INTERVIEW = [
+  {q:"Do you know what you want?",a:"Yes. I want to lead creative operations at scale — building and running the engine that turns product into content across markets, efficiently, with technology.\n\nFor most of my 15 years at FARFETCH, I built that engine in the analog, non-AI world — scaling production, teams, and processes the hard way. Then in the last 4-5 years, we started the journey of automation and AI, and that changed everything. Virtual Model technology, ML translation across 12 languages, automating 80% of product categorization — we cut operational spend from 10% to 1% of sales. That experience was incredible, and it's what I need to continue. There is so much more to build in this space.\n\nBut I need to be honest about why I left. The last 3 years at FARFETCH became entirely about cutting cost — to the point where the company was fighting for survival. My creative brain was drained. I'm not someone who can operate in pure cost-cutting mode indefinitely; my value is in building, not just stripping. So I took time off to breathe and feed my brain again — through the furniture studio, where I could imagine, design, and build with my own hands. That labor of love restored what the final years had depleted.\n\nWhat I don't want is a purely strategic role disconnected from the operational engine, or a creative-director role focused on aesthetics. My value is at the intersection — where creative quality meets operational discipline, especially now with AI and automation transforming what's possible. I'm open on industry — fashion is my native language, but content supply chains exist everywhere. I'm based in Portugal, open to remote or Porto-area roles, and I'm ready to start."},
+  {q:"Why did you leave Farfetch / what have you been doing?",a:"For most of my 15 years at FARFETCH, I built creative operations in the analog world — scaling production, teams, and processes the hard way. In the last 4-5 years, we started the AI and automation journey, and that was an incredible experience — Virtual Model tech, ML translation, 80% automation. I feel like I need to continue that work; there's so much more to build.\n\nBut the last 3 years became almost entirely about cutting cost — the company was fighting for survival. My creative brain was drained. I'm a builder, not a cost-cutter, and operating in that mode indefinitely isn't where I create value. So I left, and I took time to breathe and feed my brain again — through Rui Silva Studio, a furniture practice where I could imagine, design, and build with my own hands. That labor of love restored what the final years had depleted.\n\nThe studio is a side venture I keep running when time allows. It confirmed something I already knew: I love the craft, but my real edge is at scale — leading the creative engine that makes craft possible at industrial scale, especially now with AI transforming what's possible. That's what I'm looking to do next."},
+  {q:"Tell me about yourself",a:"I started in textile and graphic design, then joined FARFETCH early and spent 15 years there, rising from Production Manager to SVP of Creative Operations. For most of those years I built the engine in the analog, non-AI world — scaling production, teams, and processes the hard way. Then in the last 4-5 years we started the AI and automation journey, and that changed everything — Virtual Model tech, ML translation, 80% automation, cutting spend from 10% to 1% of sales. That experience was incredible and it's what I need to continue.\n\nThe last 3 years became almost entirely about cost-cutting — the company was fighting for survival. My creative brain was drained. I'm a builder, not a cost-cutter. So I took time off to breathe and feed my brain again — through a furniture studio where I could imagine, design, and build with my own hands. That labor of love restored what the final years had depleted, and it confirmed what I already knew: I love the craft, but my real edge is at scale, especially now with AI transforming what's possible. That's what I'm looking to do next."},
+  {q:"What's a weakness / blind spot?",a:"My drive for quality and precision is my biggest strength, and I've learned to watch it. Earlier in my career I could over-control under pressure — I've gotten better at distinguishing where precision matters (luxury quality, SLAs) and where 'good and done' beats 'perfect and late.' 360° feedback also showed me I under-claim my work — others consistently rated me higher than I rated myself. I'm learning to claim achievements plainly."},
+];
+
+// ============ RENDER COMPANIES ============
+let activeFilter = 'all';
+
+function renderFilterChips() {
+  const counts = {all: COMPANIES.length};
+  COMPANIES.forEach(c => {
+    const g = companyGroup(c);
+    counts[g] = (counts[g]||0) + 1;
+  });
+  const groups = [
+    {key:'all', label:'All'},
+    {key:'portugal', label:'🇵🇹 Portugal'},
+    {key:'ai-content', label:'AI / Content'},
+    {key:'fashion-retail', label:'Fashion / Retail'},
+    {key:'marketplace', label:'Marketplace'},
+    {key:'international', label:'International'},
+    {key:'inactive', label:'Inactive / Removed'},
+  ];
+  const el = document.getElementById('filterChips');
+  if (!el) return;
+  el.innerHTML = groups.map(g => {
+    const n = counts[g.key] || 0;
+    if (g.key !== 'all' && n === 0) return '';
+    return `<button class="chip ${activeFilter===g.key?'active':''}" onclick="setFilter('${g.key}')">${g.label} <span style="opacity:0.6">${n}</span></button>`;
+  }).join('');
+}
+
+function companyGroup(c) {
+  if (['Inactive','Acquired','Low priority'].includes(c.status)) return 'inactive';
+  const pt = ['Sword Health','Salsa Jeans','Parfois','Blip','Unbabel','Talkdesk','Prozis','Sonae MC (Continente)','Worten','Sonae SR (MO/Sport Zone/Zippy)','Vista Alegre Atlantis','Threads Styling'];
+  if (pt.includes(c.name)) return 'portugal';
+  if (['Synthesia','LaLaLand','The Fabricant','Bigthinx'].includes(c.name)) return 'ai-content';
+  if (['Inditex (Zara etc.)','H&M Group','Nike'].includes(c.name)) return 'fashion-retail';
+  if (['Vinted','Back Market','Shopify'].includes(c.name)) return 'marketplace';
+  if (['Chalhoub Group','Adobe','Netflix'].includes(c.name)) return 'international';
+  return 'portugal';
+}
+
+function setFilter(g) {
+  activeFilter = g;
+  renderFilterChips();
+  renderCompanies();
+}
+
+function renderCompanies() {
+  const list = document.getElementById('companyList');
+  if (!list) return;
+  let items = COMPANIES.map((c,i) => ({c, i}));
+  // filter
+  if (activeFilter !== 'all') {
+    items = items.filter(x => companyGroup(x.c) === activeFilter);
+  }
+  // sort
+  const sort = document.getElementById('sortBy') ? document.getElementById('sortBy').value : 'default';
+  if (sort === 'name') items.sort((a,b) => a.c.name.localeCompare(b.c.name));
+  else if (sort === 'tier') items.sort((a,b) => a.c.tier.localeCompare(b.c.tier));
+  else if (sort === 'status') {
+    const order = {'Warm contact':0,'Hiring':1,'Reach out':2,'Monitor':3,'No fit now':4,'Low priority':5,'Inactive':6,'Acquired':7};
+    items.sort((a,b) => (order[a.c.status]||9) - (order[b.c.status]||9));
+  }
+  list.innerHTML = items.map(({c, i}) => {
+    const noteKey = 'company_note_' + i;
+    const note = localStorage.getItem(noteKey) || '';
+    const tierPill = c.tier === 'A' ? 'pill-accent' : 'pill-warn';
+    const statusPill = c.status === 'Hiring' ? 'pill-good' : c.status === 'Reach out' ? 'pill-warn' : c.status === 'Inactive' || c.status === 'Acquired' ? 'pill-bad' : c.status === 'Low priority' ? 'pill-warn' : c.status === 'Warm contact' ? 'pill-good' : 'pill-accent';
+    return `<div class="company-card" onclick="toggleCard(this)">
+      <div class="cc-head">
+        <div>
+          <div class="cc-name">${c.name} <span style="font-size:16px;cursor:pointer;color:var(--accent);margin-left:4px;" onclick="event.stopPropagation();showCompanyModal(${i})" title="Company info">ⓘ</span></div>
+          <div class="cc-loc">${c.loc} · <span class="pill ${tierPill}">Tier ${c.tier}</span>${c.commute ? ` · <span class="pill ${/beyond/.test(c.commute) ? 'pill-commute-far' : 'pill-commute'}">${c.commute}</span>` : ''}</div>
+        </div>
+        <span class="pill ${statusPill}">${c.status}</span>
+      </div>
+      <div class="cc-why">${c.why}</div>
+      <div class="cc-notes">
+        <a href="${c.url}" target="_blank" style="font-size:12px;color:var(--accent);">Careers page →</a>
+        <textarea placeholder="Add your notes about this company..." onclick="event.stopPropagation()" oninput="saveNote('${noteKey}',this.value)">${note}</textarea>
+      </div>
+    </div>`;
+  }).join('') || '<p style="color:var(--ink-faint);font-size:13px;padding:20px;">No companies in this filter.</p>';
+}
+
+function saveNote(key, val) { localStorage.setItem(key, val); }
+
+// ============ COMPANY MODAL ============
+const COMPANY_INFO = {
+  "Sword Health": {desc:"Digital musculoskeletal care platform combining AI with physical therapists to deliver virtual pain management. Portugal's first healthtech unicorn.",bullets:["Founded: 2015","Employees: ~1,400+","Valuation: $4B (2025)","HQ: Porto, Portugal"]},
+  "Salsa Jeans": {desc:"Portuguese denim and casual fashion brand owned by Sonae, expanding globally across Europe. Hit €200M turnover in 2025.",bullets:["Founded: 1994","Employees: ~1,350","Revenue: €200M (2025)","HQ: Famalicão, Portugal"]},
+  "Parfois": {desc:"Fast-fashion accessories brand for women with 1,000+ stores across 70+ markets. 100+ new stores opening annually.",bullets:["Founded: 1994","Employees: ~3,000+","Stores: 1,000+ in 70+ markets","HQ: Porto (Rio Tinto), Portugal"]},
+  "Threads Styling": {desc:"Luxury chat-based personal shopping concierge for ultra-high-net-worth clients. Acquired by Chalhoub Group (Dubai) in 2022; now in transition — homepage shows 'New chapter coming soon,' no open roles.",bullets:["Founded: 2013","Employees: ~130 (LinkedIn)","Status: Pivoting/relaunching under Chalhoub — not actively hiring; last careers post Jan 2025","HQ: London (Porto hub existed)"]},
+  "Blip": {desc:"Portuguese tech company specializing in software engineering for online sports betting and gaming platforms. Part of Entain Group (Betfair, bwin, partypoker) since 2020.",bullets:["Founded: 2009","Employees: ~1,200+","Stage: Subsidiary of Entain (LSE: ENT)","HQ: Porto, Portugal"]},
+  "Unbabel": {desc:"AI-powered language translation platform combining machine translation with human post-editing for enterprise customer support. Acquired by TransPerfect in August 2025.",bullets:["Founded: 2013","Employees: ~200–350","Funding: $91M+ raised; acquired by TransPerfect (2025)","HQ: Lisbon, Portugal"]},
+  "Talkdesk": {desc:"Cloud-based contact center and CX platform built on AWS, recognized as a Leader in Gartner's Magic Quadrant for CCaaS. One of Portugal's most prominent SaaS unicorns.",bullets:["Founded: 2011","Employees: ~1,300","Valuation: $10B+ (2021 Series D)","HQ: San Francisco / Lisbon & Porto"]},
+  "Synthesia": {desc:"AI video generation platform that creates professional videos from text using lifelike digital avatars. One of the UK's fastest-growing AI unicorns with 55,000+ customers.",bullets:["Founded: 2017","Employees: ~550–800","Valuation: $2.1B Series D (2025)","HQ: London, UK"]},
+  "LaLaLand": {desc:"Amsterdam-based AI startup generating hyper-realistic virtual fashion models for e-commerce brands, enabling diverse product imagery without photoshoots. Acquired by Browzwear in July 2025 — now integrated, no longer independent.",bullets:["Founded: 2019","Funding: €2.1M pre-Series A","Status: Acquired by Browzwear (Jul 2025) — integrated, not independent","HQ: Amsterdam, Netherlands"]},
+  "The Fabricant": {desc:"World's first digital-only fashion house creating 3D garments and virtual clothing for brands, gaming, and metaverse. Now focused on SaaS tools that reduce fashion content production costs by 90%.",bullets:["Founded: 2018","Funding: $14M Series A (2022)","Employees: ~20–50","HQ: Amsterdam, Netherlands"]},
+  "Bigthinx": {desc:"AI-driven fashion tech company specializing in 3D virtual try-ons, mobile body scanning, and digital twins for online fashion retail. Selected by Prada Group's fashion-tech accelerator in Milan.",bullets:["Founded: 2015","Funding: ~$240K seed (early stage)","Employees: ~11–50","HQ: Bengaluru, India / Milan presence"]},
+  "Vinted": {desc:"Europe's largest secondhand fashion marketplace, enabling C2C resale across clothing, accessories, and electronics. Lithuania's first unicorn.",bullets:["Founded: 2008","Employees: 2,200+","Valuation: €8B (2025 secondary)","HQ: Vilnius, Lithuania / Berlin, Germany"]},
+  "Back Market": {desc:"Leading global marketplace for verified refurbished electronics (phones, laptops, tablets), driving the circular economy for tech.",bullets:["Founded: 2014","Employees: ~900","Valuation: $5.7B (Series D, 2022)","HQ: Paris, France"]},
+  "Adobe": {desc:"Global software giant behind Creative Cloud (Photoshop, Illustrator), Acrobat, and Experience Cloud. Powers digital creation, document management, and marketing for millions of users worldwide.",bullets:["Founded: 1982","Employees: ~30,000+","Market Cap: ~$90B","HQ: San Jose, CA"]},
+  "Snowflake": {desc:"Cloud-based AI data platform providing data warehousing, data lake, and data sharing capabilities. Powers the data infrastructure for thousands of enterprises globally.",bullets:["Founded: 2012","Employees: ~8,000","Market Cap: ~$60B","HQ: Menlo Park, CA"]},
+  "Netflix": {desc:"World's leading streaming entertainment service with 300M+ subscribers across 190+ countries. Produces original films, series, and games, now expanding into live events and gaming.",bullets:["Founded: 1997","Employees: ~14,000–16,000","Market Cap: ~$400B+","HQ: Los Gatos / Los Angeles, CA"]},
+  "Nike": {desc:"World's largest athletic footwear, apparel, and equipment company. Designs and sells products under Nike, Jordan, Converse, and Hurley brands globally.",bullets:["Founded: 1964","Employees: ~73,000–79,000","Revenue: $46.3B (FY2025)","HQ: Beaverton, OR"]},
+  "Shopify": {desc:"Leading global e-commerce platform enabling millions of merchants to build online stores and sell across web, mobile, and social. Powers ~10% of all US e-commerce.",bullets:["Founded: 2006","Employees: ~7,600","Market Cap: ~$140B","HQ: Ottawa, Canada"]},
+  "Prozis": {desc:"Portuguese D2C powerhouse (sports nutrition, supplements, activewear, food) that does everything in-house: 'idea, concept, design, manufacturing, quality control, marketing, sales, logistics, printing, distribution, client support, software development, photo, video, 3D.'",bullets:["Founded: 2007","Employees: ~1,000","Revenue: ~€190M (2023)","HQ: Maia (Porto), Portugal"]},
+  "Sonae MC (Continente)": {desc:"Portugal's largest food retailer; operates Continente hypermarkets/supermarkets, Note, and multiple private-label brands. Has an established 'Digital & Content Marketing Director' function.",bullets:["Part of Sonae Group (~50,000+ employees)","Continente: 500+ stores","Revenue: multi-billion euro","HQ: Maia (Porto), Portugal"]},
+  "Worten": {desc:"Portugal's leading consumer electronics retailer (~35% market share, 200+ stores) operating the country's most-visited marketplace (worten.pt, 6M+ monthly visits) with 3,000+ sellers.",bullets:["Part of Sonae SR","Employees: ~3,800","Marketplace: 6M+ monthly visits, 3,000+ sellers","HQ: Maia (Porto), Portugal"]},
+  "Sonae SR (MO/Sport Zone/Zippy)": {desc:"Sonae's Sports & Fashion division operating MO (fashion), Sport Zone (sports retail), Zippy (kids fashion), Losan, and Dott — 500+ stores across multiple countries.",bullets:["Part of Sonae Group","500+ stores","Turnover: ~€2B+","HQ: Maia (Porto), Portugal"]},
+  "Inditex (Zara etc.)": {desc:"World's largest fashion retailer; confirmed Lisbon-based creative recruitment for Zara Home and creative teams covering print design, styling, photography and digital production.",bullets:["Founded: 1975","Employees: 165,000+","Revenue: €35B+","Brands: Zara, Zara Home, Massimo Dutti, Bershka, Stradivarius"]},
+  "H&M Group": {desc:"Global fashion retailer with documented 'Creative Production Brand team' focusing on brand creative production; active hiring for motion graphics/visual designers in the creative production function.",bullets:["Founded: 1947","Employees: ~120,000","Revenue: €20B+","HQ: Stockholm, Sweden (Lisbon creative hub)"]},
+  "Vista Alegre Atlantis": {desc:"200-year heritage porcelain and crystal brand with global designer collaborations. Premium product content at scale.",bullets:["Founded: 1824","Employees: ~1,500+","Heritage: 200 years","HQ: Ílhavo, Portugal (near Porto)"]},
+  "Chalhoub Group": {desc:"Largest luxury retail operator in the Middle East. 750+ stores across 8 countries, 300+ international brands (LV, Dior, Sephora, Fendi, Louboutin, Tom Ford). Building in-house creative studio (OneStudio) + AI campaigns. Acquired Threads Styling (2022) which had a Porto hub — now in 'new chapter' relaunch.",bullets:["Founded: 1955","Employees: ~14,000–16,000","Revenue: ~$3–3.4B","HQ: Dubai, UAE (Threads had Porto hub)"]}
+};
+
+function showCompanyModal(idx) {
+  const c = COMPANIES[idx];
+  const info = COMPANY_INFO[c.name] || {desc: 'Description pending research.', bullets: []};
+  const modal = document.getElementById('modalContent');
+  modal.innerHTML = `
+    <h3>${c.name}</h3>
+    <div class="modal-loc">${c.loc} · Tier ${c.tier} · ${c.status}${c.commute ? ` · ${c.commute}` : ''}</div>
+    <div class="modal-desc">${info.desc}</div>
+    ${info.bullets.length ? `<ul class="modal-bullets">${info.bullets.map(b=>`<li>${b}</li>`).join('')}</ul>` : ''}
+    <div style="margin-top:10px;">
+      ${c.url ? `<a href="${c.url}" target="_blank" class="modal-link">Careers →</a>` : ''}
+      <button class="modal-close" onclick="closeModal()">Close</button>
+    </div>
+    <div style="margin-top:14px;font-size:13px;color:var(--ink-soft);">${c.why}</div>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+// ============ PIPELINE (KANBAN) ============
+let pipelineData = JSON.parse(localStorage.getItem('pipeline') || '[]');
+
+function renderPipeline() {
+  const cols = document.querySelectorAll('.kanban-col');
+  cols.forEach(col => {
+    const items = col.querySelector('.kanban-items');
+    const colName = col.dataset.col;
+    items.innerHTML = pipelineData.filter(p => p.col === colName).map((p, idx) => {
+      const globalIdx = pipelineData.indexOf(p);
+      return `<div class="kanban-item" draggable="true" data-idx="${globalIdx}">
+        <div class="ki-co">${p.co}</div>
+        <div class="ki-role">${p.role || ''}</div>
+      </div>`;
+    }).join('');
+  });
+  setupKanbanDrag();
+  updateStats();
+}
+
+function setupKanbanDrag() {
+  document.querySelectorAll('.kanban-item').forEach(item => {
+    item.addEventListener('dragstart', e => { e.dataTransfer.setData('idx', item.dataset.idx); item.classList.add('dragging'); });
+    item.addEventListener('dragend', () => item.classList.remove('dragging'));
+  });
+  document.querySelectorAll('.kanban-col').forEach(col => {
+    col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('drag-over'); });
+    col.addEventListener('dragleave', () => col.classList.remove('drag-over'));
+    col.addEventListener('drop', e => {
+      e.preventDefault(); col.classList.remove('drag-over');
+      const idx = parseInt(e.dataTransfer.getData('idx'));
+      pipelineData[idx].col = col.dataset.col;
+      localStorage.setItem('pipeline', JSON.stringify(pipelineData));
+      renderPipeline();
+    });
+  });
+}
+
+function addPipeline() {
+  const co = document.getElementById('newPipeCo').value.trim();
+  if (!co) return;
+  pipelineData.push({co, role: document.getElementById('newPipeRole').value.trim(), col: document.getElementById('newPipeCol').value});
+  localStorage.setItem('pipeline', JSON.stringify(pipelineData));
+  document.getElementById('newPipeCo').value = '';
+  document.getElementById('newPipeRole').value = '';
+  renderPipeline();
+}
+
+// ============ CONTACTS ============
+let contactData = JSON.parse(localStorage.getItem('contacts') || 'null') || CONTACTS.slice();
+
+function renderContacts() {
+  const list = document.getElementById('contactList');
+  if (!list) return;
+  list.innerHTML = contactData.map((c, i) => {
+    const tierPill = c.tier === 'A' ? 'pill-accent' : c.tier === 'B' ? 'pill-warn' : 'pill-bad';
+    const statusPill = c.status === 'Aware' ? 'pill-good' : c.status === 'Ready' ? 'pill-accent' : c.status === 'Warm contact' ? 'pill-good' : c.status === 'Indirect' ? 'pill-bad' : 'pill-warn';
+    const noteKey = 'contact_note_' + i;
+    const note = localStorage.getItem(noteKey) || '';
+    const msgKey = 'contact_msg_' + i;
+    const msg = localStorage.getItem(msgKey) || c.msg || '';
+    const goalsKey = 'contact_goals_' + i;
+    const goals = localStorage.getItem(goalsKey) || c.goals || '';
+    return `<div class="contact-card">
+      <div class="ct-head">
+        <div><div class="ct-name">${c.name}</div><div class="ct-co">${c.co} · ${c.rel}</div></div>
+        <div><span class="pill ${tierPill}">Tier ${c.tier}</span> <span class="pill ${statusPill}">${c.status}</span></div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <div style="flex:1;">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-faint);margin-bottom:4px;">Objective 1</div>
+          <textarea placeholder="What do you want from this conversation?" style="width:100%;border:1px solid var(--line);border-radius:6px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;min-height:60px;background:var(--bg);" oninput="saveNote('contact_obj1_${i}',this.value)">${localStorage.getItem('contact_obj1_'+i) || ''}</textarea>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-faint);margin-bottom:4px;">Objective 2</div>
+          <textarea placeholder="Secondary goal / fallback ask" style="width:100%;border:1px solid var(--line);border-radius:6px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;min-height:60px;background:var(--bg);" oninput="saveNote('contact_obj2_'+i,this.value)">${localStorage.getItem('contact_obj2_'+i) || ''}</textarea>
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-faint);margin-bottom:4px;">Message template <button class="btn btn-sm" style="background:var(--bg);border:1px solid var(--line);color:var(--ink-soft);margin-left:8px;" onclick="copyMsg(${i})">Copy</button></div>
+        <textarea style="width:100%;border:1px solid var(--line);border-radius:6px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;min-height:100px;background:var(--bg);" oninput="saveMsg('${msgKey}',this.value)">${msg}</textarea>
+      </div>
+      <textarea placeholder="Notes..." style="width:100%;border:1px solid var(--line);border-radius:6px;padding:6px;font-size:12px;font-family:inherit;margin-top:8px;resize:vertical;min-height:30px;" oninput="saveNote('${noteKey}',this.value)">${note}</textarea>
+    </div>`;
+  }).join('');
+  updateStats();
+}
+
+function saveMsg(key, val) { localStorage.setItem(key, val); }
+
+function copyMsg(i) {
+  const c = contactData[i];
+  const msgKey = 'contact_msg_' + i;
+  const msg = localStorage.getItem(msgKey) || c.msg || '';
+  navigator.clipboard.writeText(msg).then(() => {
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+
+function addContact() {
+  const name = document.getElementById('newContactName').value.trim();
+  if (!name) return;
+  contactData.push({
+    name,
+    co: document.getElementById('newContactCo').value.trim(),
+    rel: document.getElementById('newContactRel').value.trim(),
+    tier: document.getElementById('newContactTier').value,
+    status: 'Not contacted',
+    msg: ''
+  });
+  localStorage.setItem('contacts', JSON.stringify(contactData));
+  document.getElementById('newContactName').value = '';
+  document.getElementById('newContactCo').value = '';
+  document.getElementById('newContactRel').value = '';
+  renderContacts();
+}
+
+// ============ INTERVIEW PREP ============
+function renderInterview() {
+  const list = document.getElementById('interviewList');
+  if (!list) return;
+  list.innerHTML = INTERVIEW.map((iv, i) => {
+    return `<div class="iv-card" id="iv${i}">
+      <div class="iv-q" onclick="document.getElementById('iv${i}').classList.toggle('expanded')">
+        ${iv.q} <span class="iv-arrow">▼</span>
+      </div>
+      <div class="iv-a">${iv.a.replace(/\n/g,'<br>')}</div>
+    </div>`;
+  }).join('');
+}
+
+// ============ KNOWLEDGE BASE ============
+function renderKB() {
+  const el = document.getElementById('kbContent');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="card"><h3>Headline</h3><div class="quote"><strong>Senior Creative Operations Leader | Ex-SVP, FARFETCH | Content Supply Chain & Automation</strong></div></div>
+    <div class="card"><h3>LinkedIn Open to Work titles</h3>
+      <p style="font-size:13px;">
+        <strong>1. Content Director</strong> — catches Content Operations (Adobe, Merck, Lilly, Netflix), Content Strategy, Content Supply Chain<br>
+        <strong>2. Creative Services Director</strong> — catches in-house creative team function (Fanatics, PVH, Warner Bros, Tom Ford). At VP level = Creative Operations.<br>
+        <strong>3. Director of Operations</strong> — broadest net. Catches VP Operations, Head of Operations, COO-track across every sector.
+      </p>
+      <p style="font-size:12px;color:var(--ink-faint);margin-top:6px;">Visibility: Recruiters only (not public). Locations: Portugal (Porto/Braga/Guimarães) + Remote EU/Global. Workplace: Remote, Hybrid, On-site.</p>
+    </div>
+    <div class="card"><h3>Target job titles (search terms)</h3>
+      <p style="font-size:13px;">VP Creative Services · Head of Creative Services · Head of Creative Production · Head of Creative Operations · Director Content Operations · Content Supply Chain · Studio Operations · Brand Operations</p>
+      <p style="font-size:12px;color:var(--ink-faint);margin-top:6px;">"Creative Operations" & "Content Supply Chain" live in the headline (keyword search), not in LinkedIn's title dropdown (which doesn't recognise them).</p>
+    </div>
+    <div class="card"><h3>About opening</h3><div class="quote">I build the creative production systems that let creative work ship globally without losing quality.</div></div>
+    <div class="card"><h3>Studio framing</h3><div class="quote">A side venture, a labor of love I keep running when time allows.</div></div>
+    <div class="card"><h3>Leadership archetype</h3><p>A precise, analytical, results-driven operational leader who combines systems thinking with genuine care for people — and whose edge is driving hard for perfection and control, sometimes harder than the situation needs.</p></div>
+    <div class="card"><h3>Top 5 (CliftonStrengths)</h3><p>1. Relator · 2. Deliberative · 3. Learner · 4. Analytical · 5. Responsibility</p><p style="font-size:12px;color:var(--ink-faint);margin-top:4px;">+ Futuristic #7, Arranger #6, Strategic #8. Leads with Strategic Thinking + Executing.</p></div>
+    <div class="card"><h3>DiSC</h3><p><span class="pill pill-accent">High C</span> Conscientiousness (primary) · <span class="pill pill-accent">High i</span> Influence (secondary). Pattern: "Prático".</p></div>
+    <div class="card"><h3>Development areas (interview-ready)</h3>
+      <div class="decision" style="font-size:13px;border-bottom:1px solid var(--line);padding:6px 0;"><strong>Blind spot:</strong> Under-claims strengths. LCP 360° showed others rate you ~10 pts higher. Practice saying "I drove X" plainly.</div>
+      <div class="decision" style="font-size:13px;border-bottom:1px solid var(--line);padding:6px 0;"><strong>Weakness answer:</strong> Perfectionism — backed by all 3 assessments.</div>
+      <div class="decision" style="font-size:13px;padding:6px 0;"><strong>Network:</strong> Relator, not networker. Target 5-10 deep contacts.</div>
+    </div>
+    <div class="card"><h3>Credentials to pursue</h3>
+      <p style="font-size:13px;">1. MIT Prof Ed — Applied Generative AI ⭐<br>2. Google Cloud Certified Generative AI Leader<br>3. PMP<br>4. Adobe Workfront Certification</p>
+      <p style="font-size:12px;color:var(--bad);margin-top:6px;">Do NOT display: Coursera content marketing, Google AI for Content Creation, Six Sigma Yellow Belt, Adobe GenStudio, Lokalise — too junior at SVP level.</p>
+    </div>
+    <div class="card"><h3>Credibility assets</h3>
+      <p style="font-size:13px;">• <a href="https://www.youtube.com/watch?v=5moqOisGRYA" target="_blank" style="color:var(--accent);">Henry Stewart DAM talk (2018)</a> — add to LinkedIn Featured<br>• The org chart (4 pillars) — use in interviews<br>• Kaizen 1st place award<br>• ruisilvastudio.com — "Furniture as Cultural Infrastructure"</p>
+    </div>
+  `;
+}
+
+// ============ STATS ============
+function updateStats() {
+  const app = pipelineData.filter(p => p.col === 'interview' || p.col === 'offer').length;
+  const out = pipelineData.filter(p => p.col === 'outreach' || p.col === 'conversation').length;
+  const ints = pipelineData.filter(p => p.col === 'interview').length;
+  document.getElementById('statApp').textContent = app;
+  document.getElementById('statOut').textContent = out;
+  document.getElementById('statInt').textContent = ints;
+  document.getElementById('statContacts').textContent = contactData.length;
+  document.getElementById('sidebarStat').textContent = app + ' active';
+}
+
+// ============ INIT (gated by auth) ============
+function cockpitInit() {
+  renderFilterChips();
+  renderCompanies();
+  renderPipeline();
+  renderContacts();
+  renderInterview();
+  renderKB();
+}
+
+// Gate behind auth
+AuthGate.requireAuth().then(function(user) {
+  cockpitInit();
+});
+</script>
+
+</body>
+</html>

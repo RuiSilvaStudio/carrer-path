@@ -7,6 +7,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { BaselinePage } from './pages/BaselinePage';
 import { PulsePage } from './pages/PulsePage';
 import { DocsPage } from './pages/DocsPage';
+import { CockpitPage } from './pages/CockpitPage';
 
 export default function App() {
   const [page, setPage] = useState('dashboard');
@@ -38,6 +39,7 @@ export default function App() {
         {page === 'dashboard' && <DashboardPage onNavigate={setPage} />}
         {page === 'baseline' && <BaselinePage onNavigate={setPage} />}
         {page === 'pulse' && <PulsePage onNavigate={setPage} />}
+        {page === 'cockpit' && <CockpitPage onNavigate={setPage} />}
       </div>
     </DashboardProvider>
   );

@@ -1,168 +1,116 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
+import { useCockpit } from '../../hooks/useCockpit';
+import type { CockpitContact, PipelineStatus } from '../../types/cockpit';
+import type { NewContact, ContactUpdate } from '../../hooks/useCockpit';
+import { CompaniesView } from './CompaniesView';
+import { InterviewPrepView } from './InterviewPrepView';
+import { KnowledgeBaseView } from './KnowledgeBaseView';
 
-// ── Types ──────────────────────────────────────────────────────
-interface Contact {
-  id: string;
-  name: string;
-  company: string;
-  relationship: string;
-  tier: 'A' | 'B';
-  status: PipelineStatus;
-  goals: string;
-  message: string;
-  notes: string;
-  lastContact: string | null;
-}
+// ── Cockpit tabs ──────────────────────────────────────────────────
+type CockpitTab = 'contacts' | 'companies' | 'interview' | 'kb';
 
-type PipelineStatus = 'not_contacted' | 'aware' | 'ready' | 'warm_contact' | 'meeting';
-
-const PIPELINE_STAGES: { key: PipelineStatus; label: string; order: number }[] = [
-  { key: 'not_contacted', label: 'Not Contacted', order: 0 },
-  { key: 'aware', label: 'Aware', order: 1 },
-  { key: 'ready', label: 'Ready', order: 2 },
-  { key: 'warm_contact', label: 'Warm Contact', order: 3 },
-  { key: 'meeting', label: 'Meeting', order: 4 },
+const COCKPIT_TABS: { id: CockpitTab; num: string; label: string }[] = [
+  { id: 'contacts', num: '01', label: 'Contacts' },
+  { id: 'companies', num: '02', label: 'Companies' },
+  { id: 'interview', num: '03', label: 'Interview Prep' },
+  { id: 'kb', num: '04', label: 'Knowledge Base' },
 ];
 
-const STORAGE_KEY = 'atlas_cockpit_contacts';
+// ── Pipeline stages (match Supabase text values) ───────────────
+const PIPELINE_STAGES: { key: PipelineStatus; order: number }[] = [
+  { key: 'Not contacted', order: 0 },
+  { key: 'Aware', order: 1 },
+  { key: 'Ready', order: 2 },
+  { key: 'Warm contact', order: 3 },
+  { key: 'Meeting', order: 4 },
+];
 
 const MESSAGE_TEMPLATES: Record<string, string> = {
-  not_contacted: 'Hi {name}, I came across your work at {company} and would love to connect.',
-  aware: 'Hi {name}, following up on my earlier note. Would you have 20 minutes to chat about {goals}?',
-  ready: 'Hi {name}, I noticed {company} is expanding. I would love to share how I could contribute to {goals}.',
-  warm_contact: 'Hi {name}, great connecting recently. Let me know if there is a good time to meet.',
-  meeting: 'Hi {name}, looking forward to our meeting. Here is the agenda I am thinking of.',
+  'Not contacted': 'Hi {name}, I came across your work at {company} and would love to connect.',
+  'Aware': 'Hi {name}, following up on my earlier note. Would you have 20 minutes to chat about {goals}?',
+  'Ready': 'Hi {name}, I noticed {company} is expanding. I would love to share how I could contribute to {goals}.',
+  'Warm contact': 'Hi {name}, great connecting recently. Let me know if there is a good time to meet.',
+  'Meeting': 'Hi {name}, looking forward to our meeting. Here is the agenda I am thinking of.',
 };
-
-// ── Sample contacts for first run ───────────────────────────────
-const SAMPLE_CONTACTS: Contact[] = [
-  {
-    id: '1', name: 'Sarah Chen', company: 'Helix Labs', relationship: 'Former colleague',
-    tier: 'A', status: 'warm_contact', goals: 'AI product leadership', message: '',
-    notes: 'Met at Web Summit 2024. Interested in our analytics work.',
-    lastContact: '2025-03-15',
-  },
-  {
-    id: '2', name: 'Marcus Webb', company: 'North Star Ventures', relationship: 'Investor',
-    tier: 'A', status: 'meeting', goals: 'Series A intro', message: '',
-    notes: 'Warm intro from David Kim. Focus on data infrastructure thesis.',
-    lastContact: '2025-04-02',
-  },
-  {
-    id: '3', name: 'Priya Sharma', company: 'Atlas Consulting', relationship: 'Industry contact',
-    tier: 'B', status: 'aware', goals: 'Partnership exploration', message: '',
-    notes: 'Connected on LinkedIn. Interested in B2B analytics partnerships.',
-    lastContact: null,
-  },
-  {
-    id: '4', name: 'James OConnor', company: 'Meridian Health', relationship: 'Conference contact',
-    tier: 'B', status: 'not_contacted', goals: 'Healthcare data role', message: '',
-    notes: 'Met at HIMSS. Discussed clinical data challenges.',
-    lastContact: null,
-  },
-];
 
 // ── Cockpit component ────────────────────────────────────────────
 export function Cockpit() {
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const { contacts, loading, error, addContact, updateContact, deleteContact } = useCockpit();
+  const [activeTab, setActiveTab] = useState<CockpitTab>('contacts');
   const [view, setView] = useState<'list' | 'pipeline' | 'add'>('list');
   const [search, setSearch] = useState('');
-  const [filterTier, setFilterTier] = useState<'all' | 'A' | 'B'>('all');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Partial<Contact>>({});
+  const [filterTier, setFilterTier] = useState<'all' | 'A' | 'B' | 'C'>('all');
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<Partial<CockpitContact>>({});
 
   const formRef = useRef<HTMLDivElement>(null);
-
-  // Load contacts from localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        setContacts(JSON.parse(saved));
-      } else {
-        setContacts(SAMPLE_CONTACTS);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(SAMPLE_CONTACTS));
-      }
-    } catch {
-      setContacts(SAMPLE_CONTACTS);
-    }
-  }, []);
-
-  // Save contacts to localStorage
-  const saveContacts = useCallback((updated: Contact[]) => {
-    setContacts(updated);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch {
-      // ignore
-    }
-  }, []);
 
   // Filtered contacts
   const filteredContacts = contacts.filter((c) => {
     const matchesSearch = !search ||
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.contact_name.toLowerCase().includes(search.toLowerCase()) ||
       c.company.toLowerCase().includes(search.toLowerCase()) ||
       c.relationship.toLowerCase().includes(search.toLowerCase());
     const matchesTier = filterTier === 'all' || c.tier === filterTier;
     return matchesSearch && matchesTier;
   });
 
-  // Add new contact
-  const [newContact, setNewContact] = useState<Partial<Contact>>({
-    name: '', company: '', relationship: '', tier: 'B',
-    status: 'not_contacted', goals: '', message: '', notes: '',
+  // Add new contact form state
+  const [newContact, setNewContact] = useState<Partial<NewContact>>({
+    contact_name: '', company: '', relationship: '', tier: 'B',
+    status: 'Not contacted', goals: '', message: '', notes: '',
   });
 
-  const handleAddContact = () => {
-    if (!newContact.name?.trim()) return;
-    const contact: Contact = {
-      id: Date.now().toString(),
-      name: newContact.name || '',
+  const handleAddContact = async () => {
+    if (!newContact.contact_name?.trim()) return;
+    await addContact({
+      contact_name: newContact.contact_name || '',
       company: newContact.company || '',
       relationship: newContact.relationship || '',
-      tier: (newContact.tier as 'A' | 'B') || 'B',
-      status: (newContact.status as PipelineStatus) || 'not_contacted',
+      tier: (newContact.tier as 'A' | 'B' | 'C') || 'B',
+      status: (newContact.status as string) || 'Not contacted',
       goals: newContact.goals || '',
       message: newContact.message || '',
       notes: newContact.notes || '',
-      lastContact: null,
-    };
-    saveContacts([...contacts, contact]);
-    setNewContact({ name: '', company: '', relationship: '', tier: 'B', status: 'not_contacted', goals: '', message: '', notes: '' });
+    });
+    setNewContact({ contact_name: '', company: '', relationship: '', tier: 'B', status: 'Not contacted', goals: '', message: '', notes: '' });
     setView('list');
   };
 
-  // Update contact
-  const handleUpdateContact = (id: string) => {
-    const updated = contacts.map((c) =>
-      c.id === id ? { ...c, ...editForm } as Contact : c,
-    );
-    saveContacts(updated);
+  // Update contact (inline edit)
+  const handleUpdateContact = async (id: number) => {
+    const updates: ContactUpdate = {
+      contact_name: editForm.contact_name,
+      company: editForm.company,
+      relationship: editForm.relationship,
+      tier: editForm.tier as 'A' | 'B' | 'C' | undefined,
+      goals: editForm.goals,
+      notes: editForm.notes,
+    };
+    // Remove undefined keys
+    Object.keys(updates).forEach(k => updates[k as keyof ContactUpdate] === undefined && delete updates[k as keyof ContactUpdate]);
+    await updateContact(id, updates);
     setEditingId(null);
     setEditForm({});
   };
 
   // Delete contact
-  const handleDeleteContact = (id: string) => {
-    saveContacts(contacts.filter((c) => c.id !== id));
+  const handleDeleteContact = async (id: number) => {
+    await deleteContact(id);
     setExpandedId(null);
   };
 
   // Move contact to different pipeline stage
-  const handleStageChange = (id: string, newStatus: PipelineStatus) => {
-    const updated = contacts.map((c) =>
-      c.id === id ? { ...c, status: newStatus, lastContact: new Date().toISOString().split('T')[0] } : c,
-    );
-    saveContacts(updated);
+  const handleStageChange = (id: number, newStatus: string) => {
+    updateContact(id, { status: newStatus });
   };
 
   // Generate message template
-  const generateMessage = (contact: Contact) => {
-    const template = MESSAGE_TEMPLATES[contact.status] || MESSAGE_TEMPLATES.not_contacted;
+  const generateMessage = (contact: CockpitContact) => {
+    const template = MESSAGE_TEMPLATES[contact.status] || MESSAGE_TEMPLATES['Not contacted'];
     return template
-      .replace('{name}', contact.name)
+      .replace('{name}', contact.contact_name)
       .replace('{company}', contact.company)
       .replace('{goals}', contact.goals || 'your work');
   };
@@ -170,10 +118,32 @@ export function Cockpit() {
   // ── Stats ─────────────────────────────────────────────────────
   const totalContacts = contacts.length;
   const tierACount = contacts.filter((c) => c.tier === 'A').length;
-  const inPipeline = contacts.filter((c) => c.status !== 'not_contacted').length;
-  const meetingsCount = contacts.filter((c) => c.status === 'meeting').length;
+  const inPipeline = contacts.filter((c) => c.status !== 'Not contacted').length;
+  const meetingsCount = contacts.filter((c) => c.status === 'Meeting').length;
 
   // ── Render ─────────────────────────────────────────────────────
+  // Loading/error only applies to the Contacts tab (Supabase-backed)
+  if (activeTab === 'contacts' && loading) {
+    return (
+      <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+          Loading cockpit…
+        </div>
+      </div>
+    );
+  }
+
+  if (activeTab === 'contacts' && error) {
+    return (
+      <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--color-danger)' }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '8px' }}>
+          Error loading cockpit
+        </div>
+        <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>{error}</div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding: '32px 40px 80px', maxWidth: '1100px' }}>
       {/* Header */}
@@ -200,6 +170,44 @@ export function Cockpit() {
         </p>
       </div>
 
+      {/* Tab navigation */}
+      <div style={{ display: 'flex', gap: '0', borderBottom: '1px solid var(--color-border)', marginBottom: '28px' }}>
+        {COCKPIT_TABS.map(tab => {
+          const active = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                background: 'none',
+                border: 'none',
+                borderBottom: active ? '2px solid var(--color-accent)' : '2px solid transparent',
+                cursor: 'pointer',
+                padding: '10px 20px 10px 0',
+                marginRight: '24px',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '11px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.12em',
+                color: active ? 'var(--color-accent)' : 'var(--color-text-dim)',
+                transition: 'color 0.2s ease, border-color 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <span style={{ color: active ? 'var(--color-accent)' : 'var(--color-text-dim)' }}>
+                {tab.num}
+              </span>
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Contacts Tab ──────────────────────────────────────── */}
+      {activeTab === 'contacts' && (
+      <>
       {/* Stats row */}
       <div style={{ display: 'flex', gap: '20px', marginBottom: '28px', flexWrap: 'wrap' }}>
         <StatBox num={totalContacts} label="Total Contacts" />
@@ -236,7 +244,7 @@ export function Cockpit() {
             New Contact
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-            <FormField label="Name" value={newContact.name || ''} onChange={(v) => setNewContact({ ...newContact, name: v })} placeholder="Full name" />
+            <FormField label="Name" value={newContact.contact_name || ''} onChange={(v) => setNewContact({ ...newContact, contact_name: v })} placeholder="Full name" />
             <FormField label="Company" value={newContact.company || ''} onChange={(v) => setNewContact({ ...newContact, company: v })} placeholder="Company name" />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
@@ -245,23 +253,24 @@ export function Cockpit() {
               <label style={labelStyle}>Tier</label>
               <select
                 value={newContact.tier || 'B'}
-                onChange={(e) => setNewContact({ ...newContact, tier: e.target.value as 'A' | 'B' })}
+                onChange={(e) => setNewContact({ ...newContact, tier: e.target.value as 'A' | 'B' | 'C' })}
                 style={inputStyle}
               >
                 <option value="A">A — High Priority</option>
                 <option value="B">B — Standard</option>
+                <option value="C">C — Low Priority</option>
               </select>
             </div>
           </div>
           <div style={{ marginBottom: '16px' }}>
             <label style={labelStyle}>Pipeline Status</label>
             <select
-              value={newContact.status || 'not_contacted'}
+              value={newContact.status || 'Not contacted'}
               onChange={(e) => setNewContact({ ...newContact, status: e.target.value as PipelineStatus })}
               style={inputStyle}
             >
               {PIPELINE_STAGES.map((s) => (
-                <option key={s.key} value={s.key}>{s.label}</option>
+                <option key={s.key} value={s.key}>{s.key}</option>
               ))}
             </select>
           </div>
@@ -303,7 +312,7 @@ export function Cockpit() {
             }}
           />
           <div style={{ display: 'flex', gap: '6px' }}>
-            {(['all', 'A', 'B'] as const).map((t) => (
+            {(['all', 'A', 'B', 'C'] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setFilterTier(t)}
@@ -347,12 +356,10 @@ export function Cockpit() {
               onEdit={() => { setEditingId(contact.id); setEditForm(contact); }}
               onSaveEdit={() => handleUpdateContact(contact.id)}
               onDelete={() => handleDeleteContact(contact.id)}
-              onGenerateMessage={() => {
+              onStageChange={(stage) => handleStageChange(contact.id, stage)}
+              onGenerateMessage={async () => {
                 const msg = generateMessage(contact);
-                const updated = contacts.map((c) =>
-                  c.id === contact.id ? { ...c, message: msg } : c,
-                );
-                saveContacts(updated);
+                await updateContact(contact.id, { message: msg });
               }}
               onEditFormChange={setEditForm}
             />
@@ -384,7 +391,7 @@ export function Cockpit() {
                   marginBottom: '12px', paddingBottom: '8px',
                   borderBottom: '1px solid var(--color-border)',
                 }}>
-                  {stage.label}
+                  {stage.key}
                   <span style={{
                     color: 'var(--color-text-dim)', marginLeft: '8px',
                   }}>
@@ -433,7 +440,7 @@ export function Cockpit() {
                   fontFamily: 'var(--font-serif)', fontSize: '20px', fontWeight: 500,
                   color: 'var(--color-text)', marginBottom: '4px',
                 }}>
-                  {contact.name}
+                  {contact.contact_name}
                 </h3>
                 <div style={{
                   fontSize: '13px', color: 'var(--color-text-muted)',
@@ -464,12 +471,9 @@ export function Cockpit() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <div style={labelStyle}>Message Template</div>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     const msg = generateMessage(contact);
-                    const updated = contacts.map((c) =>
-                      c.id === contact.id ? { ...c, message: msg } : c,
-                    );
-                    saveContacts(updated);
+                    await updateContact(contact.id, { message: msg });
                   }}
                   style={{
                     background: 'none', border: '1px solid var(--color-border)',
@@ -483,11 +487,8 @@ export function Cockpit() {
               </div>
               <textarea
                 value={contact.message}
-                onChange={(e) => {
-                  const updated = contacts.map((c) =>
-                    c.id === contact.id ? { ...c, message: e.target.value } : c,
-                  );
-                  saveContacts(updated);
+                onChange={async (e) => {
+                  await updateContact(contact.id, { message: e.target.value });
                 }}
                 rows={3}
                 placeholder="Click Generate or write your own…"
@@ -510,13 +511,23 @@ export function Cockpit() {
                     transition: 'all 0.18s ease',
                   }}
                 >
-                  {s.label}
+                  {s.key}
                 </button>
               ))}
             </div>
           </div>
         );
       })()}
+      </>)}
+
+      {/* ── Companies Tab ─────────────────────────────────────── */}
+      {activeTab === 'companies' && <CompaniesView />}
+
+      {/* ── Interview Prep Tab ────────────────────────────────── */}
+      {activeTab === 'interview' && <InterviewPrepView />}
+
+      {/* ── Knowledge Base Tab ────────────────────────────────── */}
+      {activeTab === 'kb' && <KnowledgeBaseView />}
     </div>
   );
 }
@@ -549,19 +560,19 @@ function StatBox({ num, label }: { num: number; label: string }) {
 
 function ContactCard({
   contact, expanded, editing, editForm, onToggle, onEdit, onSaveEdit, onDelete,
-   onGenerateMessage, onEditFormChange,
+  onGenerateMessage, onEditFormChange, onStageChange,
 }: {
-  contact: Contact;
+  contact: CockpitContact;
   expanded: boolean;
   editing: boolean;
-  editForm: Partial<Contact>;
+  editForm: Partial<CockpitContact>;
   onToggle: () => void;
   onEdit: () => void;
   onSaveEdit: () => void;
   onDelete: () => void;
-  
   onGenerateMessage: () => void;
-  onEditFormChange: (f: Partial<Contact>) => void;
+  onEditFormChange: (f: Partial<CockpitContact>) => void;
+  onStageChange: (stage: string) => void;
 }) {
   return (
     <div style={{
@@ -584,7 +595,7 @@ function ContactCard({
               fontFamily: 'var(--font-serif)', fontSize: '17px', fontWeight: 500,
               color: 'var(--color-text)', marginBottom: '4px',
             }}>
-              {contact.name}
+              {contact.contact_name}
             </div>
             <div style={{
               fontSize: '13px', color: 'var(--color-text-muted)',
@@ -613,11 +624,11 @@ function ContactCard({
               <div style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>{contact.notes}</div>
             </div>
           )}
-          {contact.lastContact && (
+          {contact.message && (
             <div style={{ marginBottom: '12px' }}>
-              <div style={labelStyle}>Last Contact</div>
-              <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
-                {contact.lastContact}
+              <div style={labelStyle}>Message Template</div>
+              <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                {contact.message}
               </div>
             </div>
           )}
@@ -649,7 +660,7 @@ function ContactCard({
               {PIPELINE_STAGES.map((s) => (
                 <button
                   key={s.key}
-                  onClick={() => /* onStageChange */(s.key)}
+                  onClick={() => onStageChange(s.key)}
                   style={{
                     padding: '5px 10px',
                     background: contact.status === s.key ? 'var(--color-accent)' : 'var(--color-surface)',
@@ -661,7 +672,7 @@ function ContactCard({
                     transition: 'all 0.18s ease',
                   }}
                 >
-                  {s.label}
+                  {s.key}
                 </button>
               ))}
             </div>
@@ -680,7 +691,7 @@ function ContactCard({
       {expanded && editing && (
         <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--color-border)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-            <FormField label="Name" value={editForm.name || ''} onChange={(v) => onEditFormChange({ ...editForm, name: v })} />
+            <FormField label="Name" value={editForm.contact_name || ''} onChange={(v) => onEditFormChange({ ...editForm, contact_name: v })} />
             <FormField label="Company" value={editForm.company || ''} onChange={(v) => onEditFormChange({ ...editForm, company: v })} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
@@ -689,11 +700,12 @@ function ContactCard({
               <label style={labelStyle}>Tier</label>
               <select
                 value={editForm.tier || 'B'}
-                onChange={(e) => onEditFormChange({ ...editForm, tier: e.target.value as 'A' | 'B' })}
+                onChange={(e) => onEditFormChange({ ...editForm, tier: e.target.value as 'A' | 'B' | 'C' })}
                 style={inputStyle}
               >
                 <option value="A">A — High Priority</option>
                 <option value="B">B — Standard</option>
+                <option value="C">C — Low Priority</option>
               </select>
             </div>
           </div>
@@ -720,7 +732,7 @@ function ContactCard({
 }
 
 function PipelineCard({ contact, onClick }: {
-  contact: Contact;
+  contact: CockpitContact;
   onClick: () => void;
 }) {
   return (
@@ -737,7 +749,7 @@ function PipelineCard({ contact, onClick }: {
         fontFamily: 'var(--font-sans)', fontSize: '13px', fontWeight: 500,
         color: 'var(--color-text)', marginBottom: '4px',
       }}>
-        {contact.name}
+        {contact.contact_name}
       </div>
       <div style={{
         fontSize: '11px', color: 'var(--color-text-dim)',
@@ -752,7 +764,7 @@ function PipelineCard({ contact, onClick }: {
   );
 }
 
-function TierBadge({ tier }: { tier: 'A' | 'B' }) {
+function TierBadge({ tier }: { tier: 'A' | 'B' | 'C' }) {
   return (
     <span style={{
       display: 'inline-block',
@@ -767,8 +779,7 @@ function TierBadge({ tier }: { tier: 'A' | 'B' }) {
   );
 }
 
-function StageBadge({ status }: { status: PipelineStatus }) {
-  const stage = PIPELINE_STAGES.find((s) => s.key === status);
+function StageBadge({ status }: { status: string }) {
   return (
     <span style={{
       display: 'inline-block',
@@ -778,7 +789,7 @@ function StageBadge({ status }: { status: PipelineStatus }) {
       color: 'var(--color-text-muted)',
       border: '1px solid var(--color-border)',
     }}>
-      {stage?.label || status}
+      {status}
     </span>
   );
 }
