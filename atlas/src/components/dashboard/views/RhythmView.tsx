@@ -183,8 +183,9 @@ function EmotionHeatmap({ demoData }: { demoData: DemoPulse[] }) {
   if (emotions.length === 0) return null;
 
   const cellSize = 16;
-  const svgW = 40 + 24 * cellSize;
-  const svgH = 20 + emotions.length * cellSize;
+  const labelW = 90;
+  const svgW = labelW + 24 * cellSize;
+  const svgH = 28 + emotions.length * cellSize;
 
   return (
     <div style={{ overflowX: 'auto' }}>
@@ -193,7 +194,7 @@ function EmotionHeatmap({ demoData }: { demoData: DemoPulse[] }) {
           {/* Hour headers */}
           {Array.from({ length: 24 }, (_, h) => h).map(h => (
             <text key={h}
-              x={40 + h * cellSize + cellSize / 2}
+              x={90 + h * cellSize + cellSize / 2}
               y={12}
               textAnchor="middle"
               fontSize={8}
@@ -245,6 +246,13 @@ function EmotionHeatmap({ demoData }: { demoData: DemoPulse[] }) {
 export function RhythmView({ demoData }: RhythmViewProps) {
   const { mode } = useDashboardState();
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Filter out missing pulses (all 0/0/0/0/100 pattern — no response data)
+  const validData = demoData.filter(d => {
+    return !(d.openness === 0 && d.conscientiousness === 0 &&
+             d.extraversion === 0 && d.agreeableness === 0 &&
+             d.emotional_stability === 100);
+  });
 
   useGSAP(() => {
     const cards = containerRef.current?.querySelectorAll('[data-anim]');
@@ -302,7 +310,7 @@ export function RhythmView({ demoData }: RhythmViewProps) {
           {TRAIT_CONFIG.map(trait => (
             <RadialClock
               key={trait.key}
-              demoData={demoData}
+              demoData={validData}
               traitKey={trait.key}
               traitLabel={trait.label}
               color={trait.color}
@@ -318,7 +326,7 @@ export function RhythmView({ demoData }: RhythmViewProps) {
           title="Emotion Heatmap by Hour"
           subtitle="Frequency of emotions across hours of the day"
         >
-          <EmotionHeatmap demoData={demoData} />
+          <EmotionHeatmap demoData={validData} />
         </Card>
       </div>
     </div>

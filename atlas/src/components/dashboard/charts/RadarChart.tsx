@@ -163,8 +163,8 @@ export default function RadarChart({ scores, size = 400, animate = true }: Radar
     <div ref={containerRef} className="radar-chart-container">
       <svg
         width={size}
-        height={size}
-        viewBox={`0 0 ${size} ${size}`}
+        height={size + 20}
+        viewBox={`-20 -20 ${size + 40} ${size + 40}`}
         onClick={handleClick}
         role="img"
         aria-label="Big Five personality radar chart"

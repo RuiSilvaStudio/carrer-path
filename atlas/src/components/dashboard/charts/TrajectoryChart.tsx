@@ -370,7 +370,7 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
   }, []);
 
   // ── Scrub indicator position ─────────────────────────────────
-  const currentScrubIndex = scrubIndex >= 0 && scrubIndex < data.length ? scrubIndex : -1;
+  const currentScrubIndex = scrubIndex >= 0 && scrubIndex < smoothedData.length ? scrubIndex : -1;
   const scrubX = currentScrubIndex >= 0
     ? xScale(currentScrubIndex) + MARGIN.left
     : null;
@@ -445,7 +445,7 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
     return TRAITS.map(t => ({
       short: t.short,
       color: colors[t.key] || cssVar(t.cssVar) || '#888',
-      value: tooltip.point.scores[t.key] ?? '—',
+      value: tooltip.point.scores[t.key] != null ? (typeof tooltip.point.scores[t.key] === 'number' ? tooltip.point.scores[t.key].toFixed(0) : tooltip.point.scores[t.key]) : '—',
     }));
   }, [tooltip, isEmotions, colors]);
 
@@ -490,7 +490,7 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
               <span style={{
                 position: 'absolute', bottom: 'calc(100% + 8px)', left: '50%',
                 transform: 'translateX(-50%)',
-                background: 'var(--color-tooltip-bg)', border: '1px solid var(--color-border)',
+                background: 'var(--color-surface-elevated)', border: '1px solid var(--color-border)',
                 borderRadius: '6px', padding: '10px 14px', maxWidth: '260px',
                 fontFamily: 'var(--font-sans)', fontSize: '11px', lineHeight: 1.5,
                 color: 'var(--color-text-muted)', boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
@@ -822,14 +822,14 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
           >
             <div
               style={{
-                background: 'var(--color-tooltip-bg)',
+                background: 'var(--color-surface-elevated)',
                 border: '1px solid var(--color-border)',
                 borderRadius: 8,
                 padding: '10px 12px',
                 fontFamily: 'var(--font-sans)',
                 fontSize: 12,
                 color: 'var(--color-text)',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
                 lineHeight: 1.5,
               }}
             >
