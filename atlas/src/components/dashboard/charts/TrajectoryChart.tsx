@@ -153,22 +153,6 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
   // ── Determine active series (traits or emotions) ──────────────
   const isEmotions = trajectoryMode === 'emotions';
 
-  // ── Scales ────────────────────────────────────────────────────
-  // Use linear scale based on index (not time scale) — multiple pulses
-  // can share the same date (4x/day), so time scale would stack them
-  // at the same x position and create vertical cliffs.
-  const xScale = useMemo(() => {
-    if (data.length === 0) return d3.scaleLinear().range([0, INNER_W]);
-    return d3.scaleLinear()
-      .domain([0, Math.max(0, data.length - 1)])
-      .range([0, INNER_W]);
-  }, [data.length]);
-
-  const yScale = useMemo(
-    () => d3.scaleLinear().domain([0, 100]).range([INNER_H, 0]),
-    [],
-  );
-
   // ── Smoothing: aggregate data by day or week ──────────────────
   const smoothedData = useMemo(() => {
     if (smoothing === 'raw' || data.length <= 1) return data;
@@ -205,6 +189,21 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
       } as TrajectoryPoint;
     });
   }, [data, smoothing]);
+
+  // ── Scales ────────────────────────────────────────────────────
+  // Use linear scale based on index — rescaled to smoothedData length
+  const xScale = useMemo(() => {
+    const len = smoothedData.length;
+    if (len === 0) return d3.scaleLinear().range([0, INNER_W]);
+    return d3.scaleLinear()
+      .domain([0, Math.max(0, len - 1)])
+      .range([0, INNER_W]);
+  }, [smoothedData.length]);
+
+  const yScale = useMemo(
+    () => d3.scaleLinear().domain([0, 100]).range([INNER_H, 0]),
+    [],
+  );
 
   // ── Line generators (traits) ──────────────────────────────────
   const traitLineGens = useMemo(() => {
@@ -257,14 +256,15 @@ export default function TrajectoryChart({ data, onScrub }: TrajectoryChartProps)
   // ── X-axis ticks ────────────────────────────────────────────
   // Use index-based ticks with date labels
   const xTicks = useMemo(() => {
-    if (data.length <= 1) return [];
-    const tickCount = Math.min(8, data.length);
+    const len = smoothedData.length;
+    if (len <= 1) return [];
+    const tickCount = Math.min(8, len);
     const indices: number[] = [];
     for (let i = 0; i < tickCount; i++) {
-      indices.push(Math.round((i / (tickCount - 1)) * (data.length - 1)));
+      indices.push(Math.round((i / (tickCount - 1)) * (len - 1)));
     }
     return indices;
-  }, [data.length]);
+  }, [smoothedData.length]);
 
   // ── Phases ───────────────────────────────────────────────────
   const phases = useMemo(() => derivePhases(data), [data]);
