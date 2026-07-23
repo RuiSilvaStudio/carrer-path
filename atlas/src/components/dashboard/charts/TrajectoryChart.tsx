@@ -114,7 +114,7 @@ function derivePhases(data: TrajectoryPoint[]): Phase[] {
 }
 
 // ── Component ────────────────────────────────────────────────────
-export default function TrajectoryChart({ data, originalDataLength, onScrub, smoothing = 'daily', onSmoothingChange }: TrajectoryChartProps) {
+export default function TrajectoryChart({ data, originalDataLength, onScrub: _onScrub, smoothing = 'daily', onSmoothingChange }: TrajectoryChartProps) {
   const { trajectoryMode, setTrajectoryMode, scrubIndex, setScrubIndex } = useDashboardState();
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -311,10 +311,9 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub, smo
       const idx = findNearestIndex(mx);
       if (idx >= 0) {
         setScrubIndex(idx);
-        onScrub?.(idx);
       }
     },
-    [findNearestIndex, onScrub, setScrubIndex],
+    [findNearestIndex, setScrubIndex],
   );
 
   // ── Toggle trait/emotion visibility ──────────────────────────
@@ -363,8 +362,7 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub, smo
     const pct = (e.clientX - rect.left) / rect.width;
     const idx = pctToIndex(pct);
     setScrubIndex(idx);
-    onScrub?.(idx);
-  }, [pctToIndex, onScrub, setScrubIndex]);
+  }, [pctToIndex, setScrubIndex]);
 
   // Document-level drag listeners
   useEffect(() => {
@@ -376,7 +374,6 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub, smo
       const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
       const idx = pctToIndex(pct);
       setScrubIndex(idx);
-      onScrub?.(idx);
     };
     const handleUp = () => setDragging(false);
     document.addEventListener('mousemove', handleMove);
@@ -385,7 +382,7 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub, smo
       document.removeEventListener('mousemove', handleMove);
       document.removeEventListener('mouseup', handleUp);
     };
-  }, [dragging, pctToIndex, onScrub, setScrubIndex]);
+  }, [dragging, pctToIndex, setScrubIndex]);
 
   const scrubberPct = currentScrubIndex >= 0 && data.length > 1
     ? (currentScrubIndex / (data.length - 1)) * 100
@@ -786,6 +783,14 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub, smo
             const tooltipX = tooltip.x > WIDTH / 2
               ? tooltip.x - 232  // flip to left
               : tooltip.x + 12;  // default right
+            // Read computed CSS variable values (foreignObject doesn't inherit :root vars in all browsers)
+            const cs = getComputedStyle(document.documentElement);
+            const bg = cs.getPropertyValue('--color-surface').trim() || '#1f1813';
+            const border = cs.getPropertyValue('--color-border').trim() || '#3a2e24';
+            const text = cs.getPropertyValue('--color-text').trim() || '#e8e0d4';
+            const textDim = cs.getPropertyValue('--color-text-dim').trim() || '#9a8f80';
+            const fontSans = cs.getPropertyValue('--font-sans').trim() || 'IBM Plex Sans, sans-serif';
+            const fontMono = cs.getPropertyValue('--font-mono').trim() || 'IBM Plex Mono, monospace';
             return (
               <foreignObject
                 x={Math.max(4, Math.min(tooltipX, WIDTH - 220))}
@@ -798,23 +803,30 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub, smo
                   style={{
                     maxWidth: 220,
                     overflow: 'hidden',
-                    background: 'var(--color-surface)',
-                    border: '1px solid var(--color-border)',
+                    background: bg,
+                    border: `1px solid ${border}`,
                     borderRadius: 8,
                     padding: '10px 12px',
-                    fontFamily: 'var(--font-sans)',
+                    fontFamily: fontSans,
                     fontSize: 12,
-                    color: 'var(--color-text)',
+                    color: text,
                     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                     lineHeight: 1.5,
                   }}
                 >
                   <div style={{
                     fontWeight: 600, marginBottom: 6,
-                    fontFamily: 'var(--font-sans)', fontSize: 13,
-                    color: 'var(--color-text)',
+                    fontFamily: fontSans, fontSize: 13,
+                    color: text,
                   }}>
                     {fmtDateLong(new Date(tooltip.point.date))}
+                  </div>
+                  <div style={{
+                    fontFamily: fontMono, fontSize: 9,
+                    color: textDim, textTransform: 'uppercase',
+                    letterSpacing: '0.08em', marginBottom: 8,
+                  }}>
+                    {tooltip.point.type === 'baseline' ? 'Baseline' : 'Pulse'}
                   </div>
                   <div style={{
                     display: 'flex', flexWrap: 'wrap', gap: '4px 12px',
@@ -827,8 +839,8 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub, smo
                         }}
                       >
                         <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 2, background: entry.color, flexShrink: 0 }} />
-                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--color-text-dim)' }}>{entry.short}</span>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: 'var(--color-text)' }}>{entry.value}</span>
+                        <span style={{ fontFamily: fontMono, fontSize: 10, color: textDim }}>{entry.short}</span>
+                        <span style={{ fontFamily: fontMono, fontSize: 11, fontWeight: 600, color: text }}>{entry.value}</span>
                       </div>
                     ))}
                   </div>
