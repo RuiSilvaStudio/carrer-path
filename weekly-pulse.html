@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <style>
@@ -925,7 +928,7 @@ function toggleEmotion(id) {
 /* ============================================================
    COMPLETION: SAVE PULSE
    ============================================================ */
-function completePulse() {
+async function completePulse() {
   var pulses = loadPulses();
   var newId = (pulses.length === 0) ? 1 : (pulses[pulses.length - 1].id + 1);
 
@@ -934,6 +937,9 @@ function completePulse() {
     var key = 'ipip_' + it.id;
     if (state.responses[key] !== undefined) responses[key] = state.responses[key];
   });
+
+  // Score the pulse for the Supabase record
+  var pulseScores = scorePulse(state.responses);
 
   var pulse = {
     id: newId,
@@ -946,9 +952,37 @@ function completePulse() {
     note: state.note || ''
   };
 
+  // Save to localStorage as fallback (always)
   pulses.push(pulse);
   savePulses(pulses);
   clearDraft();
+
+  // Save to Supabase assessments table
+  try {
+    var sb = await getSupabase();
+    var sessResult = await sb.auth.getSession();
+    var session = sessResult.data.session;
+    if (session && session.user) {
+      var { error } = await sb
+        .from('assessments')
+        .insert({
+          user_id: session.user.id,
+          type: 'pulse',
+          responses: responses,
+          scores: pulseScores,
+          contexts: state.contexts.slice(),
+          emotions: state.emotions.slice(),
+          note: state.note || '',
+          week: state.week,
+          phase: state.phase
+        });
+      if (error) {
+        console.warn('Supabase insert failed, pulse saved to localStorage only:', error.message);
+      }
+    }
+  } catch (e) {
+    console.warn('Supabase save error, pulse saved to localStorage only:', e);
+  }
 
   renderComplete(pulse, pulses);
   showScreen('screen-complete');
@@ -972,7 +1006,7 @@ function renderComplete(pulse, pulses) {
   var prevScores = prevPulse ? scorePulse(prevPulse.responses) : null;
 
   var html = '';
-  html += '<div class="complete-points">Your trajectory now has ' + pulses.length + ' data point' + (pulses.length === 1 ? '' : 's') + '</div>';
+  html += '<div class="complete-points">Pulse saved to your trajectory &middot; ' + pulses.length + ' data point' + (pulses.length === 1 ? '' : 's') + '</div>';
 
   // Radar comparison
   if (baseline && baseline.scores && baseline.scores.bigFive) {
@@ -1155,9 +1189,13 @@ function drawCompletionRadar(stateScores, baseline, prevScores) {
 }
 
 /* ============================================================
-   BOOT
+   BOOT (gated by auth)
    ============================================================ */
-window.addEventListener('DOMContentLoaded', init);
+window.addEventListener('DOMContentLoaded', function() {
+  AuthGate.requireAuth().then(function() {
+    init();
+  });
+});
 </script>
 </body>
 </html>
