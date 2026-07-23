@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Migrate Pulse Data</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<style>
+  body { background: #18120e; color: #e8dfd3; font-family: system-ui, sans-serif; padding: 40px; max-width: 700px; margin: 0 auto; }
+  h1 { font-size: 28px; margin-bottom: 8px; font-family: Georgia, serif; }
+  p { color: #a89a87; margin-bottom: 20px; line-height: 1.6; }
+  button { background: #d4a574; color: #18120e; border: none; padding: 14px 28px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  button:hover { background: #e8b884; }
+  .ok { color: #7ba89b; font-weight: 600; font-size: 18px; }
+  .err { color: #c97757; font-weight: 600; }
+  .info { margin: 16px 0; padding: 16px; background: #1f1813; border-radius: 8px; border: 1px solid #3a2f25; }
+  .pulse-row { padding: 8px 0; border-bottom: 1px solid #3a2f25; color: #a89a87; font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Migrate Your Pulse Data</h1>
+<p id="status">Checking for pulse data in localStorage...</p>
+<div id="content"></div>
+<button id="migrateBtn" style="display:none;" onclick="migratePulses()">Send to Database</button>
+<p id="result"></p>
+
+<script>
+const PULSE_KEY = 'pulse_data_v1';
+const BASELINE_KEY = 'baseline_results_v1';
+
+async function init() {
+  const raw = localStorage.getItem(PULSE_KEY);
+  if (!raw) {
+    document.getElementById('status').textContent = 'No pulse data found in localStorage.';
+    return;
+  }
+  
+  const pulses = JSON.parse(raw);
+  document.getElementById('status').innerHTML = `Found <strong>${pulses.length}</strong> pulse(s) in localStorage. Ready to send to your database.`;
+  
+  // Show what we found
+  let html = '<div class="info">';
+  pulses.forEach((p, i) => {
+    const date = new Date(p.timestamp).toLocaleDateString();
+    const ctx = p.contexts ? p.contexts.join(', ') : 'none';
+    const emo = p.emotions ? p.emotions.join(', ') : 'none';
+    const responses = Object.keys(p.responses || {}).length;
+    html += `<div class="pulse-row"><strong>Pulse ${p.id}</strong> — ${date} — Week ${p.week} (${p.phase}) — ${responses} responses — Context: ${ctx} — Emotions: ${emo}</div>`;
+  });
+  html += '</div>';
+  document.getElementById('content').innerHTML = html;
+  document.getElementById('migrateBtn').style.display = 'block';
+}
+
+async function migratePulses() {
+  const btn = document.getElementById('migrateBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  
+  const result = document.getElementById('result');
+  
+  try {
+    const sb = await getSupabase();
+    const { data: { session }, error: sessionErr } = await sb.auth.getSession();
+    
+    if (!session) {
+      result.innerHTML = '<span class="err">Not logged in. Please log in to the dashboard first, then come back here.</span>';
+      btn.disabled = false;
+      btn.textContent = 'Send to Database';
+      return;
+    }
+    
+    const userId = session.user.id;
+    const raw = localStorage.getItem(PULSE_KEY);
+    const pulses = JSON.parse(raw);
+    let sent = 0;
+    let skipped = 0;
+    
+    for (const pulse of pulses) {
+      // Score the pulse
+      const scores = scorePulse(pulse);
+      
+      const row = {
+        user_id: userId,
+        type: 'pulse',
+        timestamp: pulse.timestamp,
+        week: pulse.week || null,
+        phase: pulse.phase || null,
+        responses: pulse.responses,
+        scores: scores,
+        contexts: pulse.contexts || null,
+        emotions: pulse.emotions || null,
+        note: pulse.note || null
+      };
+      
+      const { error } = await sb.from('assessments').insert(row);
+      
+      if (error) {
+        if (error.code === '23505') {
+          skipped++;
+        } else {
+          throw error;
+        }
+      } else {
+        sent++;
+      }
+    }
+    
+    let msg = `<span class="ok">Done! ${sent} pulse(s) sent to your database.`;
+    if (skipped > 0) msg += ` ${skipped} already existed (skipped).`;
+    msg += `</span><br><br>Go to your <a href="personality-dashboard-prototype.html" style="color:#d4a574;">dashboard</a> — switch to "MY BASELINE" to see your trajectory.`;
+    result.innerHTML = msg;
+    btn.style.display = 'none';
+    
+  } catch (e) {
+    result.innerHTML = '<span class="err">Error: ' + e.message + '</span>';
+    btn.disabled = false;
+    btn.textContent = 'Send to Database';
+  }
+}
+
+// Scoring function (same as dashboard)
+const IPIP_META = {
+  1:{t:'N',r:false},2:{t:'E',r:false},3:{t:'O',r:false},4:{t:'A',r:false},5:{t:'C',r:false},
+  6:{t:'N',r:false},7:{t:'E',r:false},8:{t:'O',r:false},9:{t:'A',r:true},10:{t:'C',r:false},
+  11:{t:'N',r:false},12:{t:'E',r:false},13:{t:'O',r:false},14:{t:'A',r:false},15:{t:'C',r:false},
+  16:{t:'N',r:false},17:{t:'E',r:false},18:{t:'O',r:false},19:{t:'A',r:true},20:{t:'C',r:false},
+  21:{t:'N',r:false},22:{t:'E',r:false},23:{t:'O',r:false},24:{t:'A',r:false},25:{t:'C',r:false},
+  26:{t:'N',r:false},27:{t:'E',r:false},28:{t:'O',r:false},29:{t:'A',r:false},30:{t:'C',r:true},
+  31:{t:'N',r:false},32:{t:'E',r:false},33:{t:'O',r:false},34:{t:'A',r:false},35:{t:'C',r:false},
+  36:{t:'N',r:false},37:{t:'E',r:false},38:{t:'O',r:false},39:{t:'A',r:true},40:{t:'C',r:true},
+  41:{t:'N',r:false},42:{t:'E',r:false},43:{t:'O',r:false},44:{t:'A',r:false},45:{t:'C',r:false},
+  46:{t:'N',r:false},47:{t:'E',r:false},48:{t:'O',r:true},49:{t:'A',r:true},50:{t:'C',r:false},
+  51:{t:'N',r:true},52:{t:'E',r:false},53:{t:'O',r:true},54:{t:'A',r:true},55:{t:'C',r:false},
+  56:{t:'N',r:false},57:{t:'E',r:false},58:{t:'O',r:false},59:{t:'A',r:false},60:{t:'C',r:true},
+  61:{t:'N',r:false},62:{t:'E',r:true},63:{t:'O',r:false},64:{t:'A',r:false},65:{t:'C',r:false},
+  66:{t:'N',r:false},67:{t:'E',r:true},68:{t:'O',r:true},69:{t:'A',r:true},70:{t:'C',r:true},
+  71:{t:'N',r:false},72:{t:'E',r:false},73:{t:'O',r:true},74:{t:'A',r:true},75:{t:'C',r:true},
+  76:{t:'N',r:false},77:{t:'E',r:false},78:{t:'O',r:true},79:{t:'A',r:true},80:{t:'C',r:true},
+  81:{t:'N',r:true},82:{t:'E',r:false},83:{t:'O',r:false},84:{t:'A',r:true},85:{t:'C',r:true},
+  86:{t:'N',r:false},87:{t:'E',r:false},88:{t:'O',r:true},89:{t:'A',r:true},90:{t:'C',r:true},
+  91:{t:'N',r:false},92:{t:'E',r:true},93:{t:'O',r:false},94:{t:'A',r:true},95:{t:'C',r:false},
+  96:{t:'N',r:true},97:{t:'E',r:true},98:{t:'O',r:true},99:{t:'A',r:true},100:{t:'C',r:true},
+  101:{t:'N',r:true},102:{t:'E',r:true},103:{t:'O',r:true},104:{t:'A',r:true},105:{t:'C',r:false},
+  106:{t:'N',r:false},107:{t:'E',r:true},108:{t:'O',r:true},109:{t:'A',r:true},110:{t:'C',r:true},
+  111:{t:'N',r:true},112:{t:'E',r:false},113:{t:'O',r:true},114:{t:'A',r:true},115:{t:'C',r:true},
+  116:{t:'N',r:true},117:{t:'E',r:false},118:{t:'O',r:true},119:{t:'A',r:true},120:{t:'C',r:true}
+};
+
+function scorePulse(pulse) {
+  const traits = {'O':'openness','C':'conscientiousness','E':'extraversion','A':'agreeableness','N':'neuroticism'};
+  const scores = {bigFive:{}, facets:{}, sd3:{}, icar:{correct:0,total:16,percent:0}, context:{}};
+  
+  Object.entries(traits).forEach(([code, name]) => {
+    const items = Object.keys(pulse.responses)
+      .filter(k => k.startsWith('ipip_'))
+      .map(k => parseInt(k.replace('ipip_','')))
+      .filter(id => IPIP_META[id] && IPIP_META[id].t === code);
+    
+    if (items.length === 0) return;
+    
+    const vals = items.map(id => {
+      const resp = pulse.responses['ipip_' + id];
+      return IPIP_META[id].r ? (6 - resp) : resp;
+    }).filter(v => v !== undefined && !isNaN(v));
+    
+    if (vals.length > 0) {
+      const mean = vals.reduce((a,b) => a+b, 0) / vals.length;
+      let score = mean * 20;
+      if (code === 'N') score = 100 - score;
+      scores.bigFive[code === 'N' ? 'emotional_stability' : name] = Math.round(score * 10) / 10;
+    }
+  });
+  
+  return scores;
+}
+
+init();
+</script>
+</body>
+</html>
