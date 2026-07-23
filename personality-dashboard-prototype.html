@@ -2111,7 +2111,6 @@ async function loadPulseData() {
    DEMO DATA — Fetch from Supabase demo_data table (public read)
    ============================================================ */
 async function loadDemoData() {
-  // Try Supabase first (demo_data is public read, no auth needed)
   try {
     const sb = await getSupabase();
     const { data, error } = await sb
@@ -2119,15 +2118,23 @@ async function loadDemoData() {
       .select('*')
       .order('pulse', { ascending: true });
     if (!error && data && data.length > 0) {
-      return data;
+      // Flatten traits JSONB to top-level fields (rendering code expects record.openness, etc.)
+      return data.map(row => {
+        const flat = { ...row };
+        if (row.traits) {
+          flat.openness = row.traits.openness;
+          flat.conscientiousness = row.traits.conscientiousness;
+          flat.extraversion = row.traits.extraversion;
+          flat.agreeableness = row.traits.agreeableness;
+          flat.emotional_stability = row.traits.emotional_stability;
+        }
+        return flat;
+      });
     }
-    if (error) {
-      console.warn('Supabase demo_data fetch failed:', error.message);
-    }
+    if (error) console.warn('Supabase demo_data fetch failed:', error.message);
   } catch (e) {
     console.warn('Supabase demo_data fetch error:', e);
   }
-  // No fallback — demo data is only in Supabase now
   return [];
 }
 
