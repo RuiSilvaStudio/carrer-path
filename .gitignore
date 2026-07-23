@@ -16,3 +16,5 @@ Thumbs.db
 # Temp downloads
 /tmp/
 *.zip
+atlas/node_modules/
+atlas/dist/

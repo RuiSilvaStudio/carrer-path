@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/* ============================================================
+   DESIGN TOKENS — Dark Mode (default)
+   ============================================================ */
+:root,
+[data-theme="dark"] {
+  --color-bg: #18120e;
+  --color-surface: #1f1813;
+  --color-surface-elevated: #2a2218;
+  --color-border: #3a2f25;
+
+  --color-text: #e8dfd3;
+  --color-text-muted: #a89a87;
+  --color-text-dim: #756657;
+
+  --color-accent: #d4a574;
+  --color-accent-bright: #e8b884;
+
+  --color-success: #7ba89b;
+  --color-warning: #c9a55c;
+  --color-danger: #c97757;
+
+  /* Big Five — Tol bright, adjusted for dark */
+  --color-openness: #5b8db8;
+  --color-conscientiousness: #4a9d5a;
+  --color-extraversion: #e87a7a;
+  --color-agreeableness: #d4b85e;
+  --color-stability: #7dc5e0;
+
+  --color-grid: #3a2f25;
+  --color-axis: #756657;
+  --color-tooltip-bg: #2a2218;
+
+  --font-serif: "Fraunces", Georgia, serif;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+/* ============================================================
+   DESIGN TOKENS — Light Mode
+   ============================================================ */
+[data-theme="light"] {
+  --color-bg: #faf8f5;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #f5f2ed;
+  --color-border: #e0d8cc;
+
+  --color-text: #2a2218;
+  --color-text-muted: #6b5d4f;
+  --color-text-dim: #9a8a7a;
+
+  --color-accent: #b8860b;
+  --color-accent-bright: #a07008;
+
+  --color-success: #4a8d7a;
+  --color-warning: #b8860b;
+  --color-danger: #b5533a;
+
+  /* Big Five — Tol bright, original */
+  --color-openness: #4477AA;
+  --color-conscientiousness: #228833;
+  --color-extraversion: #EE6677;
+  --color-agreeableness: #CCBB44;
+  --color-stability: #66CCEE;
+
+  --color-grid: #e0d8cc;
+  --color-axis: #9a8a7a;
+  --color-tooltip-bg: #2a2218;
+}
+
+/* ============================================================
+   GLOBAL
+   ============================================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
