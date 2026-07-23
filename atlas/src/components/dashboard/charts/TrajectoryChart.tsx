@@ -68,6 +68,7 @@ function cssVar(name: string): string {
 // ── Props ────────────────────────────────────────────────────────
 interface TrajectoryChartProps {
   data: TrajectoryPoint[];
+  originalDataLength?: number;
   onScrub?: (index: number) => void;
   smoothing?: 'raw' | 'daily' | 'weekly';
   onSmoothingChange?: (mode: 'raw' | 'daily' | 'weekly') => void;
@@ -113,7 +114,7 @@ function derivePhases(data: TrajectoryPoint[]): Phase[] {
 }
 
 // ── Component ────────────────────────────────────────────────────
-export default function TrajectoryChart({ data, onScrub, smoothing = 'daily', onSmoothingChange }: TrajectoryChartProps) {
+export default function TrajectoryChart({ data, originalDataLength, onScrub, smoothing = 'daily', onSmoothingChange }: TrajectoryChartProps) {
   const { trajectoryMode, setTrajectoryMode, scrubIndex, setScrubIndex } = useDashboardState();
   const containerRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -510,7 +511,7 @@ export default function TrajectoryChart({ data, onScrub, smoothing = 'daily', on
           </div>
 
           {/* ── Smoothing toggle ─────────────────────────────── */}
-          {data.length > 10 && (
+          {(originalDataLength ?? data.length) > 10 && (
             <div style={{
               display: 'flex', gap: 0,
               border: '1px solid var(--color-border)', borderRadius: '3px', overflow: 'hidden',
@@ -790,6 +791,7 @@ export default function TrajectoryChart({ data, onScrub, smoothing = 'daily', on
                 x={Math.max(4, Math.min(tooltipX, WIDTH - 220))}
                 y={Math.max(tooltip.y - 50, 4)}
                 width={220}
+                height={isEmotions ? 200 : 140}
                 style={{ pointerEvents: 'none', overflow: 'visible' }}
               >
                 <div

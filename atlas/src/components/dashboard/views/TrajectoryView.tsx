@@ -228,9 +228,10 @@ export function TrajectoryView({ demoData, baseline, pulses }: TrajectoryViewPro
             <PhaseBar trajectory={smoothedTrajectory} currentIndex={scrubIndex} />
             <TrajectoryChart
               data={smoothedTrajectory}
+              originalDataLength={demoTrajectory.length}
               onScrub={setScrubIndex}
               smoothing={smoothing}
-              onSmoothingChange={setSmoothing}
+              onSmoothingChange={(m) => { setSmoothing(m); setScrubIndex(0); }}
             />
           </Card>
         </div>
@@ -366,9 +367,10 @@ export function TrajectoryView({ demoData, baseline, pulses }: TrajectoryViewPro
           <PhaseBar trajectory={baselineTrajectory} currentIndex={scrubIndex} />
           <TrajectoryChart
             data={baselineTrajectory}
+            originalDataLength={baselineTrajectory.length}
             onScrub={setScrubIndex}
             smoothing={smoothing}
-            onSmoothingChange={setSmoothing}
+            onSmoothingChange={(m) => { setSmoothing(m); setScrubIndex(0); }}
           />
         </Card>
       </div>
