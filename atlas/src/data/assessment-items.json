@@ -1,0 +1,1338 @@
+{
+  "ipip_neo_120": {
+    "title": "IPIP-NEO-120 Personality Inventory",
+    "description": "120 statements about your typical behavior. Rate how accurately each describes you.",
+    "scale": [
+      {
+        "value": 1,
+        "label": "Very Inaccurate"
+      },
+      {
+        "value": 2,
+        "label": "Moderately Inaccurate"
+      },
+      {
+        "value": 3,
+        "label": "Neither Accurate nor Inaccurate"
+      },
+      {
+        "value": 4,
+        "label": "Moderately Accurate"
+      },
+      {
+        "value": 5,
+        "label": "Very Accurate"
+      }
+    ],
+    "items": [
+      {
+        "id": 1,
+        "text": "Worry about things.",
+        "trait": "N",
+        "facet": "Anxiety",
+        "reverse": false
+      },
+      {
+        "id": 2,
+        "text": "Make friends easily.",
+        "trait": "E",
+        "facet": "Friendliness",
+        "reverse": false
+      },
+      {
+        "id": 3,
+        "text": "Have a vivid imagination.",
+        "trait": "O",
+        "facet": "Imagination",
+        "reverse": false
+      },
+      {
+        "id": 4,
+        "text": "Trust others.",
+        "trait": "A",
+        "facet": "Trust",
+        "reverse": false
+      },
+      {
+        "id": 5,
+        "text": "Complete tasks successfully.",
+        "trait": "C",
+        "facet": "Self-efficacy",
+        "reverse": false
+      },
+      {
+        "id": 6,
+        "text": "Get angry easily.",
+        "trait": "N",
+        "facet": "Anger",
+        "reverse": false
+      },
+      {
+        "id": 7,
+        "text": "Love large parties.",
+        "trait": "E",
+        "facet": "Gregariousness",
+        "reverse": false
+      },
+      {
+        "id": 8,
+        "text": "Believe in the importance of art.",
+        "trait": "O",
+        "facet": "Artistic",
+        "reverse": false
+      },
+      {
+        "id": 9,
+        "text": "Use others for my own ends.",
+        "trait": "A",
+        "facet": "Morality",
+        "reverse": true
+      },
+      {
+        "id": 10,
+        "text": "Like to tidy up.",
+        "trait": "C",
+        "facet": "Orderliness",
+        "reverse": false
+      },
+      {
+        "id": 11,
+        "text": "Often feel blue.",
+        "trait": "N",
+        "facet": "Depression",
+        "reverse": false
+      },
+      {
+        "id": 12,
+        "text": "Take charge.",
+        "trait": "E",
+        "facet": "Assertiveness",
+        "reverse": false
+      },
+      {
+        "id": 13,
+        "text": "Experience my emotions intensely.",
+        "trait": "O",
+        "facet": "Emotionality",
+        "reverse": false
+      },
+      {
+        "id": 14,
+        "text": "Love to help others.",
+        "trait": "A",
+        "facet": "Altruism",
+        "reverse": false
+      },
+      {
+        "id": 15,
+        "text": "Keep my promises.",
+        "trait": "C",
+        "facet": "Dutifulness",
+        "reverse": false
+      },
+      {
+        "id": 16,
+        "text": "Find it difficult to approach others.",
+        "trait": "N",
+        "facet": "Self-consciousness",
+        "reverse": false
+      },
+      {
+        "id": 17,
+        "text": "Am always busy.",
+        "trait": "E",
+        "facet": "Activity",
+        "reverse": false
+      },
+      {
+        "id": 18,
+        "text": "Prefer variety to routine.",
+        "trait": "O",
+        "facet": "Adventurousness",
+        "reverse": false
+      },
+      {
+        "id": 19,
+        "text": "Love a good fight.",
+        "trait": "A",
+        "facet": "Cooperation",
+        "reverse": true
+      },
+      {
+        "id": 20,
+        "text": "Work hard.",
+        "trait": "C",
+        "facet": "Achievement-striving",
+        "reverse": false
+      },
+      {
+        "id": 21,
+        "text": "Go on binges.",
+        "trait": "N",
+        "facet": "Immoderation",
+        "reverse": false
+      },
+      {
+        "id": 22,
+        "text": "Love excitement.",
+        "trait": "E",
+        "facet": "Excitement-seeking",
+        "reverse": false
+      },
+      {
+        "id": 23,
+        "text": "Love to read challenging material.",
+        "trait": "O",
+        "facet": "Intellect",
+        "reverse": false
+      },
+      {
+        "id": 24,
+        "text": "Believe that I am better than others.",
+        "trait": "A",
+        "facet": "Modesty",
+        "reverse": true
+      },
+      {
+        "id": 25,
+        "text": "Am always prepared.",
+        "trait": "C",
+        "facet": "Self-discipline",
+        "reverse": false
+      },
+      {
+        "id": 26,
+        "text": "Panic easily.",
+        "trait": "N",
+        "facet": "Vulnerability",
+        "reverse": false
+      },
+      {
+        "id": 27,
+        "text": "Radiate joy.",
+        "trait": "E",
+        "facet": "Cheerfulness",
+        "reverse": false
+      },
+      {
+        "id": 28,
+        "text": "Tend to vote for liberal political candidates.",
+        "trait": "O",
+        "facet": "Liberalism",
+        "reverse": false
+      },
+      {
+        "id": 29,
+        "text": "Sympathise with the homeless.",
+        "trait": "A",
+        "facet": "Sympathy",
+        "reverse": false
+      },
+      {
+        "id": 30,
+        "text": "Jump into things without thinking.",
+        "trait": "C",
+        "facet": "Cautiousness",
+        "reverse": true
+      },
+      {
+        "id": 31,
+        "text": "Fear for the worst.",
+        "trait": "N",
+        "facet": "Anxiety",
+        "reverse": false
+      },
+      {
+        "id": 32,
+        "text": "Feel comfortable around people.",
+        "trait": "E",
+        "facet": "Friendliness",
+        "reverse": false
+      },
+      {
+        "id": 33,
+        "text": "Enjoy wild flights of fantasy.",
+        "trait": "O",
+        "facet": "Imagination",
+        "reverse": false
+      },
+      {
+        "id": 34,
+        "text": "Believe that others have good intentions.",
+        "trait": "A",
+        "facet": "Trust",
+        "reverse": false
+      },
+      {
+        "id": 35,
+        "text": "Excel in what I do.",
+        "trait": "C",
+        "facet": "Self-efficacy",
+        "reverse": false
+      },
+      {
+        "id": 36,
+        "text": "Get irritated easily.",
+        "trait": "N",
+        "facet": "Anger",
+        "reverse": false
+      },
+      {
+        "id": 37,
+        "text": "Talk to a lot of different people at parties.",
+        "trait": "E",
+        "facet": "Gregariousness",
+        "reverse": false
+      },
+      {
+        "id": 38,
+        "text": "See beauty in things that others might not notice.",
+        "trait": "O",
+        "facet": "Artistic",
+        "reverse": false
+      },
+      {
+        "id": 39,
+        "text": "Cheat to get ahead.",
+        "trait": "A",
+        "facet": "Morality",
+        "reverse": true
+      },
+      {
+        "id": 40,
+        "text": "Often forget to put things back in their proper place.",
+        "trait": "C",
+        "facet": "Orderliness",
+        "reverse": true
+      },
+      {
+        "id": 41,
+        "text": "Dislike myself.",
+        "trait": "N",
+        "facet": "Depression",
+        "reverse": false
+      },
+      {
+        "id": 42,
+        "text": "Try to lead others.",
+        "trait": "E",
+        "facet": "Assertiveness",
+        "reverse": false
+      },
+      {
+        "id": 43,
+        "text": "Feel others' emotions.",
+        "trait": "O",
+        "facet": "Emotionality",
+        "reverse": false
+      },
+      {
+        "id": 44,
+        "text": "Am concerned about others.",
+        "trait": "A",
+        "facet": "Altruism",
+        "reverse": false
+      },
+      {
+        "id": 45,
+        "text": "Tell the truth.",
+        "trait": "C",
+        "facet": "Dutifulness",
+        "reverse": false
+      },
+      {
+        "id": 46,
+        "text": "Am afraid to draw attention to myself.",
+        "trait": "N",
+        "facet": "Self-consciousness",
+        "reverse": false
+      },
+      {
+        "id": 47,
+        "text": "Am always on the go.",
+        "trait": "E",
+        "facet": "Activity",
+        "reverse": false
+      },
+      {
+        "id": 48,
+        "text": "Prefer to stick with things that I know.",
+        "trait": "O",
+        "facet": "Adventurousness",
+        "reverse": true
+      },
+      {
+        "id": 49,
+        "text": "Yell at people.",
+        "trait": "A",
+        "facet": "Cooperation",
+        "reverse": true
+      },
+      {
+        "id": 50,
+        "text": "Do more than what's expected of me.",
+        "trait": "C",
+        "facet": "Achievement-striving",
+        "reverse": false
+      },
+      {
+        "id": 51,
+        "text": "Rarely overindulge.",
+        "trait": "N",
+        "facet": "Immoderation",
+        "reverse": true
+      },
+      {
+        "id": 52,
+        "text": "Seek adventure.",
+        "trait": "E",
+        "facet": "Excitement-seeking",
+        "reverse": false
+      },
+      {
+        "id": 53,
+        "text": "Avoid philosophical discussions.",
+        "trait": "O",
+        "facet": "Intellect",
+        "reverse": true
+      },
+      {
+        "id": 54,
+        "text": "Think highly of myself.",
+        "trait": "A",
+        "facet": "Modesty",
+        "reverse": true
+      },
+      {
+        "id": 55,
+        "text": "Carry out my plans.",
+        "trait": "C",
+        "facet": "Self-discipline",
+        "reverse": false
+      },
+      {
+        "id": 56,
+        "text": "Become overwhelmed by events.",
+        "trait": "N",
+        "facet": "Vulnerability",
+        "reverse": false
+      },
+      {
+        "id": 57,
+        "text": "Have a lot of fun.",
+        "trait": "E",
+        "facet": "Cheerfulness",
+        "reverse": false
+      },
+      {
+        "id": 58,
+        "text": "Believe that there is no absolute right or wrong.",
+        "trait": "O",
+        "facet": "Liberalism",
+        "reverse": false
+      },
+      {
+        "id": 59,
+        "text": "Feel sympathy for those who are worse off than myself.",
+        "trait": "A",
+        "facet": "Sympathy",
+        "reverse": false
+      },
+      {
+        "id": 60,
+        "text": "Make rash decisions.",
+        "trait": "C",
+        "facet": "Cautiousness",
+        "reverse": true
+      },
+      {
+        "id": 61,
+        "text": "Am afraid of many things.",
+        "trait": "N",
+        "facet": "Anxiety",
+        "reverse": false
+      },
+      {
+        "id": 62,
+        "text": "Avoid contact with others.",
+        "trait": "E",
+        "facet": "Friendliness",
+        "reverse": true
+      },
+      {
+        "id": 63,
+        "text": "Love to daydream.",
+        "trait": "O",
+        "facet": "Imagination",
+        "reverse": false
+      },
+      {
+        "id": 64,
+        "text": "Trust what people say.",
+        "trait": "A",
+        "facet": "Trust",
+        "reverse": false
+      },
+      {
+        "id": 65,
+        "text": "Handle tasks smoothly.",
+        "trait": "C",
+        "facet": "Self-efficacy",
+        "reverse": false
+      },
+      {
+        "id": 66,
+        "text": "Lose my temper.",
+        "trait": "N",
+        "facet": "Anger",
+        "reverse": false
+      },
+      {
+        "id": 67,
+        "text": "Prefer to be alone.",
+        "trait": "E",
+        "facet": "Gregariousness",
+        "reverse": true
+      },
+      {
+        "id": 68,
+        "text": "Do not like poetry.",
+        "trait": "O",
+        "facet": "Artistic",
+        "reverse": true
+      },
+      {
+        "id": 69,
+        "text": "Take advantage of others.",
+        "trait": "A",
+        "facet": "Morality",
+        "reverse": true
+      },
+      {
+        "id": 70,
+        "text": "Leave a mess in my room.",
+        "trait": "C",
+        "facet": "Orderliness",
+        "reverse": true
+      },
+      {
+        "id": 71,
+        "text": "Am often down in the dumps.",
+        "trait": "N",
+        "facet": "Depression",
+        "reverse": false
+      },
+      {
+        "id": 72,
+        "text": "Take control of things.",
+        "trait": "E",
+        "facet": "Assertiveness",
+        "reverse": false
+      },
+      {
+        "id": 73,
+        "text": "Rarely notice my emotional reactions.",
+        "trait": "O",
+        "facet": "Emotionality",
+        "reverse": true
+      },
+      {
+        "id": 74,
+        "text": "Am indifferent to the feelings of others.",
+        "trait": "A",
+        "facet": "Altruism",
+        "reverse": true
+      },
+      {
+        "id": 75,
+        "text": "Break rules.",
+        "trait": "C",
+        "facet": "Dutifulness",
+        "reverse": true
+      },
+      {
+        "id": 76,
+        "text": "Only feel comfortable with friends.",
+        "trait": "N",
+        "facet": "Self-consciousness",
+        "reverse": false
+      },
+      {
+        "id": 77,
+        "text": "Do a lot in my spare time.",
+        "trait": "E",
+        "facet": "Activity",
+        "reverse": false
+      },
+      {
+        "id": 78,
+        "text": "Dislike changes.",
+        "trait": "O",
+        "facet": "Adventurousness",
+        "reverse": true
+      },
+      {
+        "id": 79,
+        "text": "Insult people.",
+        "trait": "A",
+        "facet": "Cooperation",
+        "reverse": true
+      },
+      {
+        "id": 80,
+        "text": "Do just enough work to get by.",
+        "trait": "C",
+        "facet": "Achievement-striving",
+        "reverse": true
+      },
+      {
+        "id": 81,
+        "text": "Easily resist temptations.",
+        "trait": "N",
+        "facet": "Immoderation",
+        "reverse": true
+      },
+      {
+        "id": 82,
+        "text": "Enjoy being reckless.",
+        "trait": "E",
+        "facet": "Excitement-seeking",
+        "reverse": false
+      },
+      {
+        "id": 83,
+        "text": "Have difficulty understanding abstract ideas.",
+        "trait": "O",
+        "facet": "Intellect",
+        "reverse": true
+      },
+      {
+        "id": 84,
+        "text": "Have a high opinion of myself.",
+        "trait": "A",
+        "facet": "Modesty",
+        "reverse": true
+      },
+      {
+        "id": 85,
+        "text": "Waste my time.",
+        "trait": "C",
+        "facet": "Self-discipline",
+        "reverse": true
+      },
+      {
+        "id": 86,
+        "text": "Feel that I'm unable to deal with things.",
+        "trait": "N",
+        "facet": "Vulnerability",
+        "reverse": false
+      },
+      {
+        "id": 87,
+        "text": "Love life.",
+        "trait": "E",
+        "facet": "Cheerfulness",
+        "reverse": false
+      },
+      {
+        "id": 88,
+        "text": "Tend to vote for conservative political candidates.",
+        "trait": "O",
+        "facet": "Liberalism",
+        "reverse": true
+      },
+      {
+        "id": 89,
+        "text": "Am not interested in other people's problems.",
+        "trait": "A",
+        "facet": "Sympathy",
+        "reverse": true
+      },
+      {
+        "id": 90,
+        "text": "Rush into things.",
+        "trait": "C",
+        "facet": "Cautiousness",
+        "reverse": true
+      },
+      {
+        "id": 91,
+        "text": "Get stressed out easily.",
+        "trait": "N",
+        "facet": "Anxiety",
+        "reverse": false
+      },
+      {
+        "id": 92,
+        "text": "Keep others at a distance.",
+        "trait": "E",
+        "facet": "Friendliness",
+        "reverse": true
+      },
+      {
+        "id": 93,
+        "text": "Like to get lost in thought.",
+        "trait": "O",
+        "facet": "Intellect",
+        "reverse": false
+      },
+      {
+        "id": 94,
+        "text": "Distrust people.",
+        "trait": "A",
+        "facet": "Trust",
+        "reverse": true
+      },
+      {
+        "id": 95,
+        "text": "Know how to get things done.",
+        "trait": "C",
+        "facet": "Self-efficacy",
+        "reverse": false
+      },
+      {
+        "id": 96,
+        "text": "Am not easily annoyed.",
+        "trait": "N",
+        "facet": "Anger",
+        "reverse": true
+      },
+      {
+        "id": 97,
+        "text": "Avoid crowds.",
+        "trait": "E",
+        "facet": "Gregariousness",
+        "reverse": true
+      },
+      {
+        "id": 98,
+        "text": "Do not enjoy going to art museums.",
+        "trait": "O",
+        "facet": "Artistic",
+        "reverse": true
+      },
+      {
+        "id": 99,
+        "text": "Obstruct others' plans.",
+        "trait": "A",
+        "facet": "Morality",
+        "reverse": true
+      },
+      {
+        "id": 100,
+        "text": "Leave my belongings around.",
+        "trait": "C",
+        "facet": "Orderliness",
+        "reverse": true
+      },
+      {
+        "id": 101,
+        "text": "Feel comfortable with myself.",
+        "trait": "N",
+        "facet": "Depression",
+        "reverse": true
+      },
+      {
+        "id": 102,
+        "text": "Wait for others to lead the way.",
+        "trait": "E",
+        "facet": "Assertiveness",
+        "reverse": true
+      },
+      {
+        "id": 103,
+        "text": "Don't understand people who get emotional.",
+        "trait": "O",
+        "facet": "Emotionality",
+        "reverse": true
+      },
+      {
+        "id": 104,
+        "text": "Take no time for others.",
+        "trait": "A",
+        "facet": "Altruism",
+        "reverse": true
+      },
+      {
+        "id": 105,
+        "text": "Break my promises.",
+        "trait": "C",
+        "facet": "Dutifulness",
+        "reverse": true
+      },
+      {
+        "id": 106,
+        "text": "Am not bothered by difficult social situations.",
+        "trait": "N",
+        "facet": "Self-consciousness",
+        "reverse": true
+      },
+      {
+        "id": 107,
+        "text": "Like to take it easy.",
+        "trait": "E",
+        "facet": "Activity",
+        "reverse": true
+      },
+      {
+        "id": 108,
+        "text": "Am attached to conventional ways.",
+        "trait": "O",
+        "facet": "Adventurousness",
+        "reverse": true
+      },
+      {
+        "id": 109,
+        "text": "Get back at others.",
+        "trait": "A",
+        "facet": "Cooperation",
+        "reverse": true
+      },
+      {
+        "id": 110,
+        "text": "Put little time and effort into my work.",
+        "trait": "C",
+        "facet": "Achievement-striving",
+        "reverse": true
+      },
+      {
+        "id": 111,
+        "text": "Am able to control my cravings.",
+        "trait": "N",
+        "facet": "Immoderation",
+        "reverse": true
+      },
+      {
+        "id": 112,
+        "text": "Act wild and crazy.",
+        "trait": "E",
+        "facet": "Excitement-seeking",
+        "reverse": false
+      },
+      {
+        "id": 113,
+        "text": "Am not interested in theoretical discussions.",
+        "trait": "O",
+        "facet": "Intellect",
+        "reverse": true
+      },
+      {
+        "id": 114,
+        "text": "Boast about my virtues.",
+        "trait": "A",
+        "facet": "Modesty",
+        "reverse": true
+      },
+      {
+        "id": 115,
+        "text": "Have difficulty starting tasks.",
+        "trait": "C",
+        "facet": "Self-discipline",
+        "reverse": true
+      },
+      {
+        "id": 116,
+        "text": "Remain calm under pressure.",
+        "trait": "N",
+        "facet": "Vulnerability",
+        "reverse": true
+      },
+      {
+        "id": 117,
+        "text": "Look at the bright side of life.",
+        "trait": "E",
+        "facet": "Cheerfulness",
+        "reverse": false
+      },
+      {
+        "id": 118,
+        "text": "Believe that we should be tough on crime.",
+        "trait": "O",
+        "facet": "Liberalism",
+        "reverse": true
+      },
+      {
+        "id": 119,
+        "text": "Try not to think about the needy.",
+        "trait": "A",
+        "facet": "Sympathy",
+        "reverse": true
+      },
+      {
+        "id": 120,
+        "text": "Act without thinking.",
+        "trait": "C",
+        "facet": "Cautiousness",
+        "reverse": true
+      }
+    ],
+    "source": "ipip.ori.org - Public Domain",
+    "citation": "Johnson, J. A. (2014). Measuring thirty facets of the five factor model with a 120-item public domain inventory: Development of the IPIP-NEO-120. Journal of Research in Personality, 51, 78-89."
+  },
+  "icar_16": {
+    "title": "ICAR-16 Cognitive Ability Assessment",
+    "description": "16 questions testing different cognitive abilities. Take your time - there is no time limit.",
+    "items": [
+      {
+        "id": 1,
+        "type": "series",
+        "text": "What comes next in the sequence? A, C, E, G, ?",
+        "options": [
+          "H",
+          "I",
+          "J",
+          "K"
+        ],
+        "correct": 1
+      },
+      {
+        "id": 2,
+        "type": "series",
+        "text": "What comes next in the sequence? 2, 6, 12, 20, 30, ?",
+        "options": [
+          "40",
+          "42",
+          "44",
+          "46"
+        ],
+        "correct": 1
+      },
+      {
+        "id": 3,
+        "type": "series",
+        "text": "What comes next in the sequence? B, D, G, K, ?",
+        "options": [
+          "M",
+          "N",
+          "O",
+          "P"
+        ],
+        "correct": 3
+      },
+      {
+        "id": 4,
+        "type": "series",
+        "text": "What comes next in the sequence? 1, 4, 9, 16, 25, ?",
+        "options": [
+          "30",
+          "36",
+          "49",
+          "64"
+        ],
+        "correct": 1
+      },
+      {
+        "id": 5,
+        "type": "verbal",
+        "text": "Which word does NOT belong with the others?",
+        "options": [
+          "Happy",
+          "Joyful",
+          "Sad",
+          "Cheerful"
+        ],
+        "correct": 2
+      },
+      {
+        "id": 6,
+        "type": "verbal",
+        "text": "Which word does NOT belong with the others?",
+        "options": [
+          "Run",
+          "Walk",
+          "Sit",
+          "Jump"
+        ],
+        "correct": 2
+      },
+      {
+        "id": 7,
+        "type": "verbal",
+        "text": "Which word does NOT belong with the others?",
+        "options": [
+          "Oak",
+          "Pine",
+          "Rose",
+          "Maple"
+        ],
+        "correct": 2
+      },
+      {
+        "id": 8,
+        "type": "verbal",
+        "text": "Which word does NOT belong with the others?",
+        "options": [
+          "Red",
+          "Blue",
+          "Circle",
+          "Green"
+        ],
+        "correct": 2
+      },
+      {
+        "id": 9,
+        "type": "matrix",
+        "text": "Complete the pattern: If A=1, B=2, C=3, then E=?",
+        "options": [
+          "4",
+          "5",
+          "6",
+          "7"
+        ],
+        "correct": 1
+      },
+      {
+        "id": 10,
+        "type": "matrix",
+        "text": "If all cats are animals, and all animals are living things, then all cats are...?",
+        "options": [
+          "Not living things",
+          "Living things",
+          "Plants",
+          "Minerals"
+        ],
+        "correct": 1
+      },
+      {
+        "id": 11,
+        "type": "matrix",
+        "text": "In a certain code, CAT is written as 3120. How would DOG be written?",
+        "options": [
+          "4157",
+          "4156",
+          "4147",
+          "3157"
+        ],
+        "correct": 0
+      },
+      {
+        "id": 12,
+        "type": "matrix",
+        "text": "Which number completes the analogy? 2 is to 8 as 3 is to...?",
+        "options": [
+          "9",
+          "12",
+          "15",
+          "27"
+        ],
+        "correct": 3
+      },
+      {
+        "id": 13,
+        "type": "rotation",
+        "text": "If you rotate the letter 'F' 180 degrees clockwise, which letter does it most resemble?",
+        "options": [
+          "F (upside down)",
+          "L",
+          "T",
+          "E"
+        ],
+        "correct": 0
+      },
+      {
+        "id": 14,
+        "type": "rotation",
+        "text": "A cube has faces painted red, blue, green, yellow, white, and black. If red is on top and blue is in front, which color is on the bottom?",
+        "options": [
+          "Green",
+          "Yellow",
+          "White",
+          "Cannot determine"
+        ],
+        "correct": 3
+      },
+      {
+        "id": 15,
+        "type": "rotation",
+        "text": "If you fold a square paper in half diagonally, then in half again, how many layers thick is the folded paper?",
+        "options": [
+          "2",
+          "4",
+          "6",
+          "8"
+        ],
+        "correct": 1
+      },
+      {
+        "id": 16,
+        "type": "rotation",
+        "text": "Which shape has the most lines of symmetry?",
+        "options": [
+          "Equilateral triangle",
+          "Square",
+          "Circle",
+          "Rectangle"
+        ],
+        "correct": 2
+      }
+    ],
+    "source": "icar-project.org - Public Domain",
+    "citation": "Condon, D.M. & Revelle, W. (2014). The International Cognitive Ability Resource: Development and initial validation of a public-domain measure. Intelligence, 43, 52-64."
+  },
+  "sd3": {
+    "title": "Short Dark Triad (SD3)",
+    "description": "27 statements about your attitudes and behaviors. Rate how much you agree with each.",
+    "scale": [
+      {
+        "value": 1,
+        "label": "Strongly Disagree"
+      },
+      {
+        "value": 2,
+        "label": "Disagree"
+      },
+      {
+        "value": 3,
+        "label": "Neither Agree nor Disagree"
+      },
+      {
+        "value": 4,
+        "label": "Agree"
+      },
+      {
+        "value": 5,
+        "label": "Strongly Agree"
+      }
+    ],
+    "items": [
+      {
+        "id": 1,
+        "text": "It's not wise to tell your secrets.",
+        "trait": "M",
+        "facet": "Machiavellianism"
+      },
+      {
+        "id": 2,
+        "text": "People see me as a natural leader.",
+        "trait": "N",
+        "facet": "Narcissism"
+      },
+      {
+        "id": 3,
+        "text": "I like to get revenge on authorities.",
+        "trait": "P",
+        "facet": "Psychopathy"
+      },
+      {
+        "id": 4,
+        "text": "I like to use clever manipulation to get my way.",
+        "trait": "M",
+        "facet": "Machiavellianism"
+      },
+      {
+        "id": 5,
+        "text": "I hate being the center of attention.",
+        "trait": "N",
+        "facet": "Narcissism",
+        "reverse": true
+      },
+      {
+        "id": 6,
+        "text": "I avoid dangerous situations.",
+        "trait": "P",
+        "facet": "Psychopathy",
+        "reverse": true
+      },
+      {
+        "id": 7,
+        "text": "Whatever it takes, you must get the important people on your side.",
+        "trait": "M",
+        "facet": "Machiavellianism"
+      },
+      {
+        "id": 8,
+        "text": "Many group activities tend to be dull without me.",
+        "trait": "N",
+        "facet": "Narcissism"
+      },
+      {
+        "id": 9,
+        "text": "Payback needs to be quick and nasty.",
+        "trait": "P",
+        "facet": "Psychopathy"
+      },
+      {
+        "id": 10,
+        "text": "Avoid direct conflict with others because they may be useful in the future.",
+        "trait": "M",
+        "facet": "Machiavellianism"
+      },
+      {
+        "id": 11,
+        "text": "I know that I am special because everyone keeps telling me so.",
+        "trait": "N",
+        "facet": "Narcissism"
+      },
+      {
+        "id": 12,
+        "text": "People often say I'm out of control.",
+        "trait": "P",
+        "facet": "Psychopathy"
+      },
+      {
+        "id": 13,
+        "text": "It's wise to keep track of information that you can use against people later.",
+        "trait": "M",
+        "facet": "Machiavellianism"
+      },
+      {
+        "id": 14,
+        "text": "I like to get acquainted with important people.",
+        "trait": "N",
+        "facet": "Narcissism"
+      },
+      {
+        "id": 15,
+        "text": "It's true that I can be mean to others.",
+        "trait": "P",
+        "facet": "Psychopathy"
+      },
+      {
+        "id": 16,
+        "text": "You should wait for the right time to get back at people.",
+        "trait": "M",
+        "facet": "Machiavellianism"
+      },
+      {
+        "id": 17,
+        "text": "I feel embarrassed if someone compliments me.",
+        "trait": "N",
+        "facet": "Narcissism",
+        "reverse": true
+      },
+      {
+        "id": 18,
+        "text": "People who mess with me always regret it.",
+        "trait": "P",
+        "facet": "Psychopathy"
+      },
+      {
+        "id": 19,
+        "text": "There are things you should hide from other people because they don't need to know.",
+        "trait": "M",
+        "facet": "Machiavellianism"
+      },
+      {
+        "id": 20,
+        "text": "I have been compared to famous people.",
+        "trait": "N",
+        "facet": "Narcissism"
+      },
+      {
+        "id": 21,
+        "text": "I have never gotten into trouble with the law.",
+        "trait": "P",
+        "facet": "Psychopathy",
+        "reverse": true
+      },
+      {
+        "id": 22,
+        "text": "Make sure your plans benefit you, not others.",
+        "trait": "M",
+        "facet": "Machiavellianism"
+      },
+      {
+        "id": 23,
+        "text": "I am an average person.",
+        "trait": "N",
+        "facet": "Narcissism",
+        "reverse": true
+      },
+      {
+        "id": 24,
+        "text": "I enjoy having sex with people I hardly know.",
+        "trait": "P",
+        "facet": "Psychopathy"
+      },
+      {
+        "id": 25,
+        "text": "Most people can be manipulated.",
+        "trait": "M",
+        "facet": "Machiavellianism"
+      },
+      {
+        "id": 26,
+        "text": "I insist on getting the respect I deserve.",
+        "trait": "N",
+        "facet": "Narcissism"
+      },
+      {
+        "id": 27,
+        "text": "I'll say anything to get what I want.",
+        "trait": "P",
+        "facet": "Psychopathy"
+      }
+    ],
+    "source": "Jones & Paulhus (2014) - CC BY-NC-SA 4.0",
+    "citation": "Jones, D. N., & Paulhus, D. L. (2014). Introducing the Short Dark Triad (SD3): A brief measure of dark personality traits. Assessment, 21(1), 28-41."
+  },
+  "context": {
+    "title": "Your Current Context",
+    "description": "A few quick questions about your current life situation. This helps interpret your baseline.",
+    "items": [
+      {
+        "id": "current_role",
+        "text": "What best describes your current work situation?",
+        "type": "select",
+        "options": [
+          "Employed full-time",
+          "Employed part-time",
+          "Self-employed / Freelance",
+          "Between roles / Job searching",
+          "Student",
+          "Other"
+        ]
+      },
+      {
+        "id": "life_event",
+        "text": "Have you experienced any significant life events in the past 3 months?",
+        "type": "select",
+        "options": [
+          "No significant events",
+          "Job change or transition",
+          "Relocation",
+          "Family change (marriage, birth, loss)",
+          "Health challenge",
+          "Other"
+        ]
+      },
+      {
+        "id": "stress_level",
+        "text": "How would you rate your current stress level?",
+        "type": "scale",
+        "min": 1,
+        "max": 10,
+        "labels": {
+          "1": "Very low",
+          "5": "Moderate",
+          "10": "Very high"
+        }
+      },
+      {
+        "id": "energy_level",
+        "text": "How would you rate your current energy level?",
+        "type": "scale",
+        "min": 1,
+        "max": 10,
+        "labels": {
+          "1": "Exhausted",
+          "5": "Moderate",
+          "10": "Very high"
+        }
+      },
+      {
+        "id": "primary_context",
+        "text": "Where do you spend most of your waking hours?",
+        "type": "select",
+        "options": [
+          "Office / Workplace",
+          "Home office",
+          "Studying / School",
+          "Home / Family",
+          "Traveling / Variable",
+          "Other"
+        ]
+      }
+    ]
+  }
+}

@@ -1,7 +1,11 @@
+import { useRef, useMemo } from 'react';
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
 import { useDashboardState } from '../../../state/DashboardContext';
 import { buildTrajectory } from '../../../lib/trajectory';
 import type { DemoPulse, Assessment, TrajectoryPoint, BigFiveScores } from '../../../types';
 import RadarChart from '../charts/RadarChart';
+import { Card } from '../../ui/Card';
 
 interface DistributionViewProps {
   demoData: DemoPulse[];
@@ -17,7 +21,7 @@ const TRAIT_CONFIG = [
   { key: 'emotional_stability' as const, label: 'Stability', color: 'var(--color-stability)' },
 ];
 
-// Simple density estimate using kernel density estimation (gaussian)
+// ── KDE (Gaussian kernel density estimation) ─────────────────────
 function estimateDensity(values: number[], bandwidth = 8): { x: number; y: number }[] {
   if (values.length === 0) return [];
   const min = 0;
@@ -37,7 +41,7 @@ function estimateDensity(values: number[], bandwidth = 8): { x: number; y: numbe
     points.push({ x, y });
   }
 
-  // Normalize
+  // Normalize to max = 1
   const maxY = Math.max(...points.map(p => p.y));
   if (maxY > 0) {
     for (const p of points) p.y = p.y / maxY;
@@ -46,50 +50,156 @@ function estimateDensity(values: number[], bandwidth = 8): { x: number; y: numbe
   return points;
 }
 
-function DensityPlot({ values, label, color }: { values: number[]; label: string; color: string }) {
+// ── Build histogram bins ─────────────────────────────────────────
+function buildHistogram(values: number[], numBins = 20): { bin: number; count: number; x0: number; x1: number }[] {
+  if (values.length === 0) return [];
+  const binSize = 100 / numBins;
+  const bins: { bin: number; count: number; x0: number; x1: number }[] = [];
+  for (let i = 0; i < numBins; i++) {
+    bins.push({ bin: i, count: 0, x0: i * binSize, x1: (i + 1) * binSize });
+  }
+  for (const v of values) {
+    const idx = Math.min(Math.floor(v / binSize), numBins - 1);
+    bins[idx].count++;
+  }
+  return bins;
+}
+
+// ── Density Chart: histogram bars + KDE curve + mean line ────────
+function DensityChart({ values, label, color }: { values: number[]; label: string; color: string }) {
+  const chartRef = useRef<SVGGElement>(null);
+
   const width = 300;
-  const height = 120;
-  const padding = { top: 10, right: 10, bottom: 20, left: 30 };
+  const height = 160;
+  const padding = { top: 12, right: 12, bottom: 24, left: 28 };
   const chartW = width - padding.left - padding.right;
   const chartH = height - padding.top - padding.bottom;
-  const density = estimateDensity(values);
-  const maxDensityY = Math.max(...density.map(d => d.y), 0.01);
 
-  const path = density
+  const density = useMemo(() => estimateDensity(values), [values]);
+  const histogram = useMemo(() => buildHistogram(values), [values]);
+  const mean = useMemo(() => values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0, [values]);
+  const maxCount = useMemo(() => Math.max(...histogram.map(h => h.count), 1), [histogram]);
+  const maxDensityY = useMemo(() => Math.max(...density.map(d => d.y), 0.01), [density]);
+
+  // Scale histogram counts to fit alongside density
+  // We normalize histogram by maxCount, and density is already normalized to 1
+  const histScale = (count: number) => (count / maxCount) * 0.7 * chartH; // 70% height for bars
+  const densityScale = (y: number) => (y / maxDensityY) * chartH;
+
+  // KDE path
+  const densityPath = density
     .map((d, i) => {
       const x = padding.left + (d.x / 100) * chartW;
-      const y = padding.top + chartH - (d.y / maxDensityY) * chartH;
+      const y = padding.top + chartH - densityScale(d.y);
       return `${i === 0 ? 'M' : 'L'}${x},${y}`;
     })
     .join(' ');
 
-  const areaPath = path
-    ? `${path} L${padding.left + chartW},${padding.top + chartH} L${padding.left},${padding.top + chartH} Z`
+  const areaPath = densityPath
+    ? `${densityPath} L${padding.left + chartW},${padding.top + chartH} L${padding.left},${padding.top + chartH} Z`
     : '';
+
+  // Mean line position
+  const meanX = padding.left + (mean / 100) * chartW;
+
+  // GSAP animate bars on entrance
+  useGSAP(() => {
+    if (!chartRef.current) return;
+    const bars = chartRef.current.querySelectorAll('rect[data-bar]');
+    gsap.fromTo(bars, { scaleY: 0, transformOrigin: 'bottom' }, { scaleY: 1, duration: 0.6, ease: 'power2.out', stagger: 0.02 });
+    const curve = chartRef.current.querySelector('path[data-curve]');
+    if (curve) {
+      const len = (curve as SVGPathElement).getTotalLength();
+      gsap.fromTo(curve, { strokeDasharray: len, strokeDashoffset: len }, { strokeDashoffset: 0, duration: 1, ease: 'power2.out', delay: 0.3 });
+    }
+  }, { scope: chartRef, dependencies: [values] });
 
   return (
     <div>
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px',
-      }}>
-        <span style={{ display: 'inline-block', width: '10px', height: '2px', background: color }} />
+      {/* Label + color swatch */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+        <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '3px', background: color }} />
         <span style={{
           fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase',
           letterSpacing: '0.08em', color: 'var(--color-text-muted)',
         }}>
           {label}
         </span>
+        <span style={{
+          fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--color-text-dim)',
+          marginLeft: 'auto',
+        }}>
+          μ={mean.toFixed(1)}
+        </span>
       </div>
-      <svg width={width} height={height}>
-        <line x1={padding.left} y1={padding.top + chartH} x2={padding.left + chartW} y2={padding.top + chartH} stroke="var(--color-grid)" />
-        <line x1={padding.left} y1={padding.top} x2={padding.left} y2={padding.top + chartH} stroke="var(--color-grid)" />
-        {[0, 50, 100].map(v => (
-          <text key={v} x={padding.left + (v / 100) * chartW} y={height - 6} textAnchor="middle" fontSize={9} fill="var(--color-text-dim)" fontFamily="var(--font-mono)">
-            {v}
+
+      <svg width="100%" viewBox={`0 0 ${width} ${height}`}>
+        <g ref={chartRef}>
+          {/* Grid lines */}
+          <line x1={padding.left} y1={padding.top + chartH} x2={padding.left + chartW} y2={padding.top + chartH} stroke="var(--color-grid)" strokeWidth={1} />
+          <line x1={padding.left} y1={padding.top} x2={padding.left} y2={padding.top + chartH} stroke="var(--color-grid)" strokeWidth={1} />
+
+          {/* X-axis labels */}
+          {[0, 25, 50, 75, 100].map(v => (
+            <text key={v} x={padding.left + (v / 100) * chartW} y={height - 6} textAnchor="middle" fontSize={9} fill="var(--color-text-dim)" fontFamily="var(--font-mono)">
+              {v}
+            </text>
+          ))}
+
+          {/* Histogram bars */}
+          {histogram.map(h => {
+            const barW = (chartW / histogram.length) - 1;
+            const barX = padding.left + (h.bin / histogram.length) * chartW + 0.5;
+            const barH = histScale(h.count);
+            return (
+              <rect
+                key={h.bin}
+                data-bar
+                x={barX}
+                y={padding.top + chartH - barH}
+                width={Math.max(barW, 1)}
+                height={barH}
+                fill={color}
+                fillOpacity={0.2}
+                rx={1}
+              />
+            );
+          })}
+
+          {/* KDE area + curve */}
+          {areaPath && <path d={areaPath} fill={color} fillOpacity={0.08} />}
+          {densityPath && (
+            <path
+              data-curve
+              d={densityPath}
+              fill="none"
+              stroke={color}
+              strokeWidth={2}
+              strokeLinejoin="round"
+            />
+          )}
+
+          {/* Mean line */}
+          <line
+            x1={meanX}
+            y1={padding.top}
+            x2={meanX}
+            y2={padding.top + chartH}
+            stroke="var(--color-text-muted)"
+            strokeWidth={1}
+            strokeDasharray="3 3"
+            opacity={0.6}
+          />
+          <text
+            x={meanX + 4}
+            y={padding.top + 10}
+            fontSize={9}
+            fill="var(--color-text-dim)"
+            fontFamily="var(--font-mono)"
+          >
+            μ
           </text>
-        ))}
-        {areaPath && <path d={areaPath} fill={color} fillOpacity={0.15} />}
-        {path && <path d={path} fill="none" stroke={color} strokeWidth={2} />}
+        </g>
       </svg>
     </div>
   );
@@ -97,7 +207,19 @@ function DensityPlot({ values, label, color }: { values: number[]; label: string
 
 export function DistributionView({ demoData, baseline, pulses }: DistributionViewProps) {
   const { mode } = useDashboardState();
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  // GSAP entrance for cards
+  useGSAP(() => {
+    const cards = containerRef.current?.querySelectorAll('[data-anim]');
+    if (cards) {
+      gsap.fromTo(cards, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out', stagger: 0.1 });
+    }
+  }, { scope: containerRef, dependencies: [mode] });
+
+  // ═══════════════════════════════════════════════════════════════
+  // DEMO MODE
+  // ═══════════════════════════════════════════════════════════════
   if (mode === 'demo') {
     const traitValues: Record<keyof BigFiveScores, number[]> = {
       openness: [],
@@ -115,53 +237,129 @@ export function DistributionView({ demoData, baseline, pulses }: DistributionVie
     });
 
     return (
-      <div>
-        <SectionLabel>Density Distributions — Demo ({demoData.length} pulses)</SectionLabel>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
-          {TRAIT_CONFIG.map(trait => (
-            <DensityPlot
-              key={trait.key}
-              values={traitValues[trait.key]}
-              label={trait.label}
-              color={trait.color}
-            />
-          ))}
+      <div ref={containerRef}>
+        <Card
+          label="02 · Distribution"
+          title="Density Distributions"
+          subtitle={`${demoData.length} pulses — frequency histograms with kernel density estimates`}
+          data-anim
+        >
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '20px',
+          }}>
+            {TRAIT_CONFIG.map(trait => (
+              <DensityChart
+                key={trait.key}
+                values={traitValues[trait.key]}
+                label={trait.label}
+                color={trait.color}
+              />
+            ))}
+          </div>
+        </Card>
+
+        {/* Stats summary */}
+        <div style={{ marginTop: '20px' }} data-anim>
+          <Card label="Summary Statistics" title="Trait Ranges & Means">
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: '12px',
+            }}>
+              {TRAIT_CONFIG.map(trait => {
+                const vals = traitValues[trait.key];
+                const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+                const min = Math.min(...vals);
+                const max = Math.max(...vals);
+                const std = Math.sqrt(vals.reduce((a, b) => a + (b - mean) ** 2, 0) / vals.length);
+                return (
+                  <div key={trait.key} style={{
+                    padding: '14px 16px', background: 'var(--color-surface-elevated)',
+                    borderRadius: '8px',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: trait.color }} />
+                      <span style={{
+                        fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase',
+                        letterSpacing: '0.08em', color: 'var(--color-text-dim)',
+                      }}>
+                        {trait.label}
+                      </span>
+                    </div>
+                    <p style={{
+                      fontFamily: 'var(--font-serif)', fontSize: '24px', fontWeight: 500,
+                      color: 'var(--color-text)', letterSpacing: '-0.02em', marginBottom: '4px',
+                    }}>
+                      {mean.toFixed(1)}
+                    </p>
+                    <p style={{
+                      fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--color-text-dim)',
+                    }}>
+                      {min.toFixed(0)}–{max.toFixed(0)} · σ={std.toFixed(1)}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
         </div>
       </div>
     );
   }
 
-  // Baseline mode
+  // ═══════════════════════════════════════════════════════════════
+  // BASELINE MODE
+  // ═══════════════════════════════════════════════════════════════
   if (!baseline) return null;
 
   const dataPoints = pulses.length + 1;
 
+  // ── Fewer than 3 data points: radar + message ─────────────────
   if (dataPoints < 3) {
     return (
-      <div>
-        <SectionLabel>Distribution</SectionLabel>
-        <div style={{ display: 'flex', gap: '32px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <RadarChart scores={baseline.scores.bigFive} size={300} />
-          <div style={{ maxWidth: '320px' }}>
-            <p style={{
-              fontFamily: 'var(--font-serif)', fontSize: '20px', fontWeight: 500,
-              color: 'var(--color-text)', marginBottom: '12px', letterSpacing: '-0.02em',
-            }}>
-              Need more data to see distributions.
-            </p>
+      <div ref={containerRef}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr) minmax(280px, 1fr)',
+          gap: '20px',
+        }}>
+          <Card label="02 · Distribution" title="Baseline Profile" data-anim>
+            <RadarChart scores={baseline.scores.bigFive} size={300} />
+          </Card>
+
+          <Card label="Status" title="Need more data to see distributions." data-anim>
             <p style={{
               fontFamily: 'var(--font-sans)', fontSize: '14px', lineHeight: 1.6,
-              color: 'var(--color-text-muted)',
+              color: 'var(--color-text-muted)', marginBottom: '16px',
             }}>
-              You have {dataPoints} data point{dataPoints === 1 ? '' : 's'}. Density distributions require at least 3 pulses to reveal meaningful patterns.
+              You have {dataPoints} data {dataPoints === 1 ? 'point' : 'points'}. Density distributions require at least 3 pulses to reveal meaningful patterns in how your traits spread and cluster.
             </p>
-          </div>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '12px 16px', background: 'var(--color-surface-elevated)',
+              borderRadius: '8px',
+            }}>
+              <span style={{
+                fontFamily: 'var(--font-mono)', fontSize: '24px', fontWeight: 500,
+                color: 'var(--color-accent)',
+              }}>
+                {3 - dataPoints}
+              </span>
+              <span style={{
+                fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-text-muted)',
+              }}>
+                more {3 - dataPoints === 1 ? 'pulse' : 'pulses'} needed
+              </span>
+            </div>
+          </Card>
         </div>
       </div>
     );
   }
 
-  // 3+ data points: show distributions from trajectory
+  // ── 3+ data points: show density distributions ────────────────
   const trajectory: TrajectoryPoint[] = buildTrajectory(baseline, pulses);
   const traitValues: Record<keyof BigFiveScores, number[]> = {
     openness: [],
@@ -179,29 +377,28 @@ export function DistributionView({ demoData, baseline, pulses }: DistributionVie
   });
 
   return (
-    <div>
-      <SectionLabel>Density Distributions — Your Data ({dataPoints} points)</SectionLabel>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
-        {TRAIT_CONFIG.map(trait => (
-          <DensityPlot
-            key={trait.key}
-            values={traitValues[trait.key]}
-            label={trait.label}
-            color={trait.color}
-          />
-        ))}
-      </div>
+    <div ref={containerRef}>
+      <Card
+        label="02 · Distribution"
+        title="Density Distributions"
+        subtitle={`${dataPoints} data points — frequency histograms with kernel density estimates`}
+        data-anim
+      >
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '20px',
+        }}>
+          {TRAIT_CONFIG.map(trait => (
+            <DensityChart
+              key={trait.key}
+              values={traitValues[trait.key]}
+              label={trait.label}
+              color={trait.color}
+            />
+          ))}
+        </div>
+      </Card>
     </div>
-  );
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p style={{
-      fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase',
-      letterSpacing: '0.12em', color: 'var(--color-text-dim)', marginBottom: '16px',
-    }}>
-      {children}
-    </p>
   );
 }

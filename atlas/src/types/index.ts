@@ -77,6 +77,8 @@ export interface TrajectoryPoint {
   scores: BigFiveScores;
   contexts?: string[];
   emotions?: string[];
+  emotionScores?: Record<string, number>;
+  day?: number;
 }
 
 export interface User {

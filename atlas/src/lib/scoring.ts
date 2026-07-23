@@ -105,3 +105,121 @@ export function scorePulseResponses(responses: Record<string, number>): BigFiveS
 
   return scores;
 }
+
+// ── Full Baseline Scoring ───────────────────────────────────────
+export function scoreBaselineResponses(
+  responses: Record<string, number>,
+): {
+  bigFive: BigFiveScores;
+  facets: Record<string, number>;
+  sd3: { Machiavellianism: number; Narcissism: number; Psychopathy: number };
+  icar: { correct: number; total: number; percent: number };
+} {
+  // Big Five + facets
+  const traitItems: Record<string, number[]> = { N: [], E: [], O: [], A: [], C: [] };
+  const facetItems: Record<string, number[]> = {};
+
+  for (const [key, value] of Object.entries(responses)) {
+    if (!key.startsWith('ipip_')) continue;
+    const id = parseInt(key.replace('ipip_', ''));
+    const meta = IPIP_ITEMS.find((m) => m.id === id);
+    if (!meta) continue;
+    const raw = meta.reverse ? 6 - value : value;
+    traitItems[meta.trait].push(raw);
+    const fkey = `${meta.trait}_${meta.facet}`;
+    if (!facetItems[fkey]) facetItems[fkey] = [];
+    facetItems[fkey].push(raw);
+  }
+
+  const bigFive: BigFiveScores = {
+    openness: 0,
+    conscientiousness: 0,
+    extraversion: 0,
+    agreeableness: 0,
+    emotional_stability: 0,
+  };
+
+  for (const [trait, items] of Object.entries(traitItems)) {
+    if (items.length === 0) continue;
+    const mean = items.reduce((a, b) => a + b, 0) / items.length;
+    let score = mean * 20;
+    if (trait === 'N') score = 100 - score;
+    bigFive[TRAIT_MAP[trait]] = Math.round(score * 10) / 10;
+  }
+
+  const facets: Record<string, number> = {};
+  for (const [fkey, items] of Object.entries(facetItems)) {
+    if (items.length === 0) continue;
+    const mean = items.reduce((a, b) => a + b, 0) / items.length;
+    let score = mean * 20;
+    if (fkey.startsWith('N_')) score = 100 - score;
+    facets[fkey] = Math.round(score * 10) / 10;
+  }
+
+  // SD3 scoring
+  const sd3ReverseIds = new Set([5, 6, 17, 21, 23]);
+  const sd3Traits: Record<string, number[]> = {
+    Machiavellianism: [],
+    Narcissism: [],
+    Psychopathy: [],
+  };
+  const sd3TraitMap: Record<string, string> = {
+    M: 'Machiavellianism',
+    N: 'Narcissism',
+    P: 'Psychopathy',
+  };
+  for (const [key, value] of Object.entries(responses)) {
+    if (!key.startsWith('sd3_')) continue;
+    const id = parseInt(key.replace('sd3_', ''));
+    // We need the trait for this sd3 item — load from the JSON at runtime
+    // But we can use a simpler approach: read from the assessment-items data
+    // For now, we'll accept that the caller has the items
+    const isReverse = sd3ReverseIds.has(id);
+    const raw = isReverse ? 6 - value : value;
+    // Trait detection from id ranges: M items: 1,4,7,10,13,16,19,22,25; N: 2,5,8,11,14,17,20,23,26; P: 3,6,9,12,15,18,21,24,27
+    let trait: string;
+    const machIds = [1, 4, 7, 10, 13, 16, 19, 22, 25];
+    const narIds = [2, 5, 8, 11, 14, 17, 20, 23, 26];
+    if (machIds.includes(id)) trait = 'M';
+    else if (narIds.includes(id)) trait = 'N';
+    else trait = 'P';
+    sd3Traits[sd3TraitMap[trait]].push(raw);
+  }
+
+  const sd3 = {
+    Machiavellianism: 0,
+    Narcissism: 0,
+    Psychopathy: 0,
+  } as { Machiavellianism: number; Narcissism: number; Psychopathy: number };
+
+  for (const [trait, items] of Object.entries(sd3Traits)) {
+    if (items.length === 0) continue;
+    const mean = items.reduce((a, b) => a + b, 0) / items.length;
+    sd3[trait as keyof typeof sd3] = Math.round(mean * 20 * 10) / 10;
+  }
+
+  // ICAR scoring
+  let correct = 0;
+  let total = 0;
+  // The correct answers for ICAR-16 (from the JSON)
+  const icarCorrect: Record<number, number> = {
+    1: 1, 2: 1, 3: 3, 4: 1, 5: 2, 6: 2, 7: 2, 8: 2,
+    9: 1, 10: 1, 11: 0, 12: 3, 13: 0, 14: 3, 15: 1, 16: 2,
+  };
+  for (const [key, value] of Object.entries(responses)) {
+    if (!key.startsWith('icar_')) continue;
+    const id = parseInt(key.replace('icar_', ''));
+    total++;
+    if (icarCorrect[id] !== undefined && icarCorrect[id] === value) {
+      correct++;
+    }
+  }
+
+  const icar = {
+    correct,
+    total,
+    percent: total > 0 ? Math.round((correct / total) * 1000) / 10 : 0,
+  };
+
+  return { bigFive, facets, sd3, icar };
+}

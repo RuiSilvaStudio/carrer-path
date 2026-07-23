@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 import type { DataSourceMode, ViewName } from '../types';
 
 interface DashboardState {
@@ -15,7 +15,9 @@ interface DashboardContextValue extends DashboardState {
   setTrajectoryMode: (mode: 'traits' | 'emotions') => void;
 }
 
-export function useDashboardState() {
+const DashboardContext = createContext<DashboardContextValue | null>(null);
+
+export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<DashboardState>({
     mode: 'demo',
     view: 'trajectory',
@@ -28,7 +30,17 @@ export function useDashboardState() {
   const setScrubIndex = useCallback((index: number) => setState(s => ({ ...s, scrubIndex: index })), []);
   const setTrajectoryMode = useCallback((mode: 'traits' | 'emotions') => setState(s => ({ ...s, trajectoryMode: mode })), []);
 
-  return { ...state, setMode, setView, setScrubIndex, setTrajectoryMode };
+  return (
+    <DashboardContext.Provider value={{ ...state, setMode, setView, setScrubIndex, setTrajectoryMode }}>
+      {children}
+    </DashboardContext.Provider>
+  );
+}
+
+export function useDashboardState() {
+  const ctx = useContext(DashboardContext);
+  if (!ctx) throw new Error('useDashboardState must be used within DashboardProvider');
+  return ctx;
 }
 
 export type { DashboardContextValue };

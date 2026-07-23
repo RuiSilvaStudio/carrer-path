@@ -1,8 +1,14 @@
+import { useRef, useMemo } from 'react';
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
 import { useDashboardState } from '../../../state/DashboardContext';
-import type { DemoPulse } from '../../../types';
+import type { DemoPulse, Assessment } from '../../../types';
+import { Card } from '../../ui/Card';
 
 interface RhythmViewProps {
   demoData: DemoPulse[];
+  baseline?: Assessment | null;
+  pulses?: Assessment[];
 }
 
 const TRAIT_CONFIG = [
@@ -13,35 +19,43 @@ const TRAIT_CONFIG = [
   { key: 'emotional_stability' as const, label: 'Stability', color: 'var(--color-stability)' },
 ];
 
-// Radial clock chart: shows average trait value by hour of day
+// ── Radial Clock Chart: avg trait value by hour of day ───────────
 function RadialClock({ demoData, traitKey, traitLabel, color }: {
   demoData: DemoPulse[];
   traitKey: keyof DemoPulse;
   traitLabel: string;
   color: string;
 }) {
+  const polyRef = useRef<SVGPolygonElement>(null);
   const size = 180;
   const center = size / 2;
   const maxRadius = size * 0.36;
 
   // Group by hour
-  const hourMap: Record<number, number[]> = {};
-  demoData.forEach(d => {
-    const hour = d.hour;
-    const val = d[traitKey] as number;
-    if (typeof val === 'number') {
-      if (!hourMap[hour]) hourMap[hour] = [];
-      hourMap[hour].push(val);
-    }
-  });
+  const { hourAvgs, peakHour } = useMemo(() => {
+    const hourMap: Record<number, number[]> = {};
+    demoData.forEach(d => {
+      const hour = d.hour;
+      const val = d[traitKey] as number;
+      if (typeof val === 'number') {
+        if (!hourMap[hour]) hourMap[hour] = [];
+        hourMap[hour].push(val);
+      }
+    });
 
-  // Average per hour
-  const hourAvgs: { hour: number; avg: number }[] = [];
-  for (let h = 0; h < 24; h++) {
-    if (hourMap[h] && hourMap[h].length > 0) {
-      hourAvgs.push({ hour: h, avg: hourMap[h].reduce((a, b) => a + b, 0) / hourMap[h].length });
+    const avgs: { hour: number; avg: number }[] = [];
+    for (let h = 0; h < 24; h++) {
+      if (hourMap[h] && hourMap[h].length > 0) {
+        avgs.push({ hour: h, avg: hourMap[h].reduce((a, b) => a + b, 0) / hourMap[h].length });
+      }
     }
-  }
+
+    let peak = -1;
+    let peakVal = 0;
+    avgs.forEach(a => { if (a.avg > peakVal) { peakVal = a.avg; peak = a.hour; } });
+
+    return { hourAvgs: avgs, peakHour: peak };
+  }, [demoData, traitKey]);
 
   const angleForHour = (hour: number) => (hour / 24) * Math.PI * 2 - Math.PI / 2;
 
@@ -53,6 +67,16 @@ function RadialClock({ demoData, traitKey, traitLabel, color }: {
   });
 
   const polygonPath = points.map(p => `${p.x},${p.y}`).join(' ');
+
+  // GSAP entrance
+  useGSAP(() => {
+    if (polyRef.current && polygonPath) {
+      gsap.fromTo(polyRef.current,
+        { opacity: 0, scale: 0.5, transformOrigin: `${center}px ${center}px` },
+        { opacity: 1, scale: 1, duration: 0.8, ease: 'power2.out' }
+      );
+    }
+  }, { dependencies: [polygonPath] });
 
   return (
     <div style={{ textAlign: 'center' }}>
@@ -84,6 +108,7 @@ function RadialClock({ demoData, traitKey, traitLabel, color }: {
         {/* Data polygon */}
         {polygonPath && (
           <polygon
+            ref={polyRef}
             points={polygonPath}
             fill={color}
             fillOpacity={0.15}
@@ -103,92 +128,115 @@ function RadialClock({ demoData, traitKey, traitLabel, color }: {
       }}>
         {traitLabel}
       </p>
+      {peakHour >= 0 && (
+        <p style={{
+          fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--color-text-dim)', marginTop: '2px',
+        }}>
+          peak @ {peakHour.toString().padStart(2, '0')}:00
+        </p>
+      )}
     </div>
   );
 }
 
-// Emotion heatmap by hour
+// ── Emotion Heatmap: time of day × emotions ──────────────────────
 function EmotionHeatmap({ demoData }: { demoData: DemoPulse[] }) {
-  // Collect all emotions
-  const allEmotions = new Set<string>();
-  demoData.forEach(d => {
-    if (d.emotions) {
-      Object.keys(d.emotions).forEach(e => allEmotions.add(e));
-    }
-  });
+  const containerRef = useRef<SVGGElement>(null);
 
-  const emotions = Array.from(allEmotions).sort();
-  if (emotions.length === 0) return null;
+  const { emotions, matrix, maxVal } = useMemo(() => {
+    const allEmotions = new Set<string>();
+    demoData.forEach(d => {
+      if (d.emotions) {
+        Object.keys(d.emotions).forEach(e => allEmotions.add(e));
+      }
+    });
 
-  // Build heatmap matrix: emotion x hour
-  const hours = Array.from({ length: 24 }, (_, i) => i);
-  const matrix: Record<string, Record<number, number>> = {};
-  emotions.forEach(e => {
-    matrix[e] = {};
-    hours.forEach(h => { matrix[e][h] = 0; });
-  });
+    const emos = Array.from(allEmotions).sort();
+    const hours = Array.from({ length: 24 }, (_, i) => i);
+    const mat: Record<string, Record<number, number>> = {};
+    emos.forEach(e => {
+      mat[e] = {};
+      hours.forEach(h => { mat[e][h] = 0; });
+    });
 
-  demoData.forEach(d => {
-    if (d.emotions) {
-      for (const [emotion, count] of Object.entries(d.emotions)) {
-        if (matrix[emotion]) {
-          matrix[emotion][d.hour] = (matrix[emotion][d.hour] || 0) + count;
+    demoData.forEach(d => {
+      if (d.emotions) {
+        for (const [emotion, count] of Object.entries(d.emotions)) {
+          if (mat[emotion]) {
+            mat[emotion][d.hour] = (mat[emotion][d.hour] || 0) + count;
+          }
         }
       }
-    }
-  });
+    });
 
-  const maxVal = Math.max(...emotions.map(e => Math.max(...hours.map(h => matrix[e][h]))), 1);
+    const mx = Math.max(...emos.map(e => Math.max(...hours.map(h => mat[e][h]))), 1);
+
+    return { emotions: emos, matrix: mat, maxVal: mx };
+  }, [demoData]);
+
+  useGSAP(() => {
+    if (!containerRef.current) return;
+    const cells = containerRef.current.querySelectorAll('rect[data-emo-cell]');
+    gsap.fromTo(cells, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'power2.out', stagger: { each: 0.005, from: 'start' } });
+  }, { scope: containerRef, dependencies: [demoData] });
+
+  if (emotions.length === 0) return null;
 
   const cellSize = 16;
+  const svgW = 40 + 24 * cellSize;
+  const svgH = 20 + emotions.length * cellSize;
 
   return (
     <div style={{ overflowX: 'auto' }}>
-      <svg width={40 + 24 * cellSize} height={20 + emotions.length * cellSize}>
-        {/* Hour headers */}
-        {hours.map(h => (
-          <text key={h}
-            x={40 + h * cellSize + cellSize / 2}
-            y={12}
-            textAnchor="middle"
-            fontSize={8}
-            fill="var(--color-text-dim)"
-            fontFamily="var(--font-mono)"
-          >
-            {h % 6 === 0 ? h.toString().padStart(2, '0') : ''}
-          </text>
-        ))}
-        {/* Emotion rows */}
-        {emotions.map((emotion, ri) => (
-          <g key={emotion}>
-            <text
-              x={36}
-              y={20 + ri * cellSize + cellSize / 2 + 3}
-              textAnchor="end"
-              fontSize={9}
-              fill="var(--color-text-muted)"
+      <svg width={svgW} height={svgH}>
+        <g ref={containerRef}>
+          {/* Hour headers */}
+          {Array.from({ length: 24 }, (_, h) => h).map(h => (
+            <text key={h}
+              x={40 + h * cellSize + cellSize / 2}
+              y={12}
+              textAnchor="middle"
+              fontSize={8}
+              fill="var(--color-text-dim)"
               fontFamily="var(--font-mono)"
             >
-              {emotion}
+              {h % 6 === 0 ? h.toString().padStart(2, '0') : ''}
             </text>
-            {hours.map(h => {
-              const val = matrix[emotion][h];
-              const opacity = val / maxVal;
-              return (
-                <rect
-                  key={h}
-                  x={40 + h * cellSize}
-                  y={20 + ri * cellSize}
-                  width={cellSize - 1}
-                  height={cellSize - 1}
-                  fill="var(--color-accent)"
-                  fillOpacity={val > 0 ? opacity : 0.05}
-                  rx={2}
-                />
-              );
-            })}
-          </g>
-        ))}
+          ))}
+
+          {/* Emotion rows */}
+          {emotions.map((emotion, ri) => (
+            <g key={emotion}>
+              <text
+                x={36}
+                y={20 + ri * cellSize + cellSize / 2 + 3}
+                textAnchor="end"
+                fontSize={9}
+                fill="var(--color-text-muted)"
+                fontFamily="var(--font-mono)"
+              >
+                {emotion}
+              </text>
+              {Array.from({ length: 24 }, (_, h) => h).map(h => {
+                const val = matrix[emotion][h];
+                const opacity = val / maxVal;
+                return (
+                  <rect
+                    key={h}
+                    data-emo-cell
+                    x={40 + h * cellSize}
+                    y={20 + ri * cellSize}
+                    width={cellSize - 1}
+                    height={cellSize - 1}
+                    fill="var(--color-accent)"
+                    fillOpacity={val > 0 ? opacity : 0.05}
+                    rx={2}
+                  />
+                );
+              })}
+            </g>
+          ))}
+        </g>
       </svg>
     </div>
   );
@@ -196,59 +244,83 @@ function EmotionHeatmap({ demoData }: { demoData: DemoPulse[] }) {
 
 export function RhythmView({ demoData }: RhythmViewProps) {
   const { mode } = useDashboardState();
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  useGSAP(() => {
+    const cards = containerRef.current?.querySelectorAll('[data-anim]');
+    if (cards) {
+      gsap.fromTo(cards, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out', stagger: 0.1 });
+    }
+  }, { scope: containerRef, dependencies: [mode] });
+
+  // ═══════════════════════════════════════════════════════════════
+  // BASELINE MODE
+  // ═══════════════════════════════════════════════════════════════
   if (mode === 'baseline') {
     return (
-      <div>
-        <SectionLabel>Rhythm</SectionLabel>
-        <p style={{
-          fontFamily: 'var(--font-serif)', fontSize: '20px', fontWeight: 500,
-          color: 'var(--color-text)', marginBottom: '12px', letterSpacing: '-0.02em',
-        }}>
-          Time-of-day patterns appear after more pulses.
-        </p>
-        <p style={{
-          fontFamily: 'var(--font-sans)', fontSize: '14px', lineHeight: 1.6,
-          color: 'var(--color-text-muted)', maxWidth: '480px',
-        }}>
-          As you complete pulses at different times of day, radial clock charts and emotion heatmaps will reveal your circadian personality rhythms — when you're most open, most focused, most sociable.
-        </p>
+      <div ref={containerRef}>
+        <Card label="04 · Rhythm" title="Time-of-day patterns appear after more pulses." data-anim>
+          <p style={{
+            fontFamily: 'var(--font-sans)', fontSize: '14px', lineHeight: 1.6,
+            color: 'var(--color-text-muted)', maxWidth: '480px', marginBottom: '16px',
+          }}>
+            As you complete pulses at different times of day, radial clock charts and emotion heatmaps will reveal your circadian personality rhythms — when you're most open, most focused, most sociable.
+          </p>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            padding: '12px 16px', background: 'var(--color-surface-elevated)',
+            borderRadius: '8px', maxWidth: '400px',
+          }}>
+            <span style={{
+              fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-text-muted)',
+            }}>
+              Complete pulses at varying hours to populate rhythm data
+            </span>
+          </div>
+        </Card>
       </div>
     );
   }
 
-  // Demo mode
+  // ═══════════════════════════════════════════════════════════════
+  // DEMO MODE
+  // ═══════════════════════════════════════════════════════════════
   return (
-    <div>
-      <SectionLabel>Radial Clock Charts — Demo</SectionLabel>
-      <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-        gap: '20px', marginBottom: '32px',
-      }}>
-        {TRAIT_CONFIG.map(trait => (
-          <RadialClock
-            key={trait.key}
-            demoData={demoData}
-            traitKey={trait.key}
-            traitLabel={trait.label}
-            color={trait.color}
-          />
-        ))}
+    <div ref={containerRef}>
+      {/* ── Radial Clock Charts ────────────────────────── */}
+      <Card
+        label="04 · Rhythm"
+        title="Circadian Trait Patterns"
+        subtitle="Average trait scores by hour of day across all demo pulses"
+        data-anim
+      >
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: '20px',
+        }}>
+          {TRAIT_CONFIG.map(trait => (
+            <RadialClock
+              key={trait.key}
+              demoData={demoData}
+              traitKey={trait.key}
+              traitLabel={trait.label}
+              color={trait.color}
+            />
+          ))}
+        </div>
+      </Card>
+
+      {/* ── Emotion Heatmap ────────────────────────────── */}
+      <div style={{ marginTop: '20px' }} data-anim>
+        <Card
+          label="Emotions"
+          title="Emotion Heatmap by Hour"
+          subtitle="Frequency of emotions across hours of the day"
+        >
+          <EmotionHeatmap demoData={demoData} />
+        </Card>
       </div>
-
-      <SectionLabel>Emotion Heatmap by Hour</SectionLabel>
-      <EmotionHeatmap demoData={demoData} />
     </div>
-  );
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p style={{
-      fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase',
-      letterSpacing: '0.12em', color: 'var(--color-text-dim)', marginBottom: '16px',
-    }}>
-      {children}
-    </p>
   );
 }
