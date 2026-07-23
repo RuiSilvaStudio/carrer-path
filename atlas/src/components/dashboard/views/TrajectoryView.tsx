@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { useDashboardState } from '../../../state/DashboardContext';
@@ -18,12 +18,12 @@ interface TrajectoryViewProps {
   pulses: Assessment[];
 }
 
-const TRAIT_LABELS: { key: keyof BigFiveScores; label: string }[] = [
-  { key: 'openness', label: 'Openness' },
-  { key: 'conscientiousness', label: 'Conscientiousness' },
-  { key: 'extraversion', label: 'Extraversion' },
-  { key: 'agreeableness', label: 'Agreeableness' },
-  { key: 'emotional_stability', label: 'Stability' },
+const TRAIT_LABELS: { key: keyof BigFiveScores; label: string; short?: string; color: string }[] = [
+  { key: 'openness', label: 'Openness', short: 'O', color: 'var(--color-openness)' },
+  { key: 'conscientiousness', label: 'Conscientiousness', short: 'C', color: 'var(--color-conscientiousness)' },
+  { key: 'extraversion', label: 'Extraversion', short: 'E', color: 'var(--color-extraversion)' },
+  { key: 'agreeableness', label: 'Agreeableness', short: 'A', color: 'var(--color-agreeableness)' },
+  { key: 'emotional_stability', label: 'Stability', short: 'ES', color: 'var(--color-stability)' },
 ];
 
 // ── Generate insight text from trajectory data ───────────────────
@@ -142,6 +142,7 @@ function Scrubber({
 export function TrajectoryView({ demoData, baseline, pulses }: TrajectoryViewProps) {
   const { mode, scrubIndex, setScrubIndex } = useDashboardState();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [smoothing, setSmoothing] = useState<'raw' | 'daily' | 'weekly'>('daily');
 
   // GSAP entrance for cards
   useGSAP(() => {
@@ -151,17 +152,40 @@ export function TrajectoryView({ demoData, baseline, pulses }: TrajectoryViewPro
     }
   }, { scope: containerRef, dependencies: [mode] });
 
-  // ═══════════════════════════════════════════════════════════════
-  // DEMO MODE
-  // ═══════════════════════════════════════════════════════════════
-  if (mode === 'demo') {
-    // Filter out missing pulses (all 0/0/0/0/100 pattern — no response data)
+  // ── Smoothing helper: aggregates a trajectory by date (daily) or week (weekly) ──
+  const smoothTrajectory = (traj: TrajectoryPoint[], smoothMode: 'raw' | 'daily' | 'weekly'): TrajectoryPoint[] => {
+    if (smoothMode === 'raw' || traj.length <= 1) return traj;
+    const groups: Record<string, TrajectoryPoint[]> = {};
+    traj.forEach(d => {
+      let groupKey: string;
+      if (smoothMode === 'daily') {
+        groupKey = d.date;
+      } else {
+        const dt = new Date(d.date);
+        const week = Math.floor(dt.getTime() / (7 * 24 * 60 * 60 * 1000));
+        groupKey = 'w' + week;
+      }
+      if (!groups[groupKey]) groups[groupKey] = [];
+      groups[groupKey].push(d);
+    });
+    return Object.entries(groups).map(([_key, points]) => {
+      const avgScores: any = {};
+      for (const key of ['openness', 'conscientiousness', 'extraversion', 'agreeableness', 'emotional_stability']) {
+        const vals = points.map(p => p.scores[key as keyof BigFiveScores]).filter(v => v != null && !isNaN(v as number)) as number[];
+        avgScores[key] = vals.length > 0 ? vals.reduce((a: number, b: number) => a + b, 0) / vals.length : null;
+      }
+      return { type: points[0].type, date: points[0].date, scores: avgScores, emotionScores: points[0].emotionScores } as TrajectoryPoint;
+    });
+  };
+
+  // ── Build demo trajectory (top-level so useMemo can wrap it) ──
+  const demoTrajectory: TrajectoryPoint[] = useMemo(() => {
     const validDemoData = demoData.filter(d => {
       return !(d.openness === 0 && d.conscientiousness === 0 &&
                d.extraversion === 0 && d.agreeableness === 0 &&
                d.emotional_stability === 100);
     });
-    const demoTrajectory: TrajectoryPoint[] = validDemoData.map(d => ({
+    return validDemoData.map(d => ({
       type: 'pulse' as const,
       date: d.date,
       day: d.day,
@@ -174,80 +198,88 @@ export function TrajectoryView({ demoData, baseline, pulses }: TrajectoryViewPro
       },
       emotionScores: d.emotions ?? undefined,
     }));
+  }, [demoData]);
 
+  // ── Smoothed trajectory for demo mode ──
+  const smoothedTrajectory = useMemo(() => smoothTrajectory(demoTrajectory, smoothing), [demoTrajectory, smoothing, /* smoothTrajectory stable */]);
+
+  // ── Build + smooth baseline trajectory (baseline + pulses) ──
+  const baselineTrajectoryRaw = useMemo(() => baseline ? buildTrajectory(baseline, pulses) : [], [baseline, pulses]);
+  const baselineTrajectory = useMemo(() => smoothTrajectory(baselineTrajectoryRaw, smoothing), [baselineTrajectoryRaw, smoothing]);
+
+  // ═══════════════════════════════════════════════════════════════
+  // DEMO MODE
+  // ═══════════════════════════════════════════════════════════════
+  if (mode === 'demo') {
     if (demoTrajectory.length === 0) {
       return <div style={{ color: 'var(--color-text-muted)', padding: '40px' }}>No demo data available.</div>;
     }
 
-    const safeScrub = Math.min(scrubIndex, demoTrajectory.length - 1);
-    const currentPoint = demoTrajectory[safeScrub] ?? demoTrajectory[demoTrajectory.length - 1];
-    const insight = generateInsight(demoTrajectory, safeScrub);
+    const safeScrub = Math.min(scrubIndex, smoothedTrajectory.length - 1);
+    const currentPoint = smoothedTrajectory[safeScrub] ?? smoothedTrajectory[smoothedTrajectory.length - 1];
+    const insight = generateInsight(smoothedTrajectory, safeScrub);
 
     return (
       <div ref={containerRef}>
-        {/* ── Two-column grid: trajectory + radar ─────────── */}
+        {/* Row 1: Full-width trajectory chart */}
+        <div style={{ marginBottom: '20px' }} data-anim>
+          <Card label="01 · Trajectory" title="Trait Trajectory — Demo"
+            infoText="Lines show Big Five trait scores over time. Phase bands mark natural periods. The scrubber lets you move through time. This is descriptive, not a clinical assessment.">
+            <PhaseBar trajectory={smoothedTrajectory} currentIndex={scrubIndex} />
+            <TrajectoryChart
+              data={smoothedTrajectory}
+              onScrub={setScrubIndex}
+              smoothing={smoothing}
+              onSmoothingChange={setSmoothing}
+            />
+          </Card>
+        </div>
+
+        {/* Row 2: Radar (50%) + Insights/Summary (50%) */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1.6fr) minmax(280px, 1fr)',
+          gridTemplateColumns: 'minmax(280px, 1fr) minmax(280px, 1fr)',
           gap: '20px',
-          marginBottom: '20px',
         }}>
-          {/* Trajectory chart card — chart includes phase bar, scrubber, traits/emotions toggle internally */}
-          <Card label="01 · Trajectory" title="Trait Trajectory — Demo" data-anim
-            infoText="Lines show Big Five trait scores over time. Phase bands mark natural periods (Semester, Christmas, Holiday, Exams). The scrubber lets you move through time. This is descriptive, not a clinical assessment."
-          >
-            <PhaseBar trajectory={demoTrajectory} currentIndex={scrubIndex} />
-          <TrajectoryChart data={demoTrajectory} onScrub={setScrubIndex} />
-          </Card>
-
-          {/* Radar panel */}
+          {/* Left: Radar */}
           <Card label="Current State" title="Big Five Profile" data-anim>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <RadarChart scores={currentPoint.scores} size={280} />
+              <RadarChart scores={currentPoint.scores} size={320} />
             </div>
-            <p style={{
-              fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase',
-              letterSpacing: '0.12em', color: 'var(--color-text-dim)',
-              textAlign: 'center', marginTop: '8px',
-            }}>
-              Pulse {safeScrub + 1} of {demoTrajectory.length}
+            <p style={{ textAlign: 'center', marginTop: '8px', color: 'var(--color-text-dim)', fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
+              Pulse {safeScrub + 1} of {smoothedTrajectory.length}
             </p>
           </Card>
-        </div>
 
-        {/* ── Insight Strip ──────────────────────────────── */}
-        <div data-anim style={{ marginBottom: '20px' }}>
-          <InsightStrip label="Pattern Insight">
-            {insight}
-          </InsightStrip>
-        </div>
+          {/* Right: Insight + Trait Summary stacked */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <InsightStrip label="Pattern Insight">
+              {insight}
+            </InsightStrip>
 
-        {/* ── Trait Summary Strip ────────────────────────── */}
-        <Card label="Trait Summary" title="Scores at Current Point" data-anim>
-          <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px',
-          }}>
-            {TRAIT_LABELS.map(t => (
-              <div key={t.key} style={{
-                padding: '12px 16px', background: 'var(--color-surface-elevated)',
-                borderRadius: '8px',
+            <Card label="Trait Summary" title="Scores at Current Point" data-anim>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(5, 1fr)',
+                gap: '8px',
               }}>
-                <p style={{
-                  fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase',
-                  letterSpacing: '0.08em', color: 'var(--color-text-dim)', marginBottom: '4px',
-                }}>
-                  {t.label}
-                </p>
-                <p style={{
-                  fontFamily: 'var(--font-serif)', fontSize: '22px', fontWeight: 500,
-                  color: 'var(--color-text)', letterSpacing: '-0.02em',
-                }}>
-                  {currentPoint.scores[t.key].toFixed(0)}
-                </p>
+                {TRAIT_LABELS.map(t => (
+                  <div key={t.key} style={{
+                    textAlign: 'center', padding: '12px 8px',
+                    background: 'var(--color-surface-elevated)', borderRadius: '8px',
+                  }}>
+                    <p style={{ color: t.color, fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}>
+                      {t.short || t.label}
+                    </p>
+                    <p style={{ color: t.color, fontFamily: 'var(--font-serif)', fontSize: '24px', fontWeight: 500 }}>
+                      {currentPoint.scores[t.key]?.toFixed(0) ?? '—'}
+                    </p>
+                  </div>
+                ))}
               </div>
-            ))}
+            </Card>
           </div>
-        </Card>
+        </div>
       </div>
     );
   }
@@ -256,8 +288,6 @@ export function TrajectoryView({ demoData, baseline, pulses }: TrajectoryViewPro
   // BASELINE MODE
   // ═══════════════════════════════════════════════════════════════
   if (!baseline) return null;
-
-  const trajectory = buildTrajectory(baseline, pulses);
 
   // ── Baseline only, no pulses ──────────────────────────────────
   if (pulses.length === 0) {
@@ -323,45 +353,70 @@ export function TrajectoryView({ demoData, baseline, pulses }: TrajectoryViewPro
   }
 
   // ── Baseline + pulses ─────────────────────────────────────────
-  const safeScrub = Math.min(scrubIndex, trajectory.length - 1);
-  const scrubbedPoint = trajectory[safeScrub] ?? trajectory[trajectory.length - 1];
-  const insight = generateInsight(trajectory, safeScrub);
+  const safeScrub = Math.min(scrubIndex, baselineTrajectory.length - 1);
+  const scrubbedPoint = baselineTrajectory[safeScrub] ?? baselineTrajectory[baselineTrajectory.length - 1];
+  const insight = generateInsight(baselineTrajectory, safeScrub);
 
   return (
     <div ref={containerRef}>
-      {/* ── Two-column grid: trajectory + radar ─────────── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1.6fr) minmax(280px, 1fr)',
-        gap: '20px',
-        marginBottom: '20px',
-      }}>
-        <Card label="01 · Trajectory" title="Trait Trajectory" data-anim
-          infoText="Lines show Big Five trait scores over time. The scrubber lets you move through time. This is descriptive, not a clinical assessment."
-        >
-          <PhaseBar trajectory={trajectory} currentIndex={scrubIndex} />
-          <TrajectoryChart data={trajectory} onScrub={setScrubIndex} />
-          </Card>
-
-        <Card label="Current State" title="Big Five Profile" data-anim>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <RadarChart scores={scrubbedPoint.scores} size={280} />
-            </div>
-          <p style={{
-            fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase',
-            letterSpacing: '0.12em', color: 'var(--color-text-dim)',
-            textAlign: 'center', marginTop: '8px',
-          }}>
-            {scrubbedPoint.type === 'baseline' ? 'Baseline' : 'Pulse'} — {scrubbedPoint.date}
-          </p>
+      {/* Row 1: Full-width trajectory chart */}
+      <div style={{ marginBottom: '20px' }} data-anim>
+        <Card label="01 · Trajectory" title="Trait Trajectory"
+          infoText="Lines show Big Five trait scores over time. The scrubber lets you move through time. This is descriptive, not a clinical assessment.">
+          <PhaseBar trajectory={baselineTrajectory} currentIndex={scrubIndex} />
+          <TrajectoryChart
+            data={baselineTrajectory}
+            onScrub={setScrubIndex}
+            smoothing={smoothing}
+            onSmoothingChange={setSmoothing}
+          />
         </Card>
       </div>
 
-      {/* ── Insight Strip ──────────────────────────────── */}
-      <div data-anim style={{ marginBottom: '20px' }}>
-        <InsightStrip label="Pattern Insight">
-          {insight}
-        </InsightStrip>
+      {/* Row 2: Radar (50%) + Insights/Summary (50%) */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(280px, 1fr) minmax(280px, 1fr)',
+        gap: '20px',
+      }}>
+        {/* Left: Radar */}
+        <Card label="Current State" title="Big Five Profile" data-anim>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <RadarChart scores={scrubbedPoint.scores} size={320} />
+          </div>
+          <p style={{ textAlign: 'center', marginTop: '8px', color: 'var(--color-text-dim)', fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
+            {scrubbedPoint.type === 'baseline' ? 'Baseline' : 'Pulse'} — {scrubbedPoint.date}
+          </p>
+        </Card>
+
+        {/* Right: Insight + Trait Summary stacked */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <InsightStrip label="Pattern Insight">
+            {insight}
+          </InsightStrip>
+
+          <Card label="Trait Summary" title="Scores at Current Point" data-anim>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(5, 1fr)',
+              gap: '8px',
+            }}>
+              {TRAIT_LABELS.map(t => (
+                <div key={t.key} style={{
+                  textAlign: 'center', padding: '12px 8px',
+                  background: 'var(--color-surface-elevated)', borderRadius: '8px',
+                }}>
+                  <p style={{ color: t.color, fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}>
+                    {t.short || t.label}
+                  </p>
+                  <p style={{ color: t.color, fontFamily: 'var(--font-serif)', fontSize: '24px', fontWeight: 500 }}>
+                    {scrubbedPoint.scores[t.key]?.toFixed(0) ?? '—'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
       </div>
 
       {/* ── SD3 + ICAR ─────────────────────────────────── */}
@@ -370,6 +425,7 @@ export function TrajectoryView({ demoData, baseline, pulses }: TrajectoryViewPro
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
           gap: '20px',
+          marginTop: '20px',
         }}>
           {baseline.scores.sd3 && (
             <Card label="Dark Triad" title="SD3 Scores" data-anim>
