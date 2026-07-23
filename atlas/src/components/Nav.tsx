@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { id: 'baseline', label: 'Baseline' },
   { id: 'pulse', label: 'Pulse' },
   { id: 'cockpit', label: 'Cockpit' },
+  { id: 'docs', label: 'Docs' },
 ];
 
 export function Nav({ currentPage, onNavigate }: NavProps) {
