@@ -211,6 +211,42 @@
   }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 
+  /* ===== Atlas Navigation ===== */
+  .atlas-nav {
+    background: #15100c;
+    border-bottom: 1px solid #3a2f25;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 40px;
+    gap: 0;
+    position: relative;
+    z-index: 100;
+    font-family: var(--mono);
+  }
+  .atlas-nav-link {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #756657;
+    text-decoration: none;
+    padding: 8px 14px;
+    transition: color 0.2s ease;
+    border-bottom: 2px solid transparent;
+    line-height: 36px;
+  }
+  .atlas-nav-link:hover { color: #e8dfd3; }
+  .atlas-nav-link.active {
+    color: #d4a574;
+    border-bottom-color: #d4a574;
+  }
+  @media (max-width: 640px) {
+    .atlas-nav { padding: 0 16px; gap: 0; overflow-x: auto; }
+    .atlas-nav-link { padding: 8px 10px; }
+  }
+
   /* ===== Data Source Toggle ===== */
   .data-source-toggle { display: inline-flex; align-items: center; background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 20px; padding: 3px; gap: 0; margin-bottom: 4px; }
   .ds-toggle-btn { background: none; border: none; color: var(--ink-dim); font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 14px; cursor: pointer; border-radius: 18px; transition: all 0.25s ease; white-space: nowrap; }
@@ -273,6 +309,12 @@
 </style>
 </head>
 <body>
+<nav class="atlas-nav">
+  <a href="personality-dashboard-prototype.html" class="atlas-nav-link active">Dashboard</a>
+  <a href="baseline-assessment.html" class="atlas-nav-link">Baseline</a>
+  <a href="weekly-pulse.html" class="atlas-nav-link">Pulse</a>
+  <a href="cockpit.html" class="atlas-nav-link">Cockpit</a>
+</nav>
 <div class="dashboard" id="dashboard">
   <header class="header fade-in" id="header">
     <div class="header-left">
@@ -1943,6 +1985,668 @@ function loadBaselineFromStorage() {
   }
 }
 
+/* ============================================================
+   PULSE DATA — Weekly pulse scoring and trajectory building
+   ============================================================ */
+let PULSE_DATA = [];
+let TRAJECTORY_SCRUB_INDEX = 0;
+
+/* IPIP item metadata: trait code and reverse-scoring flag for all 120 items.
+   Built from assessment-items.json. Trait codes: N, E, O, A, C. */
+const IPIP_ITEM_META = (function() {
+  const data = [
+    ['N',false],['E',false],['O',false],['A',false],['C',false],
+    ['N',false],['E',false],['O',false],['A',true],['C',false],
+    ['N',false],['E',false],['O',false],['A',false],['C',false],
+    ['N',false],['E',false],['O',false],['A',true],['C',false],
+    ['N',false],['E',false],['O',false],['A',true],['C',false],
+    ['N',false],['E',false],['O',false],['A',false],['C',true],
+    ['N',false],['E',false],['O',false],['A',false],['C',false],
+    ['N',false],['E',false],['O',false],['A',true],['C',true],
+    ['N',false],['E',false],['O',false],['A',false],['C',false],
+    ['N',false],['E',false],['O',true],['A',true],['C',false],
+    ['N',true],['E',false],['O',true],['A',true],['C',false],
+    ['N',false],['E',false],['O',false],['A',false],['C',true],
+    ['N',false],['E',true],['O',false],['A',false],['C',false],
+    ['N',false],['E',true],['O',true],['A',true],['C',true],
+    ['N',false],['E',false],['O',true],['A',true],['C',true],
+    ['N',false],['E',false],['O',true],['A',true],['C',true],
+    ['N',true],['E',false],['O',true],['A',true],['C',true],
+    ['N',false],['E',false],['O',true],['A',true],['C',true],
+    ['N',false],['E',true],['O',false],['A',true],['C',false],
+    ['N',true],['E',true],['O',true],['A',true],['C',true],
+    ['N',true],['E',true],['O',true],['A',true],['C',true],
+    ['N',true],['E',true],['O',true],['A',true],['C',true],
+    ['N',true],['E',false],['O',true],['A',true],['C',true],
+    ['N',true],['E',false],['O',true],['A',true],['C',true],
+  ];
+  const meta = {};
+  data.forEach((d, i) => { meta['ipip_' + (i + 1)] = { trait: d[0], reverse: d[1] }; });
+  return meta;
+})();
+
+function loadPulseData() {
+  try {
+    const raw = localStorage.getItem('pulse_data_v1');
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed;
+  } catch (e) {
+    console.warn('Failed to parse pulse_data_v1:', e);
+    return [];
+  }
+}
+
+function scorePulse(pulse) {
+  const traitKeys = { N: 'neuroticism', E: 'extraversion', O: 'openness', A: 'agreeableness', C: 'conscientiousness' };
+  const traitItems = { N: [], E: [], O: [], A: [], C: [] };
+
+  for (const [key, value] of Object.entries(pulse.responses || {})) {
+    const meta = IPIP_ITEM_META[key];
+    if (!meta) continue;
+    const rawScore = meta.reverse ? (6 - value) : value;
+    traitItems[meta.trait].push(rawScore);
+  }
+
+  const scores = {};
+  for (const [trait, items] of Object.entries(traitItems)) {
+    if (items.length === 0) {
+      scores[traitKeys[trait]] = null;
+      continue;
+    }
+    const traitMean = items.reduce((a, b) => a + b, 0) / items.length;
+    const score = traitMean * 20; // 1-5 scale -> 20-100
+    if (trait === 'N') {
+      scores['emotional_stability'] = 100 - score;
+    } else {
+      scores[traitKeys[trait]] = score;
+    }
+  }
+
+  return scores;
+}
+
+function buildTrajectory() {
+  if (!BASELINE_DATA) return [];
+  const bd = BASELINE_DATA;
+  const bigFive = bd.scores.bigFive;
+  const baselineDate = bd.timestamp ? bd.timestamp.split('T')[0] : new Date().toISOString().split('T')[0];
+
+  const trajectory = [{
+    type: 'baseline',
+    date: baselineDate,
+    scores: { ...bigFive },
+    contexts: [],
+    emotions: {},
+    timestamp: bd.timestamp
+  }];
+
+  if (PULSE_DATA && PULSE_DATA.length > 0) {
+    const sortedPulses = [...PULSE_DATA].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    sortedPulses.forEach(pulse => {
+      const scores = scorePulse(pulse);
+      const date = pulse.timestamp ? pulse.timestamp.split('T')[0] : '';
+      const emotions = {};
+      if (pulse.emotions && Array.isArray(pulse.emotions)) {
+        pulse.emotions.forEach(e => { emotions[e] = (emotions[e] || 0) + 1; });
+      }
+      trajectory.push({
+        type: 'pulse',
+        date: date,
+        scores: scores,
+        contexts: pulse.contexts || [],
+        emotions: emotions,
+        timestamp: pulse.timestamp,
+        week: pulse.week,
+        phase: pulse.phase
+      });
+    });
+  }
+
+  return trajectory;
+}
+
+/* ---- Trajectory multi-line chart (D3) ---- */
+let _trajScrubberState = null;
+
+function renderBaselineTrajectoryChart(trajectory) {
+  const container = document.getElementById('trajectoryChart');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const containerWidth = container.clientWidth || 600;
+  const margin = { top: 10, right: 20, bottom: 32, left: 40 };
+  const width = containerWidth - margin.left - margin.right;
+  const height = 340 - margin.top - margin.bottom;
+
+  const svg = d3.select(container).append('svg')
+    .attr('viewBox', '0 0 ' + containerWidth + ' 340')
+    .attr('width', '100%').attr('height', 340);
+  const g = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+  const dates = trajectory.map(d => d.date);
+  const x = d3.scalePoint().domain(dates).range([0, width]).padding(0.15);
+  const y = d3.scaleLinear().domain([0, 100]).range([height, 0]);
+
+  // Grid lines
+  g.selectAll('.grid-line').data([20, 40, 60, 80, 100]).enter().append('line')
+    .attr('class', 'grid-line')
+    .attr('x1', 0).attr('x2', width)
+    .attr('y1', d => y(d)).attr('y2', d => y(d))
+    .attr('stroke', '#2c241c').attr('stroke-width', 1).attr('stroke-dasharray', '2 4');
+
+  g.selectAll('.y-label').data([20, 40, 60, 80, 100]).enter().append('text')
+    .attr('class', 'y-label')
+    .attr('x', -12).attr('y', d => y(d))
+    .attr('text-anchor', 'end').attr('dy', '0.35em')
+    .style('font-family', 'IBM Plex Mono')
+    .style('font-size', '12px').style('fill', '#756657').text(d => d);
+
+  // X-axis labels (dates)
+  g.selectAll('.x-label').data(dates).enter().append('text')
+    .attr('class', 'x-label')
+    .attr('x', d => x(d)).attr('y', height + 20)
+    .attr('text-anchor', 'middle')
+    .style('font-family', 'IBM Plex Mono')
+    .style('font-size', '11px').style('fill', '#756657')
+    .text(d => {
+      const dt = new Date(d);
+      return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+
+  // Draw trait lines and markers
+  TRAITS.forEach((trait) => {
+    const dk = trait.dataKey;
+    const points = trajectory.map(d => ({ date: d.date, value: d.scores[dk] }));
+
+    const lineGen = d3.line()
+      .x(d => x(d.date))
+      .y(d => y(d.value))
+      .defined(d => d.value != null)
+      .curve(d3.curveCatmullRom.alpha(0.5));
+
+    g.append('path').datum(points)
+      .attr('fill', 'none')
+      .attr('stroke', trait.color)
+      .attr('stroke-width', 2)
+      .attr('opacity', 0.85)
+      .attr('d', lineGen)
+      .attr('class', 'traj-line traj-' + trait.key);
+
+    // Markers for each data point
+    trajectory.forEach((d) => {
+      if (d.scores[dk] == null) return;
+      const cx = x(d.date);
+      const cy = y(d.scores[dk]);
+      if (d.type === 'baseline') {
+        // Diamond marker
+        g.append('path')
+          .attr('d', 'M ' + cx + ' ' + (cy - 6) + ' L ' + (cx + 6) + ' ' + cy + ' L ' + cx + ' ' + (cy + 6) + ' L ' + (cx - 6) + ' ' + cy + ' Z')
+          .attr('fill', trait.color)
+          .attr('stroke', '#1f1813')
+          .attr('stroke-width', 2);
+      } else {
+        g.append('circle')
+          .attr('cx', cx).attr('cy', cy)
+          .attr('r', 4)
+          .attr('fill', trait.color)
+          .attr('stroke', '#1f1813')
+          .attr('stroke-width', 1.5);
+      }
+    });
+
+    // Invisible thick line for tooltips
+    g.append('path').datum(points)
+      .attr('fill', 'none').attr('stroke', 'transparent').attr('stroke-width', 12)
+      .attr('d', lineGen).style('pointer-events', 'stroke')
+      .on('mousemove', function(event) {
+        const [px] = d3.pointer(event);
+        let nearest = dates[0];
+        let minDist = Infinity;
+        dates.forEach(d => {
+          const dist = Math.abs(x(d) - px);
+          if (dist < minDist) { minDist = dist; nearest = d; }
+        });
+        const dataPoint = trajectory.find(d => d.date === nearest);
+        if (dataPoint && dataPoint.scores[dk] != null) {
+          showTooltip(
+            '<div class="tooltip-label">' + trait.label + '</div>' +
+            '<div class="tooltip-value">' + dataPoint.scores[dk].toFixed(1) + '</div>' +
+            '<div style="color: #a89a87; font-size: 10px; margin-top: 2px;">' + nearest + '</div>',
+            event.pageX, event.pageY
+          );
+        }
+      }).on('mouseout', hideTooltip);
+  });
+
+  // Current selection indicator line
+  const currentData = trajectory[TRAJECTORY_SCRUB_INDEX];
+  if (currentData) {
+    g.append('line')
+      .attr('class', 'traj-indicator')
+      .attr('x1', x(currentData.date)).attr('x2', x(currentData.date))
+      .attr('y1', 0).attr('y2', height)
+      .attr('stroke', '#d4a574').attr('stroke-width', 1.5).attr('opacity', 0.5)
+      .attr('stroke-dasharray', '4 3');
+  }
+
+  // Legend
+  const legendContainer = document.getElementById('trajectoryLegend');
+  if (legendContainer) {
+    legendContainer.innerHTML = '';
+    TRAITS.forEach(trait => {
+      const el = document.createElement('div');
+      el.className = 'legend-item';
+      el.innerHTML = '<span class="legend-swatch" style="background: ' + trait.color + '"></span><span class="legend-label">' + trait.label + '</span>';
+      el.addEventListener('click', () => {
+        const line = document.querySelector('.traj-' + trait.key);
+        if (line) { const isDimmed = el.classList.toggle('dimmed'); line.style.opacity = isDimmed ? '0.15' : '0.85'; }
+      });
+      legendContainer.appendChild(el);
+    });
+  }
+}
+
+/* ---- Trajectory scrubber ---- */
+function initTrajectoryScrubber(trajectory) {
+  const track = document.getElementById('scrubberTrack');
+  const handle = document.getElementById('scrubberHandle');
+  const fill = document.getElementById('scrubberFill');
+  const marks = document.getElementById('scrubberMarks');
+  const dateDisplay = document.getElementById('scrubberDate');
+  if (!track || !handle) return;
+
+  const numPoints = trajectory.length;
+
+  // Build marks
+  marks.innerHTML = '';
+  trajectory.forEach((d, i) => {
+    const pct = numPoints === 1 ? 50 : (i / (numPoints - 1)) * 100;
+    const mark = document.createElement('div');
+    mark.className = 'scrubber-mark' + (d.type === 'baseline' ? ' phase' : '');
+    mark.style.left = pct + '%';
+    const label = document.createElement('div');
+    label.className = 'scrubber-mark-label';
+    const dt = new Date(d.date);
+    label.textContent = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    mark.appendChild(label);
+    marks.appendChild(mark);
+  });
+
+  _trajScrubberState = { trajectory, numPoints, track, handle, fill, dateDisplay, _dragging: false };
+
+  function updateScrubber() {
+    if (!_trajScrubberState) return;
+    const st = _trajScrubberState;
+    const pct = st.numPoints === 1 ? 50 : (TRAJECTORY_SCRUB_INDEX / (st.numPoints - 1)) * 100;
+    st.handle.style.left = pct + '%';
+    st.fill.style.width = pct + '%';
+    const d = st.trajectory[TRAJECTORY_SCRUB_INDEX];
+    if (d) {
+      const dt = new Date(d.date);
+      st.dateDisplay.textContent = dt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + ' \u00b7 ' + d.type;
+    }
+    renderTrajectoryRadar(d);
+    updateTrajectoryRadarMeta(st.trajectory, d);
+    updateTrajectoryIndicator(st.trajectory);
+  }
+
+  _trajScrubberState.update = updateScrubber;
+
+  // Click on track
+  track.addEventListener('click', (e) => {
+    if (!_trajScrubberState) return;
+    const rect = track.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    TRAJECTORY_SCRUB_INDEX = Math.round(pct * (numPoints - 1));
+    TRAJECTORY_SCRUB_INDEX = Math.max(0, Math.min(numPoints - 1, TRAJECTORY_SCRUB_INDEX));
+    updateScrubber();
+  });
+
+  // Drag handle
+  handle.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    if (_trajScrubberState) _trajScrubberState._dragging = true;
+  });
+
+  // Document-level listeners (attached once)
+  if (!window._trajScrubberDocListeners) {
+    window._trajScrubberDocListeners = true;
+    document.addEventListener('mousemove', (e) => {
+      if (!_trajScrubberState || !_trajScrubberState._dragging) return;
+      const rect = _trajScrubberState.track.getBoundingClientRect();
+      const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      TRAJECTORY_SCRUB_INDEX = Math.round(pct * (_trajScrubberState.numPoints - 1));
+      TRAJECTORY_SCRUB_INDEX = Math.max(0, Math.min(_trajScrubberState.numPoints - 1, TRAJECTORY_SCRUB_INDEX));
+      _trajScrubberState.update();
+    });
+    document.addEventListener('mouseup', () => {
+      if (_trajScrubberState) _trajScrubberState._dragging = false;
+    });
+  }
+
+  // Initial update
+  updateScrubber();
+}
+
+function updateTrajectoryIndicator(trajectory) {
+  const indicator = document.querySelector('.traj-indicator');
+  if (!indicator) return;
+  const container = document.getElementById('trajectoryChart');
+  if (!container) return;
+  const containerWidth = container.clientWidth || 600;
+  const margin = { left: 40, right: 20 };
+  const width = containerWidth - margin.left - margin.right;
+  const dates = trajectory.map(d => d.date);
+  const x = d3.scalePoint().domain(dates).range([0, width]).padding(0.15);
+  const currentData = trajectory[TRAJECTORY_SCRUB_INDEX];
+  if (currentData) {
+    indicator.transition().duration(150)
+      .attr('x1', x(currentData.date)).attr('x2', x(currentData.date));
+  }
+}
+
+function renderTrajectoryRadar(dataPoint) {
+  if (!dataPoint) return;
+  renderBaselineRadar('radarChart', dataPoint.scores);
+}
+
+function updateTrajectoryRadarMeta(trajectory, dataPoint) {
+  if (!dataPoint) return;
+  const baseline = trajectory[0];
+  let totalDelta = 0;
+  let count = 0;
+  TRAITS.forEach(trait => {
+    const dk = trait.dataKey;
+    if (dataPoint.scores[dk] != null && baseline.scores[dk] != null) {
+      totalDelta += Math.abs(dataPoint.scores[dk] - baseline.scores[dk]);
+      count++;
+    }
+  });
+  const avgDelta = count > 0 ? (totalDelta / count).toFixed(1) : '\u2014';
+
+  const deltaEl = document.getElementById('radarDelta');
+  const phaseEl = document.getElementById('radarPhase');
+  const ctxEl = document.getElementById('radarContexts');
+  if (deltaEl) deltaEl.textContent = dataPoint.type === 'baseline' ? '\u2014' : avgDelta;
+  if (phaseEl) phaseEl.textContent = dataPoint.type === 'baseline' ? 'Baseline' : 'Pulse W' + (dataPoint.week || '?');
+  if (ctxEl) ctxEl.textContent = dataPoint.contexts && dataPoint.contexts.length > 0 ? dataPoint.contexts.join(', ') : '\u2014';
+}
+
+/* ---- Trajectory insight text ---- */
+function generateTrajectoryInsight(trajectory) {
+  if (trajectory.length < 2) return 'Not enough data for trajectory insights yet.';
+  const baseline = trajectory[0];
+  const latest = trajectory[trajectory.length - 1];
+
+  let maxChange = 0;
+  let maxChangeTrait = null;
+  let direction = 'up';
+
+  TRAITS.forEach(trait => {
+    const dk = trait.dataKey;
+    const bVal = baseline.scores[dk];
+    const lVal = latest.scores[dk];
+    if (bVal == null || lVal == null) return;
+    const change = Math.abs(lVal - bVal);
+    if (change > maxChange) {
+      maxChange = change;
+      maxChangeTrait = trait;
+      direction = lVal > bVal ? 'up' : 'down';
+    }
+  });
+
+  if (!maxChangeTrait) return 'Not enough data for trajectory insights yet.';
+  const bVal = baseline.scores[maxChangeTrait.dataKey];
+  const lVal = latest.scores[maxChangeTrait.dataKey];
+  const absChange = Math.abs(lVal - bVal);
+
+  let trend;
+  if (absChange < 3) trend = 'remarkably stable';
+  else if (direction === 'up') trend = 'a gentle upward trend';
+  else trend = 'a gentle downward trend';
+
+  return 'Your <span class="highlight">' + maxChangeTrait.label + '</span> has shifted from ' +
+    bVal.toFixed(0) + ' at baseline to ' + lVal.toFixed(0) + ' now \u2014 ' + trend + '.';
+}
+
+/* ---- Trajectory distribution (3+ data points) ---- */
+function renderTrajectoryDistribution(trajectory) {
+  const grid = document.getElementById('distributionGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  TRAITS.forEach(trait => {
+    const dk = trait.dataKey;
+    const values = trajectory.map(d => d.scores[dk]).filter(v => v != null);
+    if (values.length === 0) return;
+
+    const m = mean(values);
+    const s = std(values);
+    const minVal = Math.min(...values);
+    const maxVal = Math.max(...values);
+
+    const card = document.createElement('div');
+    card.className = 'card dist-card';
+    card.innerHTML =
+      '<div class="dist-header">' +
+        '<div class="dist-name" style="color: ' + trait.color + '">' + trait.label + '</div>' +
+        '<div class="dist-stats">' +
+          '<span>&mu; <span class="dist-stat-value">' + m.toFixed(1) + '</span></span>' +
+          '<span>&sigma; <span class="dist-stat-value">' + s.toFixed(1) + '</span></span>' +
+          '<span>range <span class="dist-stat-value">' + minVal.toFixed(0) + '\u2013' + maxVal.toFixed(0) + '</span></span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="chart-container" id="dist-' + trait.key + '"></div>';
+    grid.appendChild(card);
+
+    // Render mini density chart
+    const container = document.getElementById('dist-' + trait.key);
+    const w = container.clientWidth || 300;
+    const h = 120;
+    const mg = { top: 8, right: 10, bottom: 20, left: 30 };
+    const cw = w - mg.left - mg.right;
+    const ch = h - mg.top - mg.bottom;
+
+    const svg = d3.select(container).append('svg')
+      .attr('viewBox', '0 0 ' + w + ' ' + h)
+      .attr('width', '100%').attr('height', h);
+    const g = svg.append('g').attr('transform', 'translate(' + mg.left + ',' + mg.top + ')');
+
+    const x = d3.scaleLinear().domain([0, 100]).range([0, cw]);
+
+    [25, 50, 75].forEach(v => {
+      g.append('line').attr('x1', x(v)).attr('x2', x(v))
+        .attr('y1', 0).attr('y2', ch)
+        .attr('stroke', '#2c241c').attr('stroke-width', 0.5).attr('stroke-dasharray', '2 3');
+    });
+    [0, 25, 50, 75, 100].forEach(v => {
+      g.append('text').attr('x', x(v)).attr('y', ch + 14)
+        .attr('text-anchor', 'middle')
+        .style('font-family', 'IBM Plex Mono').style('font-size', '9px').style('fill', '#756657')
+        .text(v);
+    });
+
+    // Kernel density estimate
+    if (values.length >= 2) {
+      const bandwidth = Math.max(s, 5);
+      const numPts = 100;
+      const densityData = [];
+      for (let i = 0; i <= numPts; i++) {
+        const xVal = (i / numPts) * 100;
+        let density = 0;
+        values.forEach(v => {
+          const u = (xVal - v) / bandwidth;
+          density += Math.exp(-0.5 * u * u) / (bandwidth * Math.sqrt(2 * Math.PI));
+        });
+        density /= values.length;
+        densityData.push({ x: xVal, density });
+      }
+      const maxDensity = Math.max(...densityData.map(d => d.density));
+      const yScale = d3.scaleLinear().domain([0, maxDensity * 1.1]).range([ch, 0]);
+
+      const area = d3.area()
+        .x(d => x(d.x)).y0(ch).y1(d => yScale(d.density))
+        .curve(d3.curveCatmullRom.alpha(0.5));
+      g.append('path').datum(densityData)
+        .attr('fill', trait.color).attr('opacity', 0.1).attr('d', area);
+
+      const line = d3.line()
+        .x(d => x(d.x)).y(d => yScale(d.density))
+        .curve(d3.curveCatmullRom.alpha(0.5));
+      g.append('path').datum(densityData)
+        .attr('fill', 'none').attr('stroke', trait.color).attr('stroke-width', 1.5).attr('opacity', 0.7).attr('d', line);
+    }
+
+    // Rug plot (individual data points)
+    g.selectAll('.dist-rug').data(values).enter().append('circle')
+      .attr('cx', d => x(d)).attr('cy', ch - 4)
+      .attr('r', 3).attr('fill', trait.color).attr('opacity', 0.8)
+      .attr('stroke', '#1f1813').attr('stroke-width', 1);
+
+    // Mean line
+    g.append('line')
+      .attr('x1', x(m)).attr('x2', x(m))
+      .attr('y1', 0).attr('y2', ch)
+      .attr('stroke', trait.color).attr('stroke-width', 1.5).attr('stroke-dasharray', '3 3').attr('opacity', 0.5);
+  });
+}
+
+/* ---- Trajectory context summary (3+ pulses with context tags) ---- */
+function renderTrajectoryContextSummary(trajectory) {
+  const pulsesWithCtx = trajectory.filter(d => d.type === 'pulse' && d.contexts && d.contexts.length > 0);
+
+  if (pulsesWithCtx.length < 3) return null;
+
+  const ctxSet = new Set();
+  pulsesWithCtx.forEach(d => d.contexts.forEach(c => ctxSet.add(c)));
+  const ctxList = Array.from(ctxSet);
+
+  const ctxAvgs = {};
+  TRAITS.forEach(t => {
+    ctxAvgs[t.key] = {};
+    ctxList.forEach(ctx => {
+      const subset = pulsesWithCtx.filter(d => d.contexts.includes(ctx));
+      const vals = subset.map(d => d.scores[t.dataKey]).filter(v => v != null);
+      ctxAvgs[t.key][ctx] = vals.length > 0 ? mean(vals) : null;
+    });
+  });
+
+  let html = '<div class="context-heatmap">';
+  html += '<div class="context-corner"></div>';
+  ctxList.forEach(ctx => {
+    html += '<div class="context-col-header">' + ctx + '</div>';
+  });
+  TRAITS.forEach(t => {
+    html += '<div class="context-trait-label" style="color: ' + t.color + '">' + t.label + '</div>';
+    ctxList.forEach(ctx => {
+      const val = ctxAvgs[t.key][ctx];
+      html += '<div class="context-cell"><div class="context-bar">';
+      if (val != null) {
+        const fillPct = Math.abs(val - 50);
+        const leftStart = val >= 50 ? 50 : (50 - fillPct);
+        html += '<div class="context-bar-fill" style="background: ' + t.color + '; width: ' + fillPct + '%; left: ' + leftStart + '%;"></div>';
+        html += '<span class="context-cell-value">' + val.toFixed(0) + '</span>';
+      }
+      html += '</div></div>';
+    });
+  });
+  html += '</div>';
+
+  return html;
+}
+
+/* ---- Trajectory rhythm (5+ pulses with timestamps) ---- */
+function renderTrajectoryRhythm(trajectory) {
+  const pulses = trajectory.filter(d => d.type === 'pulse');
+  if (pulses.length < 5) return null;
+
+  function getTimeSlot(hour) {
+    if (hour >= 6 && hour < 12) return 0;
+    if (hour >= 12 && hour < 18) return 1;
+    if (hour >= 18 && hour < 24) return 2;
+    return 3;
+  }
+
+  const timeSlots = ['Morning (6\u201312)', 'Afternoon (12\u201318)', 'Evening (18\u201324)', 'Night (0\u20136)'];
+  const slotData = [[], [], [], []];
+  pulses.forEach(p => {
+    if (!p.timestamp) return;
+    const hour = new Date(p.timestamp).getHours();
+    slotData[getTimeSlot(hour)].push(p);
+  });
+
+  // Build HTML grid with mini charts
+  let html = '<div class="grid rhythm-grid">';
+  TRAITS.forEach(t => {
+    html += '<div class="card"><div class="radial-chart-wrap">';
+    html += '<div class="card-label" style="margin-bottom: 8px; color: ' + t.color + ';">' + t.label + '</div>';
+    html += '<div class="chart-container" id="rhythm-' + t.key + '"></div>';
+    html += '<div class="radial-title">By Time of Day</div>';
+    html += '</div></div>';
+  });
+  html += '</div>';
+
+  return { html, slotData, timeSlots, pulses };
+}
+
+function drawTrajectoryRhythmCharts(slotData, timeSlots) {
+  TRAITS.forEach(t => {
+    const dk = t.dataKey;
+    const container = document.getElementById('rhythm-' + t.key);
+    if (!container) return;
+    container.innerHTML = '';
+
+    const w = container.clientWidth || 200;
+    const h = 160;
+    const margin = { top: 10, right: 10, bottom: 30, left: 30 };
+    const cw = w - margin.left - margin.right;
+    const ch = h - margin.top - margin.bottom;
+
+    const svg = d3.select(container).append('svg')
+      .attr('viewBox', '0 0 ' + w + ' ' + h)
+      .attr('width', '100%').attr('height', h);
+    const g = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+    const x = d3.scaleBand().domain(timeSlots).range([0, cw]).padding(0.2);
+    const y = d3.scaleLinear().domain([0, 100]).range([ch, 0]);
+
+    // Grid
+    [25, 50, 75, 100].forEach(v => {
+      g.append('line').attr('x1', 0).attr('x2', cw)
+        .attr('y1', y(v)).attr('y2', y(v))
+        .attr('stroke', '#2c241c').attr('stroke-width', 0.5).attr('stroke-dasharray', '2 3');
+    });
+
+    // Bars
+    timeSlots.forEach((slot, i) => {
+      const vals = slotData[i].map(p => p.scores[dk]).filter(v => v != null);
+      const avg = vals.length > 0 ? mean(vals) : 0;
+      g.append('rect')
+        .attr('x', x(slot)).attr('y', y(avg))
+        .attr('width', x.bandwidth()).attr('height', ch - y(avg))
+        .attr('fill', t.color).attr('opacity', 0.6)
+        .attr('rx', 2);
+      g.append('text')
+        .attr('x', x(slot) + x.bandwidth() / 2).attr('y', y(avg) - 5)
+        .attr('text-anchor', 'middle')
+        .style('font-family', 'IBM Plex Mono').style('font-size', '10px').style('fill', t.color)
+        .text(vals.length > 0 ? avg.toFixed(0) : '\u2014');
+    });
+
+    // X-axis labels
+    timeSlots.forEach(slot => {
+      const words = slot.split(' ');
+      g.append('text')
+        .attr('x', x(slot) + x.bandwidth() / 2).attr('y', ch + 14)
+        .attr('text-anchor', 'middle')
+        .style('font-family', 'IBM Plex Mono').style('font-size', '8px').style('fill', '#756657')
+        .text(words[0]);
+    });
+  });
+}
+
 function formatDateNice(isoStr) {
   try {
     const d = new Date(isoStr);
@@ -1966,6 +2670,7 @@ function setDataSourceMode(mode) {
   });
 
   if (mode === 'baseline' && BASELINE_DATA) {
+    PULSE_DATA = loadPulseData(); // reload in case new pulses were added
     document.body.classList.add('baseline-mode');
     renderBaselineHeader();
     renderBaselineView();
@@ -1980,20 +2685,39 @@ function renderBaselineHeader() {
   const bd = BASELINE_DATA;
   const dateStr = formatDateNice(bd.timestamp);
   const scores = bd.scores;
+  const hasPulses = PULSE_DATA && PULSE_DATA.length > 0;
 
-  document.getElementById('headerLabel').textContent = 'Your Baseline Snapshot';
-  document.getElementById('headerTitle').textContent = 'Your Baseline';
-  document.getElementById('headerSubtitle').innerHTML =
-    'Your first snapshot. <strong style="color: var(--ink);">' + dateStr + '</strong>. ' +
-    'Weekly pulses will build on this.';
+  if (hasPulses) {
+    const trajectory = buildTrajectory();
+    const numPulses = PULSE_DATA.length;
+    const firstDate = trajectory[0].date;
+    const lastDate = trajectory[trajectory.length - 1].date;
+    const dateRange = formatDateNice(firstDate) + ' \u2014 ' + formatDateNice(lastDate);
+    const timespan = numPulses + ' pulse' + (numPulses !== 1 ? 's' : '');
+
+    document.getElementById('headerLabel').textContent = 'Your Trajectory';
+    document.getElementById('headerTitle').textContent = 'Your Trajectory';
+    document.getElementById('headerSubtitle').innerHTML =
+      'Started <strong style="color: var(--ink);">' + formatDateNice(bd.timestamp) + '</strong>. ' +
+      timespan + ' across this span. This is not a snapshot \u2014 it is a path through time.';
+    document.getElementById('subjectMeta1').textContent = 'Baseline + ' + numPulses + ' pulse' + (numPulses !== 1 ? 's' : '') + ' \u00b7 ' + dateRange;
+    document.getElementById('subjectMeta2').textContent = 'Big Five \u00b7 SD3 \u00b7 ICAR-16 \u00b7 Context';
+    document.getElementById('liveIndicatorText').textContent = 'Baseline + ' + numPulses + ' pulse' + (numPulses !== 1 ? 's' : '');
+  } else {
+    document.getElementById('headerLabel').textContent = 'Your Baseline Snapshot';
+    document.getElementById('headerTitle').textContent = 'Your Baseline';
+    document.getElementById('headerSubtitle').innerHTML =
+      'Your first snapshot. <strong style="color: var(--ink);">' + dateStr + '</strong>. ' +
+      'Weekly pulses will build on this.';
+    document.getElementById('subjectMeta1').textContent = 'Baseline complete \u00b7 ' + dateStr;
+    document.getElementById('subjectMeta2').textContent = 'Big Five \u00b7 SD3 \u00b7 ICAR-16 \u00b7 Context';
+    document.getElementById('liveIndicatorText').textContent = 'Baseline \u00b7 1 data point';
+  }
 
   // Context-based name or default
   let name = 'Rui Silva';
   if (scores.context && scores.context.name) name = scores.context.name;
   document.getElementById('subjectName').textContent = name;
-  document.getElementById('subjectMeta1').textContent = 'Baseline complete · ' + dateStr;
-  document.getElementById('subjectMeta2').textContent = 'Big Five · SD3 · ICAR-16 · Context';
-  document.getElementById('liveIndicatorText').textContent = 'Baseline · 1 data point';
   document.getElementById('dataSourceNote').innerHTML = '';
 }
 
@@ -2312,43 +3036,116 @@ function renderBaselineTrajectoryView() {
   const bd = BASELINE_DATA;
   const dateStr = formatDateNice(bd.timestamp);
   const bigFive = bd.scores.bigFive;
+  const hasPulses = PULSE_DATA && PULSE_DATA.length > 0;
 
-  panel.innerHTML =
-    '<div class="card" style="margin-bottom: 20px;">' +
-      '<div class="card-header">' +
-        '<div>' +
-          '<div class="card-label">View 01 / Trajectory</div>' +
-          '<div class="card-title">Baseline — ' + dateStr + '</div>' +
+  if (hasPulses) {
+    const trajectory = buildTrajectory();
+    const numPulses = PULSE_DATA.length;
+    const firstDate = trajectory[0].date;
+    const lastDate = trajectory[trajectory.length - 1].date;
+    const dateRange = formatDateNice(firstDate) + ' \u2014 ' + formatDateNice(lastDate);
+    const summary = 'Baseline + ' + numPulses + ' pulse' + (numPulses !== 1 ? 's' : '') + ' \u00b7 ' + dateRange;
+
+    TRAJECTORY_SCRUB_INDEX = trajectory.length - 1; // default to latest
+
+    panel.innerHTML =
+      '<div class="grid grid-trajectory">' +
+        '<div class="card" id="trajectoryCard">' +
+          '<div class="card-header">' +
+            '<div>' +
+              '<div class="card-label">View 01 / Trajectory</div>' +
+              '<div class="card-title">Trait Evolution \u2014 ' + summary + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="trait-legend" id="trajectoryLegend"></div>' +
+          '<div class="chart-container" id="trajectoryChart"></div>' +
+          '<div class="time-scrubber">' +
+            '<div class="scrubber-header">' +
+              '<div class="scrubber-label">Timeline \u00b7 Drag to scrub</div>' +
+              '<div class="scrubber-date" id="scrubberDate">&mdash;</div>' +
+            '</div>' +
+            '<div class="scrubber-track" id="scrubberTrack">' +
+              '<div class="scrubber-rail"></div>' +
+              '<div class="scrubber-fill" id="scrubberFill"></div>' +
+              '<div class="scrubber-marks" id="scrubberMarks"></div>' +
+              '<div class="scrubber-handle" id="scrubberHandle"></div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="card radar-panel fade-in" id="radarCard">' +
+          '<div class="card-header">' +
+            '<div>' +
+              '<div class="card-label">Personality Morphology</div>' +
+              '<div class="card-title" id="radarTitle">Latest Shape</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="radar-container">' +
+            '<div class="chart-container" id="radarChart"></div>' +
+          '</div>' +
+          '<div class="radar-meta">' +
+            '<div class="radar-meta-item">' +
+              '<span class="radar-meta-label">&Delta; from Start</span>' +
+              '<span class="radar-meta-value" id="radarDelta">&mdash;</span>' +
+            '</div>' +
+            '<div class="radar-meta-item">' +
+              '<span class="radar-meta-label">Phase</span>' +
+              '<span class="radar-meta-value" id="radarPhase">&mdash;</span>' +
+            '</div>' +
+            '<div class="radar-meta-item">' +
+              '<span class="radar-meta-label">Contexts</span>' +
+              '<span class="radar-meta-value" id="radarContexts">&mdash;</span>' +
+            '</div>' +
+          '</div>' +
         '</div>' +
       '</div>' +
-      '<div class="baseline-radar-section">' +
-        '<div class="baseline-radar-title">Your Personality Shape</div>' +
-        '<div class="baseline-radar-subtitle">Big Five — from your baseline assessment</div>' +
-        '<div class="baseline-radar-chart" id="baselineRadarTrajectory"></div>' +
-        '<div class="baseline-trait-scores" id="baselineTraitScores"></div>' +
+      '<div class="insight-strip fade-in" id="trajectoryInsight">' +
+        '<div class="insight-label">Key Insight \u00b7 ' + summary + '</div>' +
+        '<p class="insight-text" id="trajectoryInsightText">' + generateTrajectoryInsight(trajectory) + '</p>' +
+      '</div>';
+
+    // Render trajectory chart and scrubber after DOM is ready
+    setTimeout(() => {
+      renderBaselineTrajectoryChart(trajectory);
+      initTrajectoryScrubber(trajectory);
+    }, 50);
+  } else {
+    panel.innerHTML =
+      '<div class="card" style="margin-bottom: 20px;">' +
+        '<div class="card-header">' +
+          '<div>' +
+            '<div class="card-label">View 01 / Trajectory</div>' +
+            '<div class="card-title">Baseline \u2014 ' + dateStr + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="baseline-radar-section">' +
+          '<div class="baseline-radar-title">Your Personality Shape</div>' +
+          '<div class="baseline-radar-subtitle">Big Five \u2014 from your baseline assessment</div>' +
+          '<div class="baseline-radar-chart" id="baselineRadarTrajectory"></div>' +
+          '<div class="baseline-trait-scores" id="baselineTraitScores"></div>' +
+        '</div>' +
       '</div>' +
-    '</div>' +
-    '<div class="baseline-message" style="margin-bottom: 20px;">' +
-      'This is your <span class="em">starting point</span>. Complete weekly pulses to build your trajectory. ' +
-      'Each pulse adds a data point, and the shape above will evolve into a path through time.' +
-    '</div>';
+      '<div class="baseline-message" style="margin-bottom: 20px;">' +
+        'This is your <span class="em">starting point</span>. Complete weekly pulses to build your trajectory. ' +
+        'Each pulse adds a data point, and the shape above will evolve into a path through time.' +
+      '</div>';
 
-  // Render radar
-  setTimeout(() => renderBaselineRadar('baselineRadarTrajectory', bigFive), 50);
-  // Render trait scores
-  const scoresEl = document.getElementById('baselineTraitScores');
-  TRAITS.forEach(trait => {
-    const key = trait.key === 'stability' ? 'emotional_stability' : trait.key;
-    const val = bigFive[key] || 0;
-    const el = document.createElement('div');
-    el.className = 'baseline-trait-score';
-    el.innerHTML =
-      '<div class="baseline-trait-score-label" style="color: ' + trait.color + ';">' + trait.short + '</div>' +
-      '<div class="baseline-trait-score-val" style="color: ' + trait.color + ';">' + val.toFixed(0) + '</div>';
-    scoresEl.appendChild(el);
-  });
+    setTimeout(() => renderBaselineRadar('baselineRadarTrajectory', bigFive), 50);
+    const scoresEl = document.getElementById('baselineTraitScores');
+    if (scoresEl) {
+      TRAITS.forEach(trait => {
+        const key = trait.key === 'stability' ? 'emotional_stability' : trait.key;
+        const val = bigFive[key] || 0;
+        const el = document.createElement('div');
+        el.className = 'baseline-trait-score';
+        el.innerHTML =
+          '<div class="baseline-trait-score-label" style="color: ' + trait.color + ';">' + trait.short + '</div>' +
+          '<div class="baseline-trait-score-val" style="color: ' + trait.color + ';">' + val.toFixed(0) + '</div>';
+        scoresEl.appendChild(el);
+      });
+    }
+  }
 
-  // Add SD3 + ICAR below the trajectory radar
+  // Add SD3 + ICAR below
   addSD3AndICARToPanel(panel, bd.scores);
 }
 
@@ -2357,40 +3154,76 @@ function renderBaselineDistributionView() {
   const panel = document.getElementById('view-distribution');
   const bd = BASELINE_DATA;
   const bigFive = bd.scores.bigFive;
+  const hasPulses = PULSE_DATA && PULSE_DATA.length > 0;
+  const trajectory = hasPulses ? buildTrajectory() : null;
+  const numDataPoints = trajectory ? trajectory.length : 1;
 
-  panel.innerHTML =
-    '<div class="card" style="margin-bottom: 20px;">' +
-      '<div class="card-header">' +
-        '<div>' +
-          '<div class="card-label">View 02 / Distribution</div>' +
-          '<div class="card-title">Your Baseline Shape</div>' +
+  if (trajectory && numDataPoints >= 3) {
+    // Show density distributions
+    panel.innerHTML =
+      '<div class="card" style="margin-bottom: 20px;">' +
+        '<div class="card-header">' +
+          '<div>' +
+            '<div class="card-label">View 02 / Distribution</div>' +
+            '<div class="card-title">Density Distributions \u2014 The Shape of Personality</div>' +
+          '</div>' +
+          '<div class="card-label">Whole Trait Theory \u00b7 Fleeson (2001)</div>' +
+        '</div>' +
+        '<p class="card-subtitle" style="margin-bottom: 24px; max-width: 700px;">' +
+          'A trait is not a point \u2014 it is a distribution of states. Each chart below shows the density of your scores across ' + numDataPoints + ' data points. Width = adaptability. Skew = tendency.' +
+        '</p>' +
+      '</div>' +
+      '<div class="grid grid-distribution" id="distributionGrid"></div>' +
+      '<div class="insight-strip fade-in" style="margin-top: 20px;" id="distributionInsight">' +
+        '<div class="insight-label">Distribution Insight</div>' +
+        '<p class="insight-text" id="distributionInsightText">' + generateTrajectoryInsight(trajectory) + '</p>' +
+      '</div>';
+
+    setTimeout(() => renderTrajectoryDistribution(trajectory), 50);
+  } else {
+    // Not enough data points — show baseline radar + message
+    const message = hasPulses
+      ? 'Distribution patterns need at least 3 data points. You have ' + numDataPoints + '.'
+      : 'Your baseline is recorded. <span class="em">Distribution patterns</span> will emerge as you complete ' +
+        'weekly check-ins \u2014 each one adds a data point to your trajectory. The shape above is your starting point; ' +
+        'over time, you will see how your traits cluster and spread.';
+
+    panel.innerHTML =
+      '<div class="card" style="margin-bottom: 20px;">' +
+        '<div class="card-header">' +
+          '<div>' +
+            '<div class="card-label">View 02 / Distribution</div>' +
+            '<div class="card-title">' + (hasPulses ? 'Your Current Shape' : 'Your Baseline Shape') + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="baseline-radar-section">' +
+          '<div class="baseline-radar-title">' + (hasPulses ? 'Latest Big Five' : 'Your Current Big Five') + '</div>' +
+          '<div class="baseline-radar-subtitle">The shape from your ' + (hasPulses ? 'latest data point' : 'baseline assessment') + '</div>' +
+          '<div class="baseline-radar-chart" id="baselineRadarDist"></div>' +
+          '<div class="baseline-trait-scores" id="baselineTraitScoresDist"></div>' +
         '</div>' +
       '</div>' +
-      '<div class="baseline-radar-section">' +
-        '<div class="baseline-radar-title">Your Current Big Five</div>' +
-        '<div class="baseline-radar-subtitle">The shape from your baseline assessment</div>' +
-        '<div class="baseline-radar-chart" id="baselineRadarDist"></div>' +
-        '<div class="baseline-trait-scores" id="baselineTraitScoresDist"></div>' +
-      '</div>' +
-    '</div>' +
-    '<div class="baseline-message" style="margin-bottom: 20px;">' +
-      'Your baseline is recorded. <span class="em">Distribution patterns</span> will emerge as you complete ' +
-      'weekly check-ins — each one adds a data point to your trajectory. The shape above is your starting point; ' +
-      'over time, you will see how your traits cluster and spread.' +
-    '</div>';
+      '<div class="baseline-message" style="margin-bottom: 20px;">' + message + '</div>';
 
-  setTimeout(() => renderBaselineRadar('baselineRadarDist', bigFive), 50);
-  const scoresEl = document.getElementById('baselineTraitScoresDist');
-  TRAITS.forEach(trait => {
-    const key = trait.key === 'stability' ? 'emotional_stability' : trait.key;
-    const val = bigFive[key] || 0;
-    const el = document.createElement('div');
-    el.className = 'baseline-trait-score';
-    el.innerHTML =
-      '<div class="baseline-trait-score-label" style="color: ' + trait.color + ';">' + trait.short + '</div>' +
-      '<div class="baseline-trait-score-val" style="color: ' + trait.color + ';">' + val.toFixed(0) + '</div>';
-    scoresEl.appendChild(el);
-  });
+    setTimeout(() => {
+      const latest = trajectory ? trajectory[trajectory.length - 1] : null;
+      const scores = latest ? latest.scores : bigFive;
+      renderBaselineRadar('baselineRadarDist', scores);
+      const scoresEl = document.getElementById('baselineTraitScoresDist');
+      if (scoresEl) {
+        TRAITS.forEach(trait => {
+          const key = trait.key === 'stability' ? 'emotional_stability' : trait.key;
+          const val = scores[key] || 0;
+          const el = document.createElement('div');
+          el.className = 'baseline-trait-score';
+          el.innerHTML =
+            '<div class="baseline-trait-score-label" style="color: ' + trait.color + ';">' + trait.short + '</div>' +
+            '<div class="baseline-trait-score-val" style="color: ' + trait.color + ';">' + val.toFixed(0) + '</div>';
+          scoresEl.appendChild(el);
+        });
+      }
+    }, 50);
+  }
 
   addSD3AndICARToPanel(panel, bd.scores);
 }
@@ -2400,6 +3233,8 @@ function renderBaselineContextView() {
   const panel = document.getElementById('view-context');
   const bd = BASELINE_DATA;
   const ctx = bd.scores.context || {};
+  const hasPulses = PULSE_DATA && PULSE_DATA.length > 0;
+  const trajectory = hasPulses ? buildTrajectory() : null;
 
   // Map context IDs to display labels
   const ctxLabels = {
@@ -2440,42 +3275,101 @@ function renderBaselineContextView() {
     summaryHTML = '<p style="color: var(--ink-dim); font-style: italic;">No context questionnaire data found.</p>';
   }
 
+  // Check if we have enough pulses with context tags
+  const contextSummary = trajectory ? renderTrajectoryContextSummary(trajectory) : null;
+  const pulsesWithCtx = trajectory ? trajectory.filter(d => d.type === 'pulse' && d.contexts && d.contexts.length > 0) : [];
+
+  let contextHTML = '';
+  if (contextSummary) {
+    contextHTML =
+      '<div class="card" style="margin-bottom: 20px;">' +
+        '<div class="card-header">' +
+          '<div>' +
+            '<div class="card-label">View 03 / Context</div>' +
+            '<div class="card-title">Context Sensitivity \u2014 How Traits Shift Across Environments</div>' +
+          '</div>' +
+          '<div class="card-label">Contextualized Personality \u00b7 Holtrop (2025)</div>' +
+        '</div>' +
+        '<p class="card-subtitle" style="max-width: 700px;">' +
+          'The same person, measured across contexts. The variance across contexts is itself a stable individual difference. Large gaps reveal where your personality flexes \u2014 and where it doesn\'t.' +
+        '</p>' +
+        contextSummary +
+      '</div>';
+  }
+
+  const needMoreCtxMsg = hasPulses && pulsesWithCtx.length < 3
+    ? '<div class="baseline-message" style="margin-bottom: 20px;">' +
+      'Context patterns will appear as you log more pulses with context tags. You have ' + pulsesWithCtx.length + ' pulse' + (pulsesWithCtx.length !== 1 ? 's' : '') + ' with context tags so far (need 3+).' +
+      '</div>'
+    : (!hasPulses
+      ? '<div class="baseline-message" style="margin-bottom: 20px;">' +
+        '<span class="em">Context patterns</span> will appear as you log pulses with context tags. ' +
+        'The context sensitivity matrix, variance analysis, and DIAMONDS sections need multiple data points across different situations.' +
+        '</div>'
+      : '');
+
   panel.innerHTML =
     '<div class="card" style="margin-bottom: 20px;">' +
       '<div class="card-header">' +
         '<div>' +
-          '<div class="card-label">View 03 / Context</div>' +
-          '<div class="card-title">Your Context — Baseline Snapshot</div>' +
+          '<div class="card-label">Baseline Context</div>' +
+          '<div class="card-title">' + (hasPulses ? 'Your Context \u2014 Baseline Snapshot' : 'Your Context \u2014 Baseline Snapshot') + '</div>' +
         '</div>' +
       '</div>' +
       '<div class="context-summary-card">' + summaryHTML + '</div>' +
     '</div>' +
-    '<div class="baseline-message" style="margin-bottom: 20px;">' +
-      '<span class="em">Context patterns</span> will appear as you log pulses with context tags. ' +
-      'The context sensitivity matrix, variance analysis, and DIAMONDS sections need multiple data points across different situations.' +
-    '</div>';
+    contextHTML +
+    needMoreCtxMsg;
 
-  // Hide the old context sub-sections that are in the static HTML
-  // (they are already replaced by innerHTML above)
   addSD3AndICARToPanel(panel, bd.scores);
 }
 
 /* ---- Baseline Rhythm View ---- */
 function renderBaselineRhythmView() {
   const panel = document.getElementById('view-rhythm');
-  panel.innerHTML =
-    '<div class="card" style="margin-bottom: 20px;">' +
-      '<div class="card-header">' +
-        '<div>' +
-          '<div class="card-label">View 04 / Rhythm</div>' +
-          '<div class="card-title">Time of Day — Circadian Signature</div>' +
+  const hasPulses = PULSE_DATA && PULSE_DATA.length > 0;
+  const trajectory = hasPulses ? buildTrajectory() : null;
+  const pulses = trajectory ? trajectory.filter(d => d.type === 'pulse') : [];
+
+  if (pulses.length >= 5) {
+    const rhythmResult = renderTrajectoryRhythm(trajectory);
+    panel.innerHTML =
+      '<div class="card" style="margin-bottom: 20px;">' +
+        '<div class="card-header">' +
+          '<div>' +
+            '<div class="card-label">View 04 / Rhythm</div>' +
+            '<div class="card-title">Time of Day \u2014 Your Circadian Personality Signature</div>' +
+          '</div>' +
         '</div>' +
+        '<p class="card-subtitle" style="max-width: 700px;">' +
+          'Personality is not fixed across the day. Each trait has its own circadian signature. Knowing when you peak can help you schedule around your natural rhythms.' +
+        '</p>' +
       '</div>' +
-      '<div class="baseline-message" style="border-left-color: var(--accent); margin: 0;">' +
-        '<span class="em" style="color: var(--accent-bright);">Time-of-day patterns</span> will appear after you have logged pulses at different times of day. ' +
-        'Your baseline is a single snapshot — rhythm requires multiple measurements across the day.' +
-      '</div>' +
-    '</div>';
+      rhythmResult.html +
+      '<div class="insight-strip fade-in" style="margin-top: 20px;" id="rhythmInsight">' +
+        '<div class="insight-label">Rhythm Insight</div>' +
+        '<p class="insight-text" id="rhythmInsightText">Based on ' + pulses.length + ' pulses across different times of day.</p>' +
+      '</div>';
+
+    setTimeout(() => drawTrajectoryRhythmCharts(rhythmResult.slotData, rhythmResult.timeSlots), 50);
+  } else {
+    const count = pulses.length;
+    const message = hasPulses
+      ? 'Time-of-day patterns will appear after more pulses (have ' + count + ' of 5).'
+      : '<span class="em" style="color: var(--accent-bright);">Time-of-day patterns</span> will appear after you have logged pulses at different times of day. ' +
+        'Your baseline is a single snapshot \u2014 rhythm requires multiple measurements across the day.';
+
+    panel.innerHTML =
+      '<div class="card" style="margin-bottom: 20px;">' +
+        '<div class="card-header">' +
+          '<div>' +
+            '<div class="card-label">View 04 / Rhythm</div>' +
+            '<div class="card-title">Time of Day \u2014 Circadian Signature</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="baseline-message" style="border-left-color: var(--accent); margin: 0;">' + message + '</div>' +
+      '</div>';
+  }
 
   addSD3AndICARToPanel(panel, BASELINE_DATA.scores);
 }
@@ -2566,9 +3460,18 @@ function renderBaselineView() {
 
   // Update footer
   const dateStr = formatDateNice(BASELINE_DATA.timestamp);
+  const hasPulses = PULSE_DATA && PULSE_DATA.length > 0;
+  let footerLeft, footerRight;
+  if (hasPulses) {
+    footerLeft = 'Personality Atlas \u00b7 Your Trajectory \u00b7 ' + dateStr;
+    footerRight = 'Baseline + ' + PULSE_DATA.length + ' pulse' + (PULSE_DATA.length !== 1 ? 's' : '') + ' \u00b7 your real data';
+  } else {
+    footerLeft = 'Personality Atlas \u00b7 Baseline Snapshot \u00b7 ' + dateStr;
+    footerRight = 'Your real data from the baseline assessment';
+  }
   document.querySelector('.footer').innerHTML =
-    '<span>Personality Atlas &middot; Baseline Snapshot &middot; ' + dateStr + '</span>' +
-    '<span>Your real data from the baseline assessment</span>';
+    '<span>' + footerLeft + '</span>' +
+    '<span>' + footerRight + '</span>';
 
   if (view === 'trajectory') renderBaselineTrajectoryView();
   else if (view === 'distribution') renderBaselineDistributionView();
@@ -2581,6 +3484,7 @@ function renderBaselineView() {
    ============================================================ */
 (function initDataSourceToggle() {
   BASELINE_DATA = loadBaselineFromStorage();
+  PULSE_DATA = loadPulseData();
 
   // Toggle button handlers
   document.querySelectorAll('.ds-toggle-btn').forEach(btn => {
