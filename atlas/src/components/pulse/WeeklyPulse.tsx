@@ -1,16 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { scorePulseResponses } from '../../lib/scoring';
 import { IPIP_TEXTS } from '../../lib/assessment-data';
 import type { BigFiveScores } from '../../types';
 import RadarChart from '../dashboard/charts/RadarChart';
-
-interface WeeklyPulseProps {
-  onNavigate: (page: string) => void;
-}
 
 type Phase = 'intro' | 'items' | 'complete';
 
@@ -103,7 +100,8 @@ function generatePulseItems(pulseNumber: number): { ipipId: number; text: string
   return items;
 }
 
-export function WeeklyPulse({ onNavigate }: WeeklyPulseProps) {
+export function WeeklyPulse() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [phase, setPhase] = useState<Phase>('intro');
   const [pulseNumber, setPulseNumber] = useState(1);
@@ -453,7 +451,7 @@ export function WeeklyPulse({ onNavigate }: WeeklyPulseProps) {
 
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
           <button
-            onClick={() => onNavigate('dashboard')}
+            onClick={() => navigate('/')}
             style={{
               padding: '14px 32px',
               background: 'var(--color-accent)',
@@ -466,7 +464,7 @@ export function WeeklyPulse({ onNavigate }: WeeklyPulseProps) {
             View Dashboard →
           </button>
           <button
-            onClick={() => onNavigate('pulse')}
+            onClick={() => navigate('/pulse')}
             style={{
               padding: '14px 32px',
               background: 'none',

@@ -36,7 +36,7 @@ function nextMondayAfter(from: Date): Date {
   return d;
 }
 
-export function usePulseReminder(refreshKey?: string) {
+export function usePulseReminder() {
   const { user } = useAuth();
   const [state, setState] = useState<PulseReminderState>({
     due: false, daysOverdue: 0, dueDate: null, phase: 'Loading', pulseNumber: 1,
@@ -113,7 +113,7 @@ export function usePulseReminder(refreshKey?: string) {
     checkReminder();
 
     return () => { cancelled = true; };
-  }, [user?.id, refreshKey]);
+  }, [user?.id]);
 
   return { ...state, loading };
 }

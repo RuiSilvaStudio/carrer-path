@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { scoreBaselineResponses } from '../../lib/scoring';
@@ -20,7 +21,6 @@ import type { BigFiveScores } from '../../types';
 import RadarChart from '../dashboard/charts/RadarChart';
 
 interface BaselineAssessmentProps {
-  onNavigate: (page: string) => void;
 }
 
 type Phase = 'welcome' | 'ipip' | 'icar' | 'sd3' | 'context' | 'complete';
@@ -55,7 +55,8 @@ const TRAIT_DESCRIPTIONS: Record<string, string> = {
   'Cross-Trait Items': 'A mixed set covering all five domains in varied order.',
 };
 
-export function BaselineAssessment({ onNavigate }: BaselineAssessmentProps) {
+export function BaselineAssessment({}: BaselineAssessmentProps) {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [phase, setPhase] = useState<Phase>('welcome');
   const [responses, setResponses] = useState<Record<string, number>>({});
@@ -352,7 +353,7 @@ export function BaselineAssessment({ onNavigate }: BaselineAssessmentProps) {
           Begin Assessment
         </button>
         <button
-          onClick={() => onNavigate('dashboard')}
+          onClick={() => navigate('/docs')}
           style={{
             padding: '14px 28px',
             background: 'none',
@@ -470,7 +471,7 @@ export function BaselineAssessment({ onNavigate }: BaselineAssessmentProps) {
         </div>
 
         <button
-          onClick={() => onNavigate('dashboard')}
+          onClick={() => navigate('/')}
           style={{
             padding: '14px 32px',
             background: 'var(--color-accent)',

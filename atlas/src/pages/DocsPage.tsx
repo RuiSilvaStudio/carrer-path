@@ -1,4 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
+import { DashboardProvider, useDashboardState } from '../state/DashboardContext';
+import { useDemoData } from '../hooks/useDemoData';
+import { ViewTabs } from '../components/dashboard/ViewTabs';
+import { TrajectoryView } from '../components/dashboard/views/TrajectoryView';
+import { DistributionView } from '../components/dashboard/views/DistributionView';
+import { ContextView } from '../components/dashboard/views/ContextView';
+import { RhythmView } from '../components/dashboard/views/RhythmView';
 
 // ── Section metadata for table of contents ──────────────────────
 interface Section {
@@ -175,6 +182,90 @@ function Ref({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ── Demo Dashboard (collapsible) ────────────────────────────────
+function DemoDashboard() {
+  const [expanded, setExpanded] = useState(false);
+  const { demoData, loading } = useDemoData();
+
+  if (loading || demoData.length === 0) return null;
+
+  return (
+    <div
+      style={{
+        maxWidth: '1200px',
+        margin: '0 auto 32px',
+        padding: '0 40px',
+      }}
+    >
+      <div
+        style={{
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
+          borderRadius: '12px',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Toggle header */}
+        <button
+          onClick={() => setExpanded(!expanded)}
+          style={{
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '20px 24px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: 'var(--color-text)',
+            fontFamily: 'var(--font-sans)',
+            fontSize: '15px',
+            fontWeight: 500,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--color-accent)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+              Explore
+            </span>
+            <span>Demo Dashboard (Synthetic Data)</span>
+          </div>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-dim)' }}>
+            {expanded ? '− Collapse' : '+ Expand'}
+          </span>
+        </button>
+
+        {expanded && (
+          <div style={{ padding: '0 24px 24px', borderTop: '1px solid var(--color-border)' }}>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: 1.5, margin: '16px 0 20px' }}>
+              This is a live demo using a synthetic 158-pulse dataset (Beck, 2022). Explore the charts
+              and views to see how your own data will look once you complete the baseline and weekly pulses.
+            </p>
+            <DashboardProvider>
+              <div style={{ marginBottom: '20px' }}>
+                <ViewTabs />
+              </div>
+              <DemoViews demoData={demoData} />
+            </DashboardProvider>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Inner component that reads view from DashboardContext and renders the right view
+function DemoViews({ demoData }: { demoData: any[] }) {
+  const { view } = useDashboardState();
+  return (
+    <>
+      {view === 'trajectory' && <TrajectoryView demoData={demoData} baseline={null} pulses={[]} dataSource="demo" />}
+      {view === 'distribution' && <DistributionView demoData={demoData} baseline={null} pulses={[]} dataSource="demo" />}
+      {view === 'context' && <ContextView demoData={demoData} baseline={null} pulses={[]} dataSource="demo" />}
+      {view === 'rhythm' && <RhythmView demoData={demoData} baseline={null} pulses={[]} dataSource="demo" />}
+    </>
+  );
+}
+
 // ── Main component ──────────────────────────────────────────────
 export function DocsPage() {
   const [activeSection, setActiveSection] = useState<string>('overview');
@@ -264,6 +355,9 @@ export function DocsPage() {
           and calculations behind every chart you see.
         </p>
       </div>
+
+      {/* ── Demo Dashboard (collapsible) ───────────────────── */}
+      <DemoDashboard />
 
       {/* ── Table of Contents ──────────────────────────────── */}
       <div

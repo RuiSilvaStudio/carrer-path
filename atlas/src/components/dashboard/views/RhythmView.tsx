@@ -1,7 +1,6 @@
 import { useRef, useMemo } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
-import { useDashboardState } from '../../../state/DashboardContext';
 import type { DemoPulse, Assessment } from '../../../types';
 import { Card } from '../../ui/Card';
 
@@ -9,6 +8,7 @@ interface RhythmViewProps {
   demoData: DemoPulse[];
   baseline?: Assessment | null;
   pulses?: Assessment[];
+  dataSource: 'user' | 'demo';
 }
 
 const TRAIT_CONFIG = [
@@ -243,8 +243,7 @@ function EmotionHeatmap({ demoData }: { demoData: DemoPulse[] }) {
   );
 }
 
-export function RhythmView({ demoData }: RhythmViewProps) {
-  const { mode } = useDashboardState();
+export function RhythmView({ demoData, dataSource }: RhythmViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Filter out missing pulses (all 0/0/0/0/100 pattern — no response data)
@@ -259,12 +258,12 @@ export function RhythmView({ demoData }: RhythmViewProps) {
     if (cards) {
       gsap.fromTo(cards, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out', stagger: 0.1 });
     }
-  }, { scope: containerRef, dependencies: [mode] });
+  }, { scope: containerRef, dependencies: [dataSource] });
 
   // ═══════════════════════════════════════════════════════════════
-  // BASELINE MODE
+  // USER MODE (baseline + pulses)
   // ═══════════════════════════════════════════════════════════════
-  if (mode === 'baseline') {
+  if (dataSource === 'user') {
     return (
       <div ref={containerRef}>
         <Card label="04 · Rhythm" title="Time-of-day patterns appear after more pulses." data-anim>

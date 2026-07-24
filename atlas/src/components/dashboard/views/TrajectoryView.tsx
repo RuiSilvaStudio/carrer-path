@@ -15,6 +15,7 @@ interface TrajectoryViewProps {
   demoData: DemoPulse[];
   baseline: Assessment | null;
   pulses: Assessment[];
+  dataSource: 'user' | 'demo';
 }
 
 const TRAIT_LABELS: { key: keyof BigFiveScores; label: string; short?: string; color: string }[] = [
@@ -138,8 +139,8 @@ function Scrubber({
   );
 }
 
-export function TrajectoryView({ demoData, baseline, pulses }: TrajectoryViewProps) {
-  const { mode, scrubIndex, setScrubIndex } = useDashboardState();
+export function TrajectoryView({ demoData, baseline, pulses, dataSource }: TrajectoryViewProps) {
+  const { scrubIndex, setScrubIndex } = useDashboardState();
   const containerRef = useRef<HTMLDivElement>(null);
   const [smoothing, setSmoothing] = useState<'raw' | 'daily' | 'weekly'>('daily');
 
@@ -149,7 +150,7 @@ export function TrajectoryView({ demoData, baseline, pulses }: TrajectoryViewPro
     if (cards) {
       gsap.fromTo(cards, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out', stagger: 0.1 });
     }
-  }, { scope: containerRef, dependencies: [mode] });
+  }, { scope: containerRef, dependencies: [dataSource] });
 
   // ── Smoothing helper: aggregates a trajectory by date (daily) or week (weekly) ──
   const smoothTrajectory = (traj: TrajectoryPoint[], smoothMode: 'raw' | 'daily' | 'weekly'): TrajectoryPoint[] => {
@@ -209,7 +210,7 @@ export function TrajectoryView({ demoData, baseline, pulses }: TrajectoryViewPro
   // ═══════════════════════════════════════════════════════════════
   // DEMO MODE
   // ═══════════════════════════════════════════════════════════════
-  if (mode === 'demo') {
+  if (dataSource === 'demo') {
     if (demoTrajectory.length === 0) {
       return <div style={{ color: 'var(--color-text-muted)', padding: '40px' }}>No demo data available.</div>;
     }
@@ -284,7 +285,7 @@ export function TrajectoryView({ demoData, baseline, pulses }: TrajectoryViewPro
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // BASELINE MODE
+  // USER MODE (baseline + pulses)
   // ═══════════════════════════════════════════════════════════════
   if (!baseline) return null;
 

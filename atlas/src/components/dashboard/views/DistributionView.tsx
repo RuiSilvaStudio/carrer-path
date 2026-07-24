@@ -1,7 +1,6 @@
 import { useRef, useMemo } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
-import { useDashboardState } from '../../../state/DashboardContext';
 import { buildTrajectory } from '../../../lib/trajectory';
 import type { DemoPulse, Assessment, TrajectoryPoint, BigFiveScores } from '../../../types';
 import RadarChart from '../charts/RadarChart';
@@ -11,6 +10,7 @@ interface DistributionViewProps {
   demoData: DemoPulse[];
   baseline: Assessment | null;
   pulses: Assessment[];
+  dataSource: 'user' | 'demo';
 }
 
 const TRAIT_CONFIG = [
@@ -205,8 +205,7 @@ function DensityChart({ values, label, color }: { values: number[]; label: strin
   );
 }
 
-export function DistributionView({ demoData, baseline, pulses }: DistributionViewProps) {
-  const { mode } = useDashboardState();
+export function DistributionView({ demoData, baseline, pulses, dataSource }: DistributionViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // GSAP entrance for cards
@@ -215,12 +214,12 @@ export function DistributionView({ demoData, baseline, pulses }: DistributionVie
     if (cards) {
       gsap.fromTo(cards, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out', stagger: 0.1 });
     }
-  }, { scope: containerRef, dependencies: [mode] });
+  }, { scope: containerRef, dependencies: [dataSource] });
 
   // ═══════════════════════════════════════════════════════════════
   // DEMO MODE
   // ═══════════════════════════════════════════════════════════════
-  if (mode === 'demo') {
+  if (dataSource === 'demo') {
     const traitValues: Record<keyof BigFiveScores, number[]> = {
       openness: [],
       conscientiousness: [],
@@ -310,7 +309,7 @@ export function DistributionView({ demoData, baseline, pulses }: DistributionVie
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // BASELINE MODE
+  // USER MODE (baseline + pulses)
   // ═══════════════════════════════════════════════════════════════
   if (!baseline) return null;
 

@@ -86,5 +86,4 @@ export interface User {
   email: string;
 }
 
-export type DataSourceMode = 'demo' | 'baseline';
 export type ViewName = 'trajectory' | 'distribution' | 'context' | 'rhythm';

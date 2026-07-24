@@ -1,17 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePulseReminder } from '../hooks/usePulseReminder';
-
-interface PulseReminderProps {
-  onNavigate: (page: string) => void;
-  refreshKey?: string;
-}
 
 // Session-level dismissal — resets on each new session (browser tab open)
 // Keyed by pulse number so completing a pulse clears the dismiss for the next one
 const DISMISS_KEY = 'atlas_pulse_reminder_dismissed';
 
-export function PulseReminder({ onNavigate, refreshKey }: PulseReminderProps) {
-  const { due, daysOverdue, phase, pulseNumber, loading } = usePulseReminder(refreshKey);
+export function PulseReminder() {
+  const navigate = useNavigate();
+  const { due, daysOverdue, phase, pulseNumber, loading } = usePulseReminder();
   const [dismissed, setDismissed] = useState(false);
 
   // Check session dismissal on mount and when pulse number changes
@@ -31,7 +28,7 @@ export function PulseReminder({ onNavigate, refreshKey }: PulseReminderProps) {
       }
     }
     setDismissed(false);
-  }, [pulseNumber, refreshKey]);
+  }, [pulseNumber]);
 
   if (loading || !due || dismissed) return null;
 
@@ -44,7 +41,7 @@ export function PulseReminder({ onNavigate, refreshKey }: PulseReminderProps) {
   };
 
   const handleTakePulse = () => {
-    onNavigate('pulse');
+    navigate('/pulse');
   };
 
   // Build message based on overdue status

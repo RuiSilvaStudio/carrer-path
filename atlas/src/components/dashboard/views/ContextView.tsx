@@ -1,7 +1,6 @@
 import { useRef, useMemo } from 'react';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
-import { useDashboardState } from '../../../state/DashboardContext';
 import type { DemoPulse, Assessment } from '../../../types';
 import { Card } from '../../ui/Card';
 import { InfoTooltip } from '../../ui/InfoTooltip';
@@ -10,6 +9,7 @@ interface ContextViewProps {
   demoData: DemoPulse[];
   baseline: Assessment | null;
   pulses: Assessment[];
+  dataSource: 'user' | 'demo';
 }
 
 const TRAIT_CONFIG = [
@@ -384,8 +384,7 @@ function ContextTags({ demoData }: { demoData: DemoPulse[] }) {
   );
 }
 
-export function ContextView({ demoData, baseline }: ContextViewProps) {
-  const { mode } = useDashboardState();
+export function ContextView({ demoData, baseline, dataSource }: ContextViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
@@ -393,12 +392,12 @@ export function ContextView({ demoData, baseline }: ContextViewProps) {
     if (cards) {
       gsap.fromTo(cards, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out', stagger: 0.1 });
     }
-  }, { scope: containerRef, dependencies: [mode] });
+  }, { scope: containerRef, dependencies: [dataSource] });
 
   // ═══════════════════════════════════════════════════════════════
   // DEMO MODE
   // ═══════════════════════════════════════════════════════════════
-  if (mode === 'demo') {
+  if (dataSource === 'demo') {
     return (
       <div ref={containerRef}>
         {/* ── Heatmap + Variance ─────────────────────────── */}
@@ -467,7 +466,7 @@ export function ContextView({ demoData, baseline }: ContextViewProps) {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // BASELINE MODE
+  // USER MODE (baseline + pulses)
   // ═══════════════════════════════════════════════════════════════
   if (!baseline) return null;
 

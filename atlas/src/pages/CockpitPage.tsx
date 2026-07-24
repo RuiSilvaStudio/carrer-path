@@ -1,13 +1,9 @@
 import { useAuth } from '../hooks/useAuth';
 import { Cockpit } from '../components/cockpit/Cockpit';
 
-interface CockpitPageProps {
-  onNavigate: (page: string) => void;
-}
-
 const RUI_USER_ID = '37d25257-5fcf-4318-b1b6-5bdb48288a71';
 
-export function CockpitPage({ onNavigate: _onNavigate }: CockpitPageProps) {
+export function CockpitPage() {
   const { user } = useAuth();
 
   if (user?.id !== RUI_USER_ID) {

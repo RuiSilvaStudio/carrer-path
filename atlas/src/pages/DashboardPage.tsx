@@ -1,51 +1,24 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAssessments } from '../hooks/useAssessments';
 import { useDemoData } from '../hooks/useDemoData';
 import { useDashboardState } from '../state/DashboardContext';
-import { DataSourceToggle } from '../components/dashboard/DataSourceToggle';
 import { ViewTabs } from '../components/dashboard/ViewTabs';
 import { TrajectoryView } from '../components/dashboard/views/TrajectoryView';
 import { DistributionView } from '../components/dashboard/views/DistributionView';
 import { ContextView } from '../components/dashboard/views/ContextView';
 import { RhythmView } from '../components/dashboard/views/RhythmView';
 
-interface DashboardPageProps {
-  onNavigate: (page: string) => void;
-}
-
-export function DashboardPage({ onNavigate }: DashboardPageProps) {
+export function DashboardPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { baseline, pulses, loading } = useAssessments(user?.id ?? null);
   const { demoData, loading: demoLoading } = useDemoData();
-  const { mode, view } = useDashboardState();
+  const { view } = useDashboardState();
 
-  // If mode is baseline but no baseline exists, redirect to baseline page
-  useEffect(() => {
-    if (mode === 'baseline' && !loading && !baseline) {
-      onNavigate('baseline');
-    }
-  }, [mode, loading, baseline, onNavigate]);
-
-  // Compute metadata for header
+  // Compute metadata for header — always user data
   const meta = useMemo(() => {
-    if (mode === 'demo') {
-      const count = demoData.length;
-      if (count === 0) return { count, dateRange: '', participant: 'Demo Participant', assessmentType: 'Demo Data', phase: '' };
-      const dates = demoData.map(d => d.date).sort();
-      const fmt = (d: string) => {
-        const dt = new Date(d);
-        return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      };
-      return {
-        count,
-        dateRange: count > 1 ? `${fmt(dates[0])} — ${fmt(dates[dates.length - 1])}` : fmt(dates[0]),
-        participant: 'Demo Participant',
-        assessmentType: 'Longitudinal Pulse Series',
-        phase: `${count} pulses over ~6 months`,
-      };
-    }
-    // Baseline mode
     const count = pulses.length;
     const participant = user?.email?.split('@')[0] ?? 'You';
     const assessmentType = baseline ? 'Baseline + Pulses' : 'Baseline';
@@ -65,7 +38,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       assessmentType,
       phase: count === 0 ? 'Baseline only' : `${count + 1} data points`,
     };
-  }, [mode, demoData, pulses, baseline, user]);
+  }, [pulses, baseline, user]);
 
   if (loading || demoLoading) {
     return (
@@ -109,7 +82,47 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                 : 'A longitudinal view of your personality — observe how traits, contexts, and rhythms shift over time.'}
             </p>
           </div>
-          <DataSourceToggle hasBaseline={!!baseline} onNavigate={onNavigate} />
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {!baseline && (
+              <button
+                onClick={() => navigate('/baseline')}
+                style={{
+                  padding: '6px 16px',
+                  background: 'var(--color-accent)',
+                  color: 'var(--color-bg)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '10px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.12em',
+                  fontWeight: 600,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Take Baseline
+              </button>
+            )}
+            <button
+              onClick={() => navigate('/pulse')}
+              style={{
+                padding: '6px 16px',
+                background: 'none',
+                border: '1px solid var(--color-border)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '10px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.12em',
+                color: 'var(--color-text-dim)',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Pulse
+            </button>
+          </div>
         </div>
 
         {/* ── Subject Metadata Strip ─────────────────────── */}
@@ -137,16 +150,16 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       {/* ── Active View ──────────────────────────────────── */}
       <main>
         {view === 'trajectory' && (
-          <TrajectoryView demoData={demoData} baseline={baseline} pulses={pulses} />
+          <TrajectoryView demoData={demoData} baseline={baseline} pulses={pulses} dataSource="user" />
         )}
         {view === 'distribution' && (
-          <DistributionView demoData={demoData} baseline={baseline} pulses={pulses} />
+          <DistributionView demoData={demoData} baseline={baseline} pulses={pulses} dataSource="user" />
         )}
         {view === 'context' && (
-          <ContextView demoData={demoData} baseline={baseline} pulses={pulses} />
+          <ContextView demoData={demoData} baseline={baseline} pulses={pulses} dataSource="user" />
         )}
         {view === 'rhythm' && (
-          <RhythmView demoData={demoData} baseline={baseline} pulses={pulses} />
+          <RhythmView demoData={demoData} baseline={baseline} pulses={pulses} dataSource="user" />
         )}
       </main>
 
@@ -167,9 +180,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
           letterSpacing: '0.12em',
           color: 'var(--color-text-dim)',
         }}>
-          {mode === 'demo'
-            ? 'Data source: Synthetic demo dataset (158 pulses)'
-            : 'Data source: Your recorded assessments'}
+          Data source: Your recorded assessments
         </p>
         <p style={{
           fontFamily: 'var(--font-mono)',
