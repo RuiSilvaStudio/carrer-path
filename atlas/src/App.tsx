@@ -14,8 +14,13 @@ export default function App() {
   return (
     <DashboardProvider>
       <Routes>
-        {/* Public route — no auth required */}
-        <Route path="/docs" element={<DocsPage />} />
+        {/* Public route — no auth required, but shows nav */}
+        <Route path="/docs" element={
+          <div style={{ minHeight: '100vh' }}>
+            <Nav />
+            <DocsPage />
+          </div>
+        } />
 
         {/* Protected routes — require auth */}
         <Route
