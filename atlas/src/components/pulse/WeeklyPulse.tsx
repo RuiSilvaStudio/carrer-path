@@ -142,13 +142,16 @@ export function WeeklyPulse({ onNavigate }: WeeklyPulseProps) {
         const ph = wk > 3 ? 'Maintenance' : 'Loading';
         setPhaseLabel(ph);
 
-        // Check if already completed this week (last 7 days)
+        // Cadence: 7 days (Loading phase, pulses 1-3), 14 days (Maintenance phase, pulse 4+)
+        const cadenceDays = ph === 'Maintenance' ? 14 : 7;
+
+        // Check if already completed this period
         const lastPulse = pulses[pulses.length - 1];
         if (lastPulse) {
           const lastDate = new Date(lastPulse.timestamp);
           const now = new Date();
           const daysSince = (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24);
-          if (daysSince < 7) {
+          if (daysSince < cadenceDays) {
             setAlreadyCompleted(true);
           }
         }
@@ -315,8 +318,8 @@ export function WeeklyPulse({ onNavigate }: WeeklyPulseProps) {
             border: '1px solid var(--color-warning)', borderRadius: '4px',
             marginBottom: '24px', fontSize: '13px', color: 'var(--color-warning)',
           }}>
-            You've already completed a pulse this week. You can submit another, but weekly
-            spacing is recommended for best results.
+            You've already completed a pulse this period. You can submit another, but{' '}
+            {phaseLabel === 'Loading' ? 'weekly' : 'bi-weekly'} spacing is recommended for best results.
           </div>
         )}
 

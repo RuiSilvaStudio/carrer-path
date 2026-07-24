@@ -351,6 +351,21 @@ export function BaselineAssessment({ onNavigate }: BaselineAssessmentProps) {
         >
           Begin Assessment
         </button>
+        <button
+          onClick={() => onNavigate('dashboard')}
+          style={{
+            padding: '14px 28px',
+            background: 'none',
+            color: 'var(--color-text-muted)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '6px',
+            fontSize: '14px', fontWeight: 500,
+            cursor: 'pointer', fontFamily: 'var(--font-sans)',
+            marginLeft: '12px',
+          }}
+        >
+          Explore Dashboard (Demo Data) →
+        </button>
       </div>
     );
   }
