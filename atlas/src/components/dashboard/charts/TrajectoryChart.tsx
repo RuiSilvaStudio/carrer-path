@@ -109,7 +109,7 @@ function derivePhases(data: TrajectoryPoint[]): Phase[] {
 export default function TrajectoryChart({ data, originalDataLength, onScrub: _onScrub, smoothing = 'daily', onSmoothingChange }: TrajectoryChartProps) {
   const { trajectoryMode, setTrajectoryMode, scrubIndex, setScrubIndex } = useDashboardState();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [measureRef, WIDTH] = useElementWidth<HTMLDivElement>({ initial: 760, min: 280, max: 760 });
+  const [measureRef, WIDTH] = useElementWidth<HTMLDivElement>({ initial: 760, min: 280, max: 1200 });
   const svgRef = useRef<SVGSVGElement>(null);
 
   // ── Derived chart geometry (must precede the useMemo scales below) ──
@@ -837,26 +837,32 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
                   aria-label={`Go to ${d.date}`}
                   style={{
                     position: 'absolute', top: '50%', left: `${pct}%`,
-                    width: isBaseline ? 12 : 10,
-                    height: isBaseline ? 12 : 10,
-                    borderRadius: '50%',
-                    background: isActive
-                      ? 'var(--color-accent)'
-                      : isBaseline ? 'var(--color-accent)' : 'var(--color-surface)',
-                    border: `2px solid ${isActive ? 'var(--color-accent-bright)' : isBaseline ? 'var(--color-accent)' : 'var(--color-text-dim)'}`,
+                    /* fixed 32px hit area, centered on the rail */
+                    width: '32px', height: '32px',
                     transform: 'translate(-50%, -50%)',
-                    opacity: isActive ? 1 : 0.7,
+                    background: 'none', border: 'none', padding: 0,
                     cursor: 'pointer',
-                    /* expand touch target to ~32px, keep small visual dot */
-                    padding: '11px',
-                    margin: '-11px',
-                    backgroundClip: 'content-box',
-                    transition: 'transform 0.15s ease, opacity 0.15s ease, background 0.15s ease',
-                    boxShadow: isActive ? '0 0 8px rgba(212,165,116,0.5)' : 'none',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1.3)'; e.currentTarget.style.opacity = '1'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translate(-50%, -50%)'; e.currentTarget.style.opacity = isActive ? '1' : '0.7'; }}
-                />
+                >
+                  <span
+                    style={{
+                      width: isBaseline ? 12 : 10,
+                      height: isBaseline ? 12 : 10,
+                      borderRadius: '50%',
+                      background: isActive
+                        ? 'var(--color-accent)'
+                        : isBaseline ? 'var(--color-accent)' : 'var(--color-surface)',
+                      border: `2px solid ${isActive ? 'var(--color-accent-bright)' : isBaseline ? 'var(--color-accent)' : 'var(--color-text-dim)'}`,
+                      opacity: isActive ? 1 : 0.7,
+                      transition: 'transform 0.15s ease, opacity 0.15s ease, background 0.15s ease',
+                      boxShadow: isActive ? '0 0 8px rgba(212,165,116,0.5)' : 'none',
+                      display: 'block',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.3)'; e.currentTarget.style.opacity = '1'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.opacity = isActive ? '1' : '0.7'; }}
+                  />
+                </button>
               );
             })}
           </div>

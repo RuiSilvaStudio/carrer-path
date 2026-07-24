@@ -80,6 +80,7 @@ function DocCard({
           fontSize: '16px',
           lineHeight: 1.7,
           color: 'var(--color-text-muted)',
+          maxWidth: '68ch', /* readable measure inside the wider card */
         }}
       >
         {children}
@@ -314,7 +315,7 @@ export function DocsPage() {
         className="atlas-page"
         style={{
           padding: '48px 40px 24px',
-          maxWidth: '720px',
+          maxWidth: '1200px',
           margin: '0 auto',
         }}
       >
@@ -364,7 +365,7 @@ export function DocsPage() {
       <div
         className="atlas-page"
         style={{
-          maxWidth: '720px',
+          maxWidth: '1200px',
           margin: '0 auto',
           padding: '0 40px 32px',
         }}
@@ -435,7 +436,7 @@ export function DocsPage() {
         ref={sectionsRef}
         className="atlas-page"
         style={{
-          maxWidth: '720px',
+          maxWidth: '1200px',
           margin: '0 auto',
           padding: '0 40px 80px',
           display: 'flex',

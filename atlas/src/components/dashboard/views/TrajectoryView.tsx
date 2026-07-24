@@ -380,9 +380,9 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
       </div>
 
       {/* Row 2: Radar (50%) + Insights/Summary (50%) */}
-      <div style={{
+      <div className="atlas-2col" style={{
         display: 'grid',
-        gridTemplateColumns: 'minmax(280px, 1fr) minmax(280px, 1fr)',
+        gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
         gap: '20px',
       }}>
         {/* Left: Radar */}

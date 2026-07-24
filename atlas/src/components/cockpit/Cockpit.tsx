@@ -162,7 +162,7 @@ export function Cockpit() {
   }
 
   return (
-    <div style={{ padding: '32px 40px 80px', maxWidth: '1100px' }}>
+    <div className="atlas-page" style={{ padding: '32px 40px 80px', maxWidth: '1200px', margin: '0 auto' }}>
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
         <div style={{

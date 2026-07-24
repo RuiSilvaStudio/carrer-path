@@ -113,7 +113,7 @@ body {
   --nav-gap: 24px;
   --nav-gap-sm: 12px;
   --nav-pad: 40px;
-  --nav-pad-sm: 14px;
+  --nav-pad-sm: 16px; /* match --space-page-sm so nav aligns with page content */
 }
 
 html, body { overflow-x: hidden; }

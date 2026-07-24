@@ -319,7 +319,7 @@ export function DistributionView({ demoData, baseline, pulses, dataSource }: Dis
   if (dataPoints < 3) {
     return (
       <div ref={containerRef}>
-        <div style={{
+        <div className="atlas-2col" style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
           gap: '20px',

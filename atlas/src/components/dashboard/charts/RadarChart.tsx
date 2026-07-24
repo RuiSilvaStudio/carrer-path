@@ -289,7 +289,7 @@ export default function RadarChart({ scores, size = 400, animate = true }: Radar
                 fontSize={10}
                 fontFamily="var(--font-mono)"
               >
-                {lp.val}
+                {Math.round(lp.val)}
               </text>
             </g>
           );
