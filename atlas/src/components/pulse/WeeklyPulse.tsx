@@ -252,7 +252,7 @@ export function WeeklyPulse() {
   // ── Intro screen ─────────────────────────────────────────────────
   if (phase === 'intro') {
     return (
-      <div ref={itemsRef} style={{ padding: '60px 40px', maxWidth: '640px', margin: '0 auto' }}>
+      <div ref={itemsRef} className="atlas-page" style={{ padding: '60px 40px', maxWidth: '640px', margin: '0 auto' }}>
         <div style={{
           fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 500,
           letterSpacing: '0.15em', textTransform: 'uppercase',
@@ -378,7 +378,7 @@ export function WeeklyPulse() {
   // ── Complete screen ──────────────────────────────────────────────
   if (phase === 'complete' && scores) {
     return (
-      <div ref={itemsRef} style={{ padding: '60px 40px', maxWidth: '720px', margin: '0 auto', textAlign: 'center' }}>
+      <div ref={itemsRef} className="atlas-page" style={{ padding: '60px 40px', maxWidth: '720px', margin: '0 auto', textAlign: 'center' }}>
         <div style={{
           fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 500,
           letterSpacing: '0.15em', textTransform: 'uppercase',
@@ -433,7 +433,7 @@ export function WeeklyPulse() {
 
         {/* Score deltas */}
         {baselineScores && (
-          <div style={{
+          <div className="atlas-score-grid" style={{
             display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)',
             gap: '8px', marginBottom: '40px', maxWidth: '520px', margin: '0 auto 40px',
           }}>
@@ -508,7 +508,7 @@ export function WeeklyPulse() {
 
   // ── Items screen ─────────────────────────────────────────────────
   return (
-    <div ref={itemsRef} style={{ padding: '60px 40px 80px', maxWidth: '680px', margin: '0 auto' }}>
+    <div ref={itemsRef} className="atlas-page" style={{ padding: '60px 40px 80px', maxWidth: '680px', margin: '0 auto' }}>
       {/* Header */}
       <div style={{ marginBottom: '28px' }}>
         <div style={{

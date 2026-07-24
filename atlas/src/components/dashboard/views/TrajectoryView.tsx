@@ -265,7 +265,7 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
             </InsightStrip>
 
             <Card label="Trait Summary" title="Scores at Current Point" data-anim>
-              <div style={{
+              <div className="atlas-score-grid" style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(5, 1fr)',
                 gap: '8px',
@@ -402,7 +402,7 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
           </InsightStrip>
 
           <Card label="Trait Summary" title="Scores at Current Point" data-anim>
-            <div style={{
+            <div className="atlas-score-grid" style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(5, 1fr)',
               gap: '8px',

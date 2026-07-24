@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -18,6 +19,12 @@ export function Nav() {
   const navigate = useNavigate();
   const location = useLocation();
   const isRui = user?.id === RUI_USER_ID;
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Close menu on route change
+  useEffect(() => { setMenuOpen(false); }, [location.pathname]);
+
+  const links = isRui ? [...NAV_LINKS, { path: '/cockpit', label: 'Cockpit' }] : NAV_LINKS;
 
   const navButtonStyle = (active: boolean): React.CSSProperties => ({
     background: 'none', border: 'none', cursor: 'pointer',
@@ -30,56 +37,122 @@ export function Nav() {
 
   return (
     <nav className="atlas-nav" style={{
-      display: 'flex', alignItems: 'center', gap: 'var(--nav-gap)',
-      padding: '0 var(--nav-pad)', height: '44px',
+      position: 'sticky', top: 0, zIndex: 100,
       background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)',
-      fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase',
-      letterSpacing: '0.12em', position: 'sticky', top: 0, zIndex: 100,
+      fontFamily: 'var(--font-mono)', fontSize: '12px', textTransform: 'uppercase',
+      letterSpacing: '0.12em',
     }}>
-      {NAV_LINKS.map(link => (
+      {/* ── Bar row ── */}
+      <div className="atlas-nav-bar" style={{
+        display: 'flex', alignItems: 'center', gap: 'var(--nav-gap)',
+        padding: '0 var(--nav-pad)', height: '44px',
+      }}>
+        {/* Desktop links (hidden on mobile via CSS) */}
+        <div className="atlas-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 'var(--nav-gap)' }}>
+          {links.map(link => (
+            <button
+              key={link.path}
+              onClick={() => navigate(link.path)}
+              style={navButtonStyle(location.pathname === link.path)}
+            >
+              {link.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Mobile: wordmark + hamburger */}
         <button
-          key={link.path}
-          onClick={() => navigate(link.path)}
-          style={navButtonStyle(location.pathname === link.path)}
-        >
-          {link.label}
-        </button>
-      ))}
-
-      {/* Cockpit — only visible to Rui */}
-      {isRui && (
-        <button
-          onClick={() => navigate('/cockpit')}
-          style={navButtonStyle(location.pathname === '/cockpit')}
-        >
-          Cockpit
-        </button>
-      )}
-
-      <div style={{ flex: 1 }} />
-
-      <button
-        onClick={toggleTheme}
-        style={{
-          background: 'none', border: 'none', cursor: 'pointer',
-          color: 'var(--color-text-dim)', fontFamily: 'var(--font-mono)',
-          fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em',
-        }}
-      >
-        {theme === 'dark' ? '☀ Light' : '☾ Dark'}
-      </button>
-
-      {user && (
-        <button
-          onClick={() => signOut()}
+          className="atlas-nav-hamburger"
+          onClick={() => setMenuOpen(o => !o)}
+          aria-expanded={menuOpen}
+          aria-label="Toggle menu"
           style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            color: 'var(--color-text-dim)', fontFamily: 'var(--font-mono)',
-            fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em',
+            display: 'none', background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--color-text)', fontSize: '18px', lineHeight: 1,
+            padding: '8px', minHeight: '44px', minWidth: '44px',
           }}
         >
-          Sign Out
+          {menuOpen ? '✕' : '☰'}
         </button>
+
+        <div style={{ flex: 1 }} />
+
+        {/* Desktop-only theme + sign out (hidden on mobile; they move into the menu) */}
+        <div className="atlas-nav-actions" style={{ display: 'flex', alignItems: 'center', gap: 'var(--nav-gap)' }}>
+          <button
+            onClick={toggleTheme}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'var(--color-text-dim)', fontFamily: 'var(--font-mono)',
+              fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.12em',
+            }}
+          >
+            {theme === 'dark' ? '☀ Light' : '☾ Dark'}
+          </button>
+          {user && (
+            <button
+              onClick={() => signOut()}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'var(--color-text-dim)', fontFamily: 'var(--font-mono)',
+                fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.12em',
+              }}
+            >
+              Sign Out
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Mobile dropdown menu ── */}
+      {menuOpen && (
+        <div className="atlas-nav-menu" style={{
+          display: 'flex', flexDirection: 'column',
+          borderTop: '1px solid var(--color-border)',
+          padding: '8px var(--nav-pad)',
+          background: 'var(--color-surface)',
+        }}>
+          {links.map(link => (
+            <button
+              key={link.path}
+              onClick={() => navigate(link.path)}
+              style={{
+                ...navButtonStyle(location.pathname === link.path),
+                textAlign: 'left', padding: '14px 0',
+                borderBottom: '1px solid var(--color-border)',
+                fontSize: '14px', minHeight: '44px',
+              }}
+            >
+              {link.label}
+            </button>
+          ))}
+          <div style={{ display: 'flex', gap: '16px', paddingTop: '8px' }}>
+            <button
+              onClick={toggleTheme}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'var(--color-text-dim)', fontFamily: 'var(--font-mono)',
+                fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.12em',
+                padding: '12px 0', minHeight: '44px',
+              }}
+            >
+              {theme === 'dark' ? '☀ Light' : '☾ Dark'}
+            </button>
+            {user && (
+              <button
+                onClick={() => signOut()}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'var(--color-text-dim)', fontFamily: 'var(--font-mono)',
+                  fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.12em',
+                  padding: '12px 0', minHeight: '44px',
+                }}
+              >
+                Sign Out
+              </button>
+            )}
+          </div>
+        </div>
       )}
     </nav>
   );

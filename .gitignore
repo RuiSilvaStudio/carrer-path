@@ -18,3 +18,4 @@ Thumbs.db
 *.zip
 atlas/node_modules/
 atlas/dist/
+.audit-tmp/

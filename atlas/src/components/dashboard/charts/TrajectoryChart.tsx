@@ -372,7 +372,7 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
   return (
     <div ref={(el) => { containerRef.current = el; measureRef.current = el; }} className="trajectory-chart-container w-full">
       {/* ── Header: Title + ⓘ + Traits/Emotions toggle ──────── */}
-      <div style={{
+      <div className="atlas-chart-controls" style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         marginBottom: '12px', flexWrap: 'wrap', gap: '8px',
       }}>
@@ -386,7 +386,7 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
         </div>
 
         {/* ── Traits / Emotions pill toggle ────────────────── */}
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <div className="atlas-chart-toggles" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{
             display: 'flex', gap: 0,
             border: '1px solid var(--color-border)', borderRadius: '3px', overflow: 'hidden',

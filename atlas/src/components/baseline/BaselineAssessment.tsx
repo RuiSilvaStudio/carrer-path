@@ -400,7 +400,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
         </div>
 
         {/* Score summary */}
-        <div style={{
+        <div className="atlas-score-grid" style={{
           display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)',
           gap: '8px', marginBottom: '40px', maxWidth: '520px', margin: '0 auto 40px',
         }}>
