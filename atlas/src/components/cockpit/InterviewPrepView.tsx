@@ -24,7 +24,7 @@ export function InterviewPrepView() {
   };
 
   return (
-    <div style={{ maxWidth: '720px' }}>
+    <div style={{ maxWidth: '100%' }}>
       {INTERVIEW.map((item, idx) => {
         const expanded = expandedIdx === idx;
         return (

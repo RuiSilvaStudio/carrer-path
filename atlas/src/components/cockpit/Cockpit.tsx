@@ -188,7 +188,7 @@ export function Cockpit() {
       </div>
 
       {/* Tab navigation */}
-      <div style={{ display: 'flex', gap: '0', borderBottom: '1px solid var(--color-border)', marginBottom: '28px' }}>
+      <div className="atlas-tabs" style={{ display: 'flex', gap: '0', borderBottom: '1px solid var(--color-border)', marginBottom: '28px' }}>
         {COCKPIT_TABS.map(tab => {
           const active = activeTab === tab.id;
           return (
@@ -260,11 +260,11 @@ export function Cockpit() {
           }}>
             New Contact
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          <div className="atlas-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
             <FormField label="Name" value={newContact.contact_name || ''} onChange={(v) => setNewContact({ ...newContact, contact_name: v })} placeholder="Full name" />
             <FormField label="Company" value={newContact.company || ''} onChange={(v) => setNewContact({ ...newContact, company: v })} placeholder="Company name" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          <div className="atlas-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
             <FormField label="Relationship" value={newContact.relationship || ''} onChange={(v) => setNewContact({ ...newContact, relationship: v })} placeholder="e.g. Former colleague" />
             <div>
               <label style={labelStyle}>Tier</label>
@@ -389,7 +389,7 @@ export function Cockpit() {
 
       {/* ── Pipeline View (Kanban) ────────────────────────────── */}
       {view === 'pipeline' && (
-        <div style={{
+        <div className="atlas-pipeline" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(5, 1fr)',
           gap: '12px',
@@ -670,11 +670,11 @@ function ContactCard({
 
       {expanded && editing && (
         <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--color-border)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+          <div className="atlas-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
             <FormField label="Name" value={editForm.contact_name || ''} onChange={(v) => onEditFormChange({ ...editForm, contact_name: v })} />
             <FormField label="Company" value={editForm.company || ''} onChange={(v) => onEditFormChange({ ...editForm, company: v })} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+          <div className="atlas-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
             <FormField label="Relationship" value={editForm.relationship || ''} onChange={(v) => onEditFormChange({ ...editForm, relationship: v })} />
             <div>
               <label style={labelStyle}>Tier</label>

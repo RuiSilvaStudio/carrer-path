@@ -2,7 +2,7 @@ import { KB_SECTIONS } from './cockpitKB';
 
 export function KnowledgeBaseView() {
   return (
-    <div style={{ maxWidth: '720px' }}>
+    <div style={{ maxWidth: '100%' }}>
       {KB_SECTIONS.map((section, idx) => (
         <div
           key={idx}

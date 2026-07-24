@@ -75,12 +75,12 @@ function DocCard({
         {title}
       </h2>
       <div
+        className="atlas-doc-content"
         style={{
           fontFamily: 'var(--font-sans)',
           fontSize: '16px',
           lineHeight: 1.7,
           color: 'var(--color-text-muted)',
-          maxWidth: '68ch', /* readable measure inside the wider card */
         }}
       >
         {children}
@@ -192,6 +192,7 @@ function DemoDashboard() {
 
   return (
     <div
+      className="atlas-page"
       style={{
         maxWidth: '1200px',
         margin: '0 auto 32px',
@@ -209,11 +210,13 @@ function DemoDashboard() {
         {/* Toggle header */}
         <button
           onClick={() => setExpanded(!expanded)}
+          className="atlas-demo-header"
           style={{
             width: '100%',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            gap: '12px',
             padding: '20px 24px',
             background: 'none',
             border: 'none',
@@ -224,13 +227,13 @@ function DemoDashboard() {
             fontWeight: 500,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', minWidth: 0 }}>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--color-accent)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
               Explore
             </span>
             <span>Demo Dashboard (Synthetic Data)</span>
           </div>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-dim)' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-dim)', whiteSpace: 'nowrap' }}>
             {expanded ? '− Collapse' : '+ Expand'}
           </span>
         </button>

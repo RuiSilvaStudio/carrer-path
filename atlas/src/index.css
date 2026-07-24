@@ -169,6 +169,14 @@ svg, img { max-width: 100%; height: auto; }
   /* ── Score grids: 5 cols → 2 cols ── */
   .atlas-score-grid { grid-template-columns: 1fr 1fr !important; }
 
+  /* ── Pipeline kanban: horizontal scroll on mobile ── */
+  .atlas-pipeline {
+    grid-template-columns: repeat(5, minmax(160px, 1fr)) !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 8px;
+  }
+
   /* ── Chart control rows: stack + wrap ── */
   .atlas-chart-controls { flex-direction: column !important; align-items: stretch !important; }
   .atlas-chart-toggles { flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
@@ -176,3 +184,15 @@ svg, img { max-width: 100%; height: auto; }
 
   .atlas-h1 { font-size: var(--fs-h1-sm) !important; }
 }
+
+/* ============================================================
+   DOCS CONTENT — prose keeps readable measure; structural
+   elements (formulas, code, lists, grids) span full width.
+   ============================================================ */
+.atlas-doc-content p { max-width: 68ch; }
+.atlas-doc-content ul,
+.atlas-doc-content ol { max-width: 68ch; }
+.atlas-doc-content pre,
+.atlas-doc-content code,
+.atlas-doc-content [style*="fontFamily: 'var(--font-mono')"][style*="background"],
+.atlas-doc-content table { max-width: none; }

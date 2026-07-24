@@ -107,9 +107,9 @@ export function CompaniesView() {
       </div>
 
       {/* Company grid */}
-      <div style={{
+      <div className="atlas-grid-auto" style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
         gap: '12px',
       }}>
         {filtered.map((c) => (

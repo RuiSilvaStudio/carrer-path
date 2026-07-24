@@ -16,7 +16,7 @@ export default function App() {
       <Routes>
         {/* Public route — no auth required, but shows nav */}
         <Route path="/docs" element={
-          <div className="atlas-page" style={{ minHeight: '100dvh' }}>
+          <div style={{ minHeight: '100dvh' }}>
             <Nav />
             <DocsPage />
           </div>
