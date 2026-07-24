@@ -1,10 +1,28 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useCockpit } from '../../hooks/useCockpit';
 import type { CockpitContact, PipelineStatus } from '../../types/cockpit';
 import type { NewContact, ContactUpdate } from '../../hooks/useCockpit';
 import { CompaniesView } from './CompaniesView';
 import { InterviewPrepView } from './InterviewPrepView';
 import { KnowledgeBaseView } from './KnowledgeBaseView';
+import { ContactLogView } from './ContactLogView';
+
+// ── Goals helpers (stored as JSON array string in the text column) ──
+function parseGoals(raw: string): string[] {
+  if (!raw || !raw.trim()) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed.filter((g) => typeof g === 'string');
+  } catch {
+    // legacy plain-text — split on newlines, treat each line as a goal
+    return raw.split(/\r?\n/).map((g) => g.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+function serializeGoals(goals: string[]): string {
+  return JSON.stringify(goals);
+}
 
 // ── Cockpit tabs ──────────────────────────────────────────────────
 type CockpitTab = 'contacts' | 'companies' | 'interview' | 'kb';
@@ -85,7 +103,6 @@ export function Cockpit() {
       company: editForm.company,
       relationship: editForm.relationship,
       tier: editForm.tier as 'A' | 'B' | 'C' | undefined,
-      goals: editForm.goals,
       notes: editForm.notes,
     };
     // Remove undefined keys
@@ -274,9 +291,6 @@ export function Cockpit() {
               ))}
             </select>
           </div>
-          <div style={{ marginBottom: '16px' }}>
-            <FormField label="Goals" value={newContact.goals || ''} onChange={(v) => setNewContact({ ...newContact, goals: v })} placeholder="What do you want from this connection?" />
-          </div>
           <div style={{ marginBottom: '20px' }}>
             <label style={labelStyle}>Notes</label>
             <textarea
@@ -362,6 +376,12 @@ export function Cockpit() {
                 await updateContact(contact.id, { message: msg });
               }}
               onEditFormChange={setEditForm}
+              onSaveGoals={async (goals) => {
+                await updateContact(contact.id, { goals: serializeGoals(goals) });
+              }}
+              onSaveMessage={async (message) => {
+                await updateContact(contact.id, { message });
+              }}
             />
           ))}
         </div>
@@ -455,12 +475,11 @@ export function Cockpit() {
                 ✕
               </button>
             </div>
-            {contact.goals && (
-              <div style={{ marginBottom: '12px' }}>
-                <div style={labelStyle}>Goals</div>
-                <div style={{ fontSize: '14px', color: 'var(--color-text)' }}>{contact.goals}</div>
-              </div>
-            )}
+            <div style={{ marginBottom: '12px' }}>
+              <GoalsEditor contact={contact} onSave={async (goals) => {
+                await updateContact(contact.id, { goals: serializeGoals(goals) });
+              }} />
+            </div>
             {contact.notes && (
               <div style={{ marginBottom: '12px' }}>
                 <div style={labelStyle}>Notes</div>
@@ -468,32 +487,15 @@ export function Cockpit() {
               </div>
             )}
             <div style={{ marginBottom: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <div style={labelStyle}>Message Template</div>
-                <button
-                  onClick={async () => {
-                    const msg = generateMessage(contact);
-                    await updateContact(contact.id, { message: msg });
-                  }}
-                  style={{
-                    background: 'none', border: '1px solid var(--color-border)',
-                    borderRadius: '4px', padding: '4px 10px',
-                    fontSize: '11px', fontFamily: 'var(--font-mono)',
-                    color: 'var(--color-accent)', cursor: 'pointer',
-                  }}
-                >
-                  Generate
-                </button>
-              </div>
-              <textarea
-                value={contact.message}
-                onChange={async (e) => {
-                  await updateContact(contact.id, { message: e.target.value });
-                }}
-                rows={3}
-                placeholder="Click Generate or write your own…"
-                style={{ ...inputStyle, resize: 'vertical' }}
-              />
+              <MessageEditor contact={contact} onSave={async (message) => {
+                await updateContact(contact.id, { message });
+              }} onGenerate={async () => {
+                const msg = generateMessage(contact);
+                await updateContact(contact.id, { message: msg });
+              }} />
+            </div>
+            <div style={{ marginBottom: '12px' }}>
+              <ContactLogView contact={contact} />
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
               {PIPELINE_STAGES.map((s) => (
@@ -560,7 +562,7 @@ function StatBox({ num, label }: { num: number; label: string }) {
 
 function ContactCard({
   contact, expanded, editing, editForm, onToggle, onEdit, onSaveEdit, onDelete,
-  onGenerateMessage, onEditFormChange, onStageChange,
+  onGenerateMessage, onEditFormChange, onStageChange, onSaveGoals, onSaveMessage,
 }: {
   contact: CockpitContact;
   expanded: boolean;
@@ -573,6 +575,8 @@ function ContactCard({
   onGenerateMessage: () => void;
   onEditFormChange: (f: Partial<CockpitContact>) => void;
   onStageChange: (stage: string) => void;
+  onSaveGoals: (goals: string[]) => Promise<void>;
+  onSaveMessage: (message: string) => Promise<void>;
 }) {
   return (
     <div style={{
@@ -612,46 +616,22 @@ function ContactCard({
 
       {expanded && !editing && (
         <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--color-border)' }}>
-          {contact.goals && (
-            <div style={{ marginBottom: '12px' }}>
-              <div style={labelStyle}>Goals</div>
-              <div style={{ fontSize: '14px', color: 'var(--color-text)' }}>{contact.goals}</div>
-            </div>
-          )}
+          <div style={{ marginBottom: '12px' }}>
+            <GoalsEditor contact={contact} onSave={onSaveGoals} />
+          </div>
           {contact.notes && (
             <div style={{ marginBottom: '12px' }}>
               <div style={labelStyle}>Notes</div>
               <div style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>{contact.notes}</div>
             </div>
           )}
-          {contact.message && (
-            <div style={{ marginBottom: '12px' }}>
-              <div style={labelStyle}>Message Template</div>
-              <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
-                {contact.message}
-              </div>
-            </div>
-          )}
           <div style={{ marginBottom: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <div style={labelStyle}>Message Template</div>
-              <button onClick={onGenerateMessage} style={{
-                background: 'none', border: '1px solid var(--color-border)',
-                borderRadius: '4px', padding: '4px 10px',
-                fontSize: '11px', fontFamily: 'var(--font-mono)',
-                color: 'var(--color-accent)', cursor: 'pointer',
-              }}>
-                Generate
-              </button>
-            </div>
-            <div style={{
-              padding: '10px 12px', background: 'var(--color-bg)',
-              border: '1px solid var(--color-border)', borderRadius: '6px',
-              fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: 1.5,
-              minHeight: '40px', whiteSpace: 'pre-wrap',
-            }}>
-              {contact.message || 'Click Generate to create a message template.'}
-            </div>
+            <MessageEditor contact={contact} onSave={onSaveMessage} onGenerate={async () => {
+              await onGenerateMessage();
+            }} />
+          </div>
+          <div style={{ marginBottom: '12px' }}>
+            <ContactLogView contact={contact} />
           </div>
           {/* Stage selector */}
           <div style={{ marginBottom: '12px' }}>
@@ -708,9 +688,6 @@ function ContactCard({
                 <option value="C">C — Low Priority</option>
               </select>
             </div>
-          </div>
-          <div style={{ marginBottom: '12px' }}>
-            <FormField label="Goals" value={editForm.goals || ''} onChange={(v) => onEditFormChange({ ...editForm, goals: v })} />
           </div>
           <div style={{ marginBottom: '12px' }}>
             <label style={labelStyle}>Notes</label>
@@ -814,6 +791,192 @@ function FormField({ label, value, onChange, placeholder }: {
   );
 }
 
+// ── GoalsEditor: add / edit / remove individual goals ──────────────
+function GoalsEditor({ contact, onSave }: {
+  contact: CockpitContact;
+  onSave: (goals: string[]) => Promise<void>;
+}) {
+  const goals = parseGoals(contact.goals);
+  const [editingIdx, setEditingIdx] = useState<number | null>(null);
+  const [draft, setDraft] = useState('');
+  const [adding, setAdding] = useState(false);
+
+  const startAdd = () => { setAdding(true); setDraft(''); setEditingIdx(null); };
+  const startEdit = (idx: number) => { setEditingIdx(idx); setDraft(goals[idx] || ''); setAdding(false); };
+  const cancel = () => { setEditingIdx(null); setAdding(false); setDraft(''); };
+
+  const commitAdd = async () => {
+    if (!draft.trim()) { cancel(); return; }
+    await onSave([...goals, draft.trim()]);
+    cancel();
+  };
+
+  const commitEdit = async () => {
+    if (editingIdx === null) return;
+    const next = [...goals];
+    if (draft.trim()) {
+      next[editingIdx] = draft.trim();
+    } else {
+      next.splice(editingIdx, 1); // empty = delete
+    }
+    await onSave(next);
+    cancel();
+  };
+
+  const removeGoal = async (idx: number) => {
+    const next = goals.filter((_, i) => i !== idx);
+    await onSave(next);
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <div style={labelStyle}>Goals</div>
+        {!adding && editingIdx === null && (
+          <button onClick={startAdd} style={smallAddBtnStyle}>+ Add Goal</button>
+        )}
+      </div>
+
+      {goals.length === 0 && !adding && (
+        <div style={{ fontSize: '13px', color: 'var(--color-text-dim)', fontStyle: 'italic' }}>
+          No goals yet.
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {goals.map((goal, idx) => (
+          <div key={idx} style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            padding: '8px 10px',
+            background: 'var(--color-surface-elevated)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '6px',
+          }}>
+            <span style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-mono)', fontSize: '11px', flexShrink: 0 }}>›</span>
+            {editingIdx === idx ? (
+              <>
+                <input
+                  type="text"
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') cancel(); }}
+                  autoFocus
+                  style={{ ...inputStyle, flex: 1 }}
+                />
+                <button onClick={commitEdit} style={smallSaveBtnStyle}>Save</button>
+                <button onClick={cancel} style={smallGhostBtnStyle}>Cancel</button>
+              </>
+            ) : (
+              <>
+                <span style={{ fontSize: '14px', color: 'var(--color-text)', flex: 1 }}>{goal}</span>
+                <button onClick={() => startEdit(idx)} style={smallGhostBtnStyle}>Edit</button>
+                <button onClick={() => removeGoal(idx)} style={{ ...smallGhostBtnStyle, color: 'var(--color-danger)', borderColor: 'var(--color-danger)' }}>Remove</button>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {adding && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '8px',
+          padding: '8px 10px',
+          background: 'var(--color-surface-elevated)',
+          border: '1px solid var(--color-accent)',
+          borderRadius: '6px',
+          marginTop: '6px',
+        }}>
+          <span style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-mono)', fontSize: '11px', flexShrink: 0 }}>›</span>
+          <input
+            type="text"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') commitAdd(); if (e.key === 'Escape') cancel(); }}
+            autoFocus
+            placeholder="What do you want from this connection?"
+            style={{ ...inputStyle, flex: 1 }}
+          />
+          <button onClick={commitAdd} style={smallSaveBtnStyle}>Add</button>
+          <button onClick={cancel} style={smallGhostBtnStyle}>Cancel</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── MessageEditor: edit and save message template with Save/Cancel ─
+function MessageEditor({ contact, onSave, onGenerate }: {
+  contact: CockpitContact;
+  onSave: (message: string) => Promise<void>;
+  onGenerate?: () => Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+
+  useEffect(() => {
+    if (!editing) setDraft(contact.message || '');
+  }, [contact.message, editing]);
+
+  const startEdit = () => { setDraft(contact.message || ''); setEditing(true); };
+  const cancel = () => { setEditing(false); setDraft(''); };
+  const save = async () => {
+    await onSave(draft);
+    setEditing(false);
+  };
+  const generate = async () => {
+    if (onGenerate) {
+      await onGenerate();
+    }
+    setEditing(true);
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <div style={labelStyle}>Message Template</div>
+        {!editing && (
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {onGenerate && (
+              <button onClick={generate} style={{
+                ...smallGhostBtnStyle,
+                color: 'var(--color-accent)',
+                borderColor: 'var(--color-accent)',
+              }}>
+                Generate
+              </button>
+            )}
+            <button onClick={startEdit} style={smallGhostBtnStyle}>Edit</button>
+          </div>
+        )}
+      </div>
+      {editing ? (
+        <>
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            rows={4}
+            autoFocus
+            style={{ ...inputStyle, resize: 'vertical', width: '100%' }}
+          />
+          <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+            <button onClick={save} style={smallSaveBtnStyle}>Save</button>
+            <button onClick={cancel} style={smallGhostBtnStyle}>Cancel</button>
+          </div>
+        </>
+      ) : (
+        <div style={{
+          padding: '10px 12px', background: 'var(--color-bg)',
+          border: '1px solid var(--color-border)', borderRadius: '6px',
+          fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: 1.5,
+          minHeight: '40px', whiteSpace: 'pre-wrap',
+        }}>
+          {contact.message || <span style={{ color: 'var(--color-text-dim)', fontStyle: 'italic' }}>No message yet. Click Edit to write one.</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Shared styles ───────────────────────────────────────────────
 const labelStyle: React.CSSProperties = {
   display: 'block',
@@ -847,6 +1010,38 @@ const ghostBtnStyle: React.CSSProperties = {
   borderRadius: '4px',
   fontSize: '13px', fontWeight: 500,
   cursor: 'pointer', fontFamily: 'var(--font-sans)',
+};
+
+const smallSaveBtnStyle: React.CSSProperties = {
+  padding: '4px 12px',
+  background: 'var(--color-accent)',
+  color: 'var(--color-bg)',
+  border: 'none', borderRadius: '4px',
+  fontSize: '11px', fontWeight: 600,
+  cursor: 'pointer', fontFamily: 'var(--font-sans)',
+  whiteSpace: 'nowrap',
+};
+
+const smallGhostBtnStyle: React.CSSProperties = {
+  padding: '4px 10px',
+  background: 'none',
+  color: 'var(--color-text-muted)',
+  border: '1px solid var(--color-border)',
+  borderRadius: '4px',
+  fontSize: '11px', fontWeight: 500,
+  cursor: 'pointer', fontFamily: 'var(--font-sans)',
+  whiteSpace: 'nowrap',
+};
+
+const smallAddBtnStyle: React.CSSProperties = {
+  padding: '3px 10px',
+  background: 'none',
+  color: 'var(--color-accent)',
+  border: `1px solid var(--color-accent)`,
+  borderRadius: '4px',
+  fontSize: '11px', fontWeight: 500,
+  cursor: 'pointer', fontFamily: 'var(--font-mono)',
+  whiteSpace: 'nowrap',
 };
 
 function viewBtnStyle(active: boolean, isAdd = false): React.CSSProperties {
