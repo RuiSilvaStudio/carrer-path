@@ -581,7 +581,7 @@ function ContactCard({
   return (
     <div style={{
       background: 'var(--color-surface)',
-      border: '1px solid var(--color-border)',
+      border: `1px solid ${expanded ? 'var(--color-accent)' : 'var(--color-border)'}`,
       borderRadius: '8px', padding: '16px 18px',
       marginBottom: '10px',
       transition: 'border-color 0.2s ease',
