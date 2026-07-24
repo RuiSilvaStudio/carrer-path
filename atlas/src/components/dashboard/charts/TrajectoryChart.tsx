@@ -111,6 +111,10 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
   const containerRef = useRef<HTMLDivElement>(null);
   const [measureRef, WIDTH] = useElementWidth<HTMLDivElement>({ initial: 760, min: 280, max: 760 });
   const svgRef = useRef<SVGSVGElement>(null);
+
+  // ── Derived chart geometry (must precede the useMemo scales below) ──
+  const INNER_W = WIDTH - MARGIN.left - MARGIN.right;
+  const INNER_H = HEIGHT - MARGIN.top - MARGIN.bottom;
   const linesRef = useRef<(SVGPathElement | null)[]>([]);
   const pointsRef = useRef<(SVGGElement | null)[]>([]);
   const [colors, setColors] = useState<Record<string, string>>({});
@@ -364,9 +368,6 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
 
   // ── Get color for a series key ────────────────────────────────
   // (restored for future use — currently using inline maps)
-
-  const INNER_W = WIDTH - MARGIN.left - MARGIN.right;
-  const INNER_H = HEIGHT - MARGIN.top - MARGIN.bottom;
 
   return (
     <div ref={(el) => { containerRef.current = el; measureRef.current = el; }} className="trajectory-chart-container w-full">
