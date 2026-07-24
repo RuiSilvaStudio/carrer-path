@@ -236,9 +236,9 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
         </div>
 
         {/* Row 2: Radar (50%) + Insights/Summary (50%) */}
-        <div style={{
+        <div className="atlas-2col" style={{
           display: 'grid',
-          gridTemplateColumns: 'minmax(280px, 1fr) minmax(280px, 1fr)',
+          gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
           gap: '20px',
         }}>
           {/* Left: Radar */}
@@ -295,10 +295,10 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
       <div ref={containerRef}>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr) minmax(280px, 1fr)',
+          gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
           gap: '20px',
           marginBottom: '20px',
-        }}>
+        }} className="atlas-2col">
           <Card label="Starting Point" title="Your Baseline Profile" data-anim>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <RadarChart scores={baseline.scores.bigFive} size={320} />
@@ -328,9 +328,9 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
 
         {/* ── SD3 + ICAR ────────────────────────────────── */}
         {(baseline.scores.sd3 || baseline.scores.icar) && (
-          <div style={{
+          <div className="atlas-grid-auto" style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
             gap: '20px',
           }}>
             {baseline.scores.sd3 && (
@@ -420,9 +420,9 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
 
       {/* ── SD3 + ICAR ─────────────────────────────────── */}
       {(baseline.scores.sd3 || baseline.scores.icar) && (
-        <div style={{
+        <div className="atlas-grid-auto" style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
           gap: '20px',
           marginTop: '20px',
         }}>

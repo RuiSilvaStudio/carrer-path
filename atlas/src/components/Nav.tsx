@@ -29,9 +29,9 @@ export function Nav() {
   });
 
   return (
-    <nav style={{
-      display: 'flex', alignItems: 'center', gap: '24px',
-      padding: '0 40px', height: '44px',
+    <nav className="atlas-nav" style={{
+      display: 'flex', alignItems: 'center', gap: 'var(--nav-gap)',
+      padding: '0 var(--nav-pad)', height: '44px',
       background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)',
       fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase',
       letterSpacing: '0.12em', position: 'sticky', top: 0, zIndex: 100,

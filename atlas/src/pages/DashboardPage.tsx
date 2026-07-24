@@ -51,7 +51,7 @@ export function DashboardPage() {
   }
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px' }}>
+    <div className="atlas-page" style={{ maxWidth: '1200px', margin: '0 auto', padding: 'var(--space-page)' }}>
       {/* ── Header ────────────────────────────────────────── */}
       <header style={{ marginBottom: '28px' }}>
         <div style={{
@@ -59,9 +59,9 @@ export function DashboardPage() {
           flexWrap: 'wrap', gap: '20px',
         }}>
           <div style={{ flex: '1 1 400px', minWidth: 0 }}>
-            <h1 style={{
+            <h1 className="atlas-h1" style={{
               fontFamily: 'var(--font-serif)',
-              fontSize: '36px',
+              fontSize: 'var(--fs-h1)',
               fontWeight: 500,
               color: 'var(--color-text)',
               letterSpacing: '-0.03em',

@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import * as d3 from 'd3';
 import type { TrajectoryPoint, BigFiveScores } from '../../../types';
 import { useDashboardState } from '../../../state/DashboardContext';
+import { useElementWidth } from '../../../lib/useElementWidth';
 
 // ── Trait metadata ──────────────────────────────────────────────
 interface TraitMeta {
@@ -74,12 +75,9 @@ interface TrajectoryChartProps {
   onSmoothingChange?: (mode: 'raw' | 'daily' | 'weekly') => void;
 }
 
-// ── Chart dimensions ─────────────────────────────────────────────
-const WIDTH = 760;
+// ── Chart dimensions (responsive: width tracks the measured container) ──
 const HEIGHT = 340;
 const MARGIN = { top: 20, right: 28, bottom: 40, left: 44 };
-const INNER_W = WIDTH - MARGIN.left - MARGIN.right;
-const INNER_H = HEIGHT - MARGIN.top - MARGIN.bottom;
 
 // ── Line/marker styling ──────────────────────────────────────────
 const LINE_STROKE = 1.5;
@@ -111,6 +109,7 @@ function derivePhases(data: TrajectoryPoint[]): Phase[] {
 export default function TrajectoryChart({ data, originalDataLength, onScrub: _onScrub, smoothing = 'daily', onSmoothingChange }: TrajectoryChartProps) {
   const { trajectoryMode, setTrajectoryMode, scrubIndex, setScrubIndex } = useDashboardState();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [measureRef, WIDTH] = useElementWidth<HTMLDivElement>({ initial: 760, min: 280, max: 760 });
   const svgRef = useRef<SVGSVGElement>(null);
   const linesRef = useRef<(SVGPathElement | null)[]>([]);
   const pointsRef = useRef<(SVGGElement | null)[]>([]);
@@ -366,8 +365,11 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
   // ── Get color for a series key ────────────────────────────────
   // (restored for future use — currently using inline maps)
 
+  const INNER_W = WIDTH - MARGIN.left - MARGIN.right;
+  const INNER_H = HEIGHT - MARGIN.top - MARGIN.bottom;
+
   return (
-    <div ref={containerRef} className="trajectory-chart-container w-full">
+    <div ref={(el) => { containerRef.current = el; measureRef.current = el; }} className="trajectory-chart-container w-full">
       {/* ── Header: Title + ⓘ + Traits/Emotions toggle ──────── */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -464,14 +466,15 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
       <div style={{ position: 'relative' }}>
         <svg
           ref={svgRef}
-          width="100%"
+          width={WIDTH}
+          height={HEIGHT}
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           onClick={handleClick}
           role="img"
           aria-label={isEmotions ? 'Emotion trajectory chart' : 'Big Five personality trajectory chart'}
-          style={{ display: 'block' }}
+          style={{ display: 'block', maxWidth: '100%', height: 'auto' }}
         >
         {/* ── Phase background bands ──────────────────────── */}
         <g>

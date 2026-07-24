@@ -94,3 +94,72 @@ body {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
+
+/* ============================================================
+   RESPONSIVE TOKENS + MOBILE LAYER
+   Desktop keeps its exact pixel values; small screens swap the
+   token values and stack grids. Inline styles that reference
+   var(--space-*)/var(--fs-*)/var(--tap) adapt automatically.
+   Grid/tap utilities use !important to win over inline styles.
+   ============================================================ */
+:root {
+  --space-page: 40px;
+  --space-page-sm: 16px;
+  --space-card: 24px;
+  --space-card-sm: 16px;
+  --fs-h1: 36px;
+  --fs-h1-sm: 28px;
+  --tap: 44px;
+  --nav-gap: 24px;
+  --nav-gap-sm: 12px;
+  --nav-pad: 40px;
+  --nav-pad-sm: 14px;
+}
+
+html, body { overflow-x: hidden; }
+svg, img { max-width: 100%; height: auto; }
+
+/* Stack two-column dashboard grids to one column on tablet/phone */
+@media (max-width: 720px) {
+  .atlas-2col { grid-template-columns: 1fr !important; }
+}
+
+/* Multi-column auto-fit cards collapse to one column on phones */
+@media (max-width: 640px) {
+  .atlas-grid-auto {
+    grid-template-columns: 1fr !important;
+  }
+  .atlas-nav {
+    padding: 0 var(--nav-pad-sm) !important;
+    gap: var(--nav-gap-sm) !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+  .atlas-nav button {
+    font-size: 11px !important;
+    padding: 10px 0 !important;
+    min-height: var(--tap);
+    scroll-snap-align: start;
+    white-space: nowrap;
+  }
+  .atlas-page {
+    padding-left: var(--space-page-sm) !important;
+    padding-right: var(--space-page-sm) !important;
+  }
+  .atlas-page-sm {
+    padding-top: 28px !important;
+    padding-bottom: 44px !important;
+  }
+  .atlas-tabs {
+    overflow-x: auto !important;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+  .atlas-tabs button {
+    min-height: var(--tap);
+    scroll-snap-align: start;
+    white-space: nowrap;
+  }
+  .atlas-h1 { font-size: var(--fs-h1-sm) !important; }
+}

@@ -243,9 +243,9 @@ export function DistributionView({ demoData, baseline, pulses, dataSource }: Dis
           subtitle={`${demoData.length} pulses — frequency histograms with kernel density estimates`}
           data-anim
         >
-          <div style={{
+          <div className="atlas-grid-auto" style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
             gap: '20px',
           }}>
             {TRAIT_CONFIG.map(trait => (
@@ -321,7 +321,7 @@ export function DistributionView({ demoData, baseline, pulses, dataSource }: Dis
       <div ref={containerRef}>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr) minmax(280px, 1fr)',
+          gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
           gap: '20px',
         }}>
           <Card label="02 · Distribution" title="Baseline Profile" data-anim>
@@ -383,9 +383,9 @@ export function DistributionView({ demoData, baseline, pulses, dataSource }: Dis
         subtitle={`${dataPoints} data points — frequency histograms with kernel density estimates`}
         data-anim
       >
-        <div style={{
+        <div className="atlas-grid-auto" style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
           gap: '20px',
         }}>
           {TRAIT_CONFIG.map(trait => (

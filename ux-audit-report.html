@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UX Audit — Personality Atlas Dashboard</title>
+<style>
+  :root, [data-theme="dark"] {
+    --color-bg: #18120e;
+    --color-surface: #1f1813;
+    --color-surface-elevated: #2a2218;
+    --color-border: #3a2f25;
+    --color-text: #e8dfd3;
+    --color-text-muted: #a89a87;
+    --color-text-dim: #756657;
+    --color-accent: #d4a574;
+    --color-accent-bright: #e8b884;
+    --color-critical: #c97757;
+    --color-warning: #c9a55c;
+    --color-suggestion: #7ba89b;
+    --color-clean: #7ba89b;
+    --font-serif: "Fraunces", Georgia, serif;
+    --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", monospace;
+  }
+  [data-theme="light"] {
+    --color-bg: #faf8f5;
+    --color-surface: #ffffff;
+    --color-surface-elevated: #f5f2ed;
+    --color-border: #e0d8cc;
+    --color-text: #2a2218;
+    --color-text-muted: #6b5d4f;
+    --color-text-dim: #9a8a7a;
+    --color-accent: #b8860b;
+    --color-accent-bright: #a07008;
+    --color-critical: #b5533a;
+    --color-warning: #b8860b;
+    --color-suggestion: #4a8d7a;
+    --color-clean: #4a8d7a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    padding: 40px 20px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .header {
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .header h1 {
+    font-family: var(--font-serif);
+    font-size: 32px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+  }
+  .header .meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .summary-box {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 32px;
+  }
+  .summary-box p {
+    color: var(--color-text-muted);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-text-dim);
+    margin-bottom: 16px;
+    margin-top: 40px;
+  }
+  .smell-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .smell-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .smell-id {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-dim);
+    background: var(--color-surface-elevated);
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+  .severity {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .severity.critical { background: var(--color-critical); color: var(--color-bg); }
+  .severity.warning { background: var(--color-warning); color: var(--color-bg); }
+  .severity.suggestion { background: var(--color-suggestion); color: var(--color-bg); }
+  .smell-name {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .smell-category {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+  }
+  .smell-message {
+    color: var(--color-text-muted);
+    font-size: 14px;
+    line-height: 1.7;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--color-surface-elevated);
+    border-radius: 8px;
+    border-left: 3px solid var(--color-accent);
+  }
+  .matched-symptoms {
+    margin-bottom: 20px;
+  }
+  .matched-symptoms h4 {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-dim);
+    margin-bottom: 8px;
+  }
+  .matched-symptoms ul {
+    list-style: none;
+  }
+  .matched-symptoms li {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    padding: 6px 0 6px 20px;
+    position: relative;
+  }
+  .matched-symptoms li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--color-accent);
+  }
+  .recipe {
+    margin-bottom: 20px;
+  }
+  .recipe h4 {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-dim);
+    margin-bottom: 12px;
+  }
+  .recipe-summary {
+    font-size: 14px;
+    color: var(--color-text);
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+  .recipe-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .recipe-step {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    background: var(--color-surface-elevated);
+    border-radius: 8px;
+  }
+  .step-number {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-accent);
+    font-weight: 600;
+    min-width: 24px;
+  }
+  .step-content h5 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 4px;
+  }
+  .step-content p {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+  }
+  .before-after {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+  }
+  .before, .after {
+    padding: 16px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .before {
+    background: rgba(201, 119, 87, 0.1);
+    border: 1px solid var(--color-critical);
+    color: var(--color-text-muted);
+  }
+  .after {
+    background: rgba(123, 168, 155, 0.1);
+    border: 1px solid var(--color-suggestion);
+    color: var(--color-text-muted);
+  }
+  .before strong, .after strong {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .before strong { color: var(--color-critical); }
+  .after strong { color: var(--color-suggestion); }
+  .meta-row {
+    display: flex;
+    gap: 24px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border);
+    flex-wrap: wrap;
+  }
+  .meta-item {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-text-dim);
+  }
+  .meta-item span {
+    color: var(--color-text-muted);
+  }
+  .suspected-card {
+    background: var(--color-surface);
+    border: 1px dashed var(--color-border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .suspected-card h4 {
+    font-family: var(--font-serif);
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+  .suspected-card .smell-id {
+    margin-bottom: 8px;
+    display: inline-block;
+  }
+  .suspected-card p {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+  }
+  .clean-card {
+    background: rgba(123, 168, 155, 0.08);
+    border: 1px solid var(--color-suggestion);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .clean-card p {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    line-height: 1.7;
+  }
+  .clean-card p::before {
+    content: "✓ ";
+    color: var(--color-suggestion);
+    font-weight: 600;
+  }
+  .priority-list {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .priority-item {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    background: var(--color-surface-elevated);
+    border: 1px solid var(--color-border);
+  }
+  .priority-item.critical { border-color: var(--color-critical); color: var(--color-critical); }
+  .priority-item.warning { border-color: var(--color-warning); color: var(--color-warning); }
+  .footer {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--color-border);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .theme-toggle:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+  @media (max-width: 640px) {
+    .before-after { grid-template-columns: 1fr; }
+    body { padding: 20px 16px; }
+    .header h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'">Toggle Theme</button>
+
+<div class="header">
+  <h1>UX Audit — Personality Atlas Dashboard</h1>
+  <div class="meta">Interface Auditor Report · July 23, 2026 · API Enriched: No</div>
+</div>
+
+<div class="summary-box">
+  <p><strong>Audited interface:</strong> Personality Atlas dashboard — full-width trait trajectory line chart with phase bands, clickable timeline checkpoints (35 dots), traits/emotions/smoothing toggle pill groups, 5-item legend toggles, hover SVG tooltip, radar chart, insight strip, and 5 trait score cards.</p>
+</div>
+
+<div class="section-title">Detected Smells (3)</div>
+
+<!-- Smell 1: Overloaded Screen -->
+<div class="smell-card">
+  <div class="smell-header">
+    <span class="smell-id">overloaded-screen</span>
+    <span class="severity warning">Warning</span>
+  </div>
+  <h2 class="smell-name">Overloaded Screen</h2>
+  <div class="smell-category">Category: Efficiency</div>
+
+  <div class="smell-message">
+    The trajectory card alone contains ~9 distinct interactive zones: (1) Traits/Emotions toggle, (2) Raw/Daily/Weekly smoothing toggle, (3) 5 legend toggle buttons, (4) the chart itself (click-to-scrub), (5) the hover tooltip region, (6) the phase bar (4 segments with title tooltips), (7) the timeline track (clickable), (8) 35 individual checkpoint buttons, (9) the scrub date label. Add the radar chart, insight strip, and 5 score cards below the fold and the dashboard presents 15+ simultaneous action areas. In emotions mode, the legend expands to 10 toggle buttons and the tooltip shows 10 values — pushing the count further past the 7±2 threshold. The interface does mitigate this with visual hierarchy (small mono uppercase labels, muted colors), but the raw interactive density remains high.
+  </div>
+
+  <div class="matched-symptoms">
+    <h4>Matched Symptoms</h4>
+    <ul>
+      <li>More than 7 distinct action areas visible</li>
+      <li>Information density causing scroll fatigue</li>
+    </ul>
+  </div>
+
+  <div class="recipe">
+    <h4>Remediation Recipe</h4>
+    <p class="recipe-summary">Reduce simultaneous interactive density by collapsing secondary controls and consolidating the timeline interaction model.</p>
+    <div class="recipe-steps">
+      <div class="recipe-step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h5>Consolidate the two pill toggles into a single control cluster</h5>
+          <p>Traits/Emotions and Raw/Daily/Weekly serve different purposes but read as one group. Wrap both in a visually unified toolbar with a divider, or move smoothing into a dropdown labeled 'View: Daily Avg' to reclaim horizontal space.</p>
+        </div>
+      </div>
+      <div class="recipe-step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h5>Collapse the emotion legend under progressive disclosure</h5>
+          <p>In emotions mode, 10 legend buttons dominate the header. Show the 5 most-active emotions by default with a '+5 more' expander. Trait mode (5 items) is within tolerance and can stay as-is.</p>
+        </div>
+      </div>
+      <div class="recipe-step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h5>Reduce checkpoint count via adaptive sampling</h5>
+          <p>35 checkpoints on a 32px-tall track puts each dot ~3% apart — overlapping hit areas on smaller screens. Render every Nth checkpoint (N = ceil(len/15)) so no more than 15 dots are visible; the track click still maps to any index, so no functionality is lost.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="before-after">
+    <div class="before">
+      <strong>Before</strong>
+      Trajectory card with 2 pill toggles, 5-10 legend buttons, 35 checkpoint dots, and clickable chart all competing for attention.
+    </div>
+    <div class="after">
+      <strong>After</strong>
+      Unified toolbar, collapsed legend, 12-15 checkpoint dots with identical click coverage.
+    </div>
+  </div>
+
+  <div class="meta-row">
+    <div class="meta-item">Time: <span>45-60 min</span></div>
+    <div class="meta-item">Principles: <span>cognitive-load, hicks-law, progressive-disclosure</span></div>
+  </div>
+</div>
+
+<!-- Smell 2: Contrast Blindness -->
+<div class="smell-card">
+  <div class="smell-header">
+    <span class="smell-id">contrast-blindness</span>
+    <span class="severity critical">Critical</span>
+  </div>
+  <h2 class="smell-name">Contrast Blindness</h2>
+  <div class="smell-category">Category: Accessibility</div>
+
+  <div class="smell-message">
+    Several text-on-background pairings fall below WCAG 2.2 AA (4.5:1 for normal text, 3:1 for large text). Dark mode: --color-text-dim (#756657) on --color-surface (#1f1813) computes to roughly 3.3:1 — fails AA for the 9-10px mono labels used on axis ticks, phase bar labels, legend secondary text, and the scrubber header. Light mode: --color-text-dim (#9a8a7a) on --color-surface (#ffffff) is roughly 3.1:1 — same failure. Additionally, legend toggle state is communicated by color+opacity alone (opacity 0.35 when hidden) with no text decoration change — a color-vision-deficient user cannot reliably tell whether a trait is active. The phase bar also encodes active phase purely via inset accent box-shadow (color-only signal).
+  </div>
+
+  <div class="matched-symptoms">
+    <h4>Matched Symptoms</h4>
+    <ul>
+      <li>Text on background with contrast ratio below 4.5:1</li>
+      <li>Relying on color alone to communicate status</li>
+    </ul>
+  </div>
+
+  <div class="recipe">
+    <h4>Remediation Recipe</h4>
+    <p class="recipe-summary">Raise dim-text contrast to meet AA, and add non-color affordances for toggle and active states.</p>
+    <div class="recipe-steps">
+      <div class="recipe-step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h5>Darken/lighten --color-text-dim in both themes to reach 4.5:1</h5>
+          <p>Dark mode: move #756657 toward #8f8172 (≈4.6:1 on #1f1813). Light mode: move #9a8a7a toward #7a6a58 (≈4.6:1 on #ffffff). Verify with a contrast checker against both --color-surface and --color-bg since labels appear on both.</p>
+        </div>
+      </div>
+      <div class="recipe-step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h5>Add a non-color signal to legend toggles</h5>
+          <p>Hidden traits should show strikethrough on the label or an empty vs filled dot (outline-only circle when off, filled when on) — not just reduced opacity. This survives both color blindness and low-contrast displays.</p>
+        </div>
+      </div>
+      <div class="recipe-step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h5>Give the active phase segment a shape or weight cue</h5>
+          <p>In addition to the accent inset shadow, render the active phase label in bold or with a top accent bar 2px taller than siblings. Color + weight/position is a redundant signal; color alone is not.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="before-after">
+    <div class="before">
+      <strong>Before</strong>
+      9px #756657 labels on #1f1813 (≈3.3:1), legend state shown by opacity only, active phase by color shadow only.
+    </div>
+    <div class="after">
+      <strong>After</strong>
+      All labels ≥4.5:1, toggles with filled/outline dots plus strikethrough, active phase with weight cue.
+    </div>
+  </div>
+
+  <div class="meta-row">
+    <div class="meta-item">Time: <span>30-45 min</span></div>
+    <div class="meta-item">Principles: <span>contrast, accessibility, redundant-coding</span></div>
+  </div>
+</div>
+
+<!-- Smell 3: Mystery Navigation -->
+<div class="smell-card">
+  <div class="smell-header">
+    <span class="smell-id">mystery-navigation</span>
+    <span class="severity warning">Warning</span>
+  </div>
+  <h2 class="smell-name">Mystery Navigation</h2>
+  <div class="smell-category">Category: Learnability</div>
+
+  <div class="smell-message">
+    Two label clarity problems. First, the chart-level instruction 'Timeline · Click a point' is accurate but incomplete — users can also click directly on the chart line area to scrub (handleClick on the SVG), and that affordance is never communicated anywhere. Clickable line charts are not a conventional pattern; without a cue most users will never discover it. Second, the legend labels use terse abbreviations ('O — Openness', 'ES — Emotional Stability') where 'ES' in particular is non-standard (most Big Five literature uses 'N' for Neuroticism or 'S'/'Emotional Stability' spelled out). A first-time user must already know the five-factor model to parse 'ES'. The trait summary cards below use the same abbreviations with no expansion except in the radar axis labels.
+  </div>
+
+  <div class="matched-symptoms">
+    <h4>Matched Symptoms</h4>
+    <ul>
+      <li>Unclear labels</li>
+      <li>Features users cannot find on first attempt</li>
+    </ul>
+  </div>
+
+  <div class="recipe">
+    <h4>Remediation Recipe</h4>
+    <p class="recipe-summary">Surface the chart-click affordance and disambiguate abbreviated labels at first exposure.</p>
+    <div class="recipe-steps">
+      <div class="recipe-step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h5>Update the scrubber header copy to describe both interactions</h5>
+          <p>Change 'Timeline · Click a point' to 'Click the chart or a point below'. One line, zero layout cost, closes the discoverability gap for chart-click scrubbing.</p>
+        </div>
+      </div>
+      <div class="recipe-step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h5>Add native title tooltips to abbreviated legend buttons</h5>
+          <p>title='Emotional Stability — click to show/hide' on each legend button. Tooltips on hover cost nothing and resolve abbreviation ambiguity without changing the compact layout.</p>
+        </div>
+      </div>
+      <div class="recipe-step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h5>Spell out trait names in the trait summary cards</h5>
+          <p>The cards currently show 'ES' over the score. With 5 cards in a row there is room for 'Stability' (8 chars) instead of 'ES'. Reserve abbreviations for the radar chart where space genuinely constrains.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="before-after">
+    <div class="before">
+      <strong>Before</strong>
+      Chart-click scrubbing undocumented, 'ES' abbreviation unexplained, legend buttons with no hover hints.
+    </div>
+    <div class="after">
+      <strong>After</strong>
+      Header documents both click zones, legend buttons expose full names on hover, summary cards spell out traits.
+    </div>
+  </div>
+
+  <div class="meta-row">
+    <div class="meta-item">Time: <span>20-30 min</span></div>
+    <div class="meta-item">Principles: <span>recognition-rather-than-recall, mental-model, affordances</span></div>
+  </div>
+</div>
+
+<div class="section-title">Suspected Smells (3)</div>
+
+<div class="suspected-card">
+  <span class="smell-id">silent-errors</span>
+  <h4>Silent Errors</h4>
+  <p><strong>Category:</strong> Feedback</p>
+  <p><strong>Reason:</strong> No empty, loading, or error states are described in the audited components. The demo path has a 'No demo data available' fallback, but the baseline path returns null when !baseline (blank screen), and there is no visible feedback if the Supabase fetch fails or returns empty pulses. Verify failure states exist before ruling this out.</p>
+</div>
+
+<div class="suspected-card">
+  <span class="smell-id">dead-end-states</span>
+  <h4>Dead-End States</h4>
+  <p><strong>Category:</strong> Feedback</p>
+  <p><strong>Reason:</strong> The baseline-only view includes guidance text ('Complete weekly pulses...') which partially mitigates dead ends, but the empty-pulses-with-baseline flow offers no direct action (e.g., a 'Take your first pulse' button linking to the Pulse page). The user must infer the next step and navigate via the top nav themselves. Confirm whether a CTA exists elsewhere in the layout.</p>
+</div>
+
+<div class="suspected-card">
+  <span class="smell-id">inconsistent-actions</span>
+  <h4>Inconsistent Actions</h4>
+  <p><strong>Category:</strong> Consistency</p>
+  <p><strong>Reason:</strong> The chart supports click-to-scrub, the timeline track supports click-to-scrub, and checkpoints support click-to-scrub — three different hit areas with three different visual languages (line hover indicator, track fill, dot highlight) for the same action. This may be intentional redundancy, but it could also confuse the interaction model. Verify whether users perceive them as one action or three.</p>
+</div>
+
+<div class="section-title">Clean Areas (3)</div>
+
+<div class="clean-card">
+  <p>Redundant theme handling is exemplary: MutationObserver on data-theme re-reads CSS variables, tooltips and charts adapt to light/dark without reload, and trait colors use the colorblind-safe Tol bright palette with per-theme adjustments — a strong accessibility foundation that makes the contrast failures above easier to fix (single-token change).</p>
+</div>
+
+<div class="clean-card">
+  <p>Progressive disclosure is applied well at the view level: the smoothing toggle only appears when data exceeds 10 points, and the baseline-only flow replaces the chart entirely with guidance text instead of showing an empty visualization — no dead chart real estate.</p>
+</div>
+
+<div class="clean-card">
+  <p>Keyboard/screen-reader affordances are present where it matters most: all 35 checkpoints are real &lt;button&gt; elements with descriptive aria-labels ('Go to 2019-12-09'), making the timeline fully operable without a pointer — rare for custom data-viz scrubbers.</p>
+</div>
+
+<div class="section-title">Priority Order</div>
+
+<div class="priority-list">
+  <div class="priority-item critical">1. contrast-blindness</div>
+  <div class="priority-item warning">2. overloaded-screen</div>
+  <div class="priority-item warning">3. mystery-navigation</div>
+</div>
+
+<div class="footer">
+  Generated by interface-auditor · API Enriched: false · Install the uxuiprinciples API key for full remediation recipes, time estimates, and AI refactor prompts. See uxuiprinciples.com/pricing
+</div>
+
+</body>
+</html>

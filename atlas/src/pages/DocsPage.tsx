@@ -311,6 +311,7 @@ export function DocsPage() {
     >
       {/* ── Header ──────────────────────────────────────────── */}
       <div
+        className="atlas-page"
         style={{
           padding: '48px 40px 24px',
           maxWidth: '720px',
@@ -361,6 +362,7 @@ export function DocsPage() {
 
       {/* ── Table of Contents ──────────────────────────────── */}
       <div
+        className="atlas-page"
         style={{
           maxWidth: '720px',
           margin: '0 auto',
@@ -431,6 +433,7 @@ export function DocsPage() {
       {/* ── Sections ───────────────────────────────────────── */}
       <main
         ref={sectionsRef}
+        className="atlas-page"
         style={{
           maxWidth: '720px',
           margin: '0 auto',

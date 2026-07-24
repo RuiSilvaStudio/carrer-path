@@ -184,12 +184,12 @@ export default function RadarChart({ scores, size = 400, animate = true }: Radar
   return (
     <div ref={containerRef} className="radar-chart-container">
       <svg
-        width={size}
-        height={size + 20}
+        width="100%"
         viewBox={`-20 -20 ${size + 40} ${size + 40}`}
         onClick={handleClick}
         role="img"
         aria-label="Big Five personality radar chart"
+        style={{ maxWidth: size, height: 'auto', display: 'block', margin: '0 auto' }}
       >
         {/* Grid rings */}
         {gridRings.map((ring) => (

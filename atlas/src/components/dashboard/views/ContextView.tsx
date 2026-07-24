@@ -78,8 +78,8 @@ function ContextHeatmap({ demoData }: { demoData: DemoPulse[] }) {
   if (contextList.length === 0) return null;
 
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <svg width={svgW} height={svgH}>
+    <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
+      <svg width="100%" viewBox={`0 0 ${svgW} ${svgH}`} style={{ minWidth: svgW, display: 'block' }}>
         <g ref={containerRef}>
           {TRAIT_CONFIG.map((t, ci) => (
             <text
@@ -401,9 +401,9 @@ export function ContextView({ demoData, baseline, dataSource }: ContextViewProps
     return (
       <div ref={containerRef}>
         {/* ── Heatmap + Variance ─────────────────────────── */}
-        <div style={{
+        <div className="atlas-grid-auto" style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
           gap: '20px',
           marginBottom: '20px',
         }}>
@@ -427,9 +427,9 @@ export function ContextView({ demoData, baseline, dataSource }: ContextViewProps
         </div>
 
         {/* ── Stress Delta + DIAMONDS ────────────────────── */}
-        <div style={{
+        <div className="atlas-grid-auto" style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
           gap: '20px',
           marginBottom: '20px',
         }}>
@@ -481,9 +481,9 @@ export function ContextView({ demoData, baseline, dataSource }: ContextViewProps
           subtitle="Your self-reported situational context at baseline"
           data-anim
         >
-          <div style={{
+          <div className="atlas-grid-auto" style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
             gap: '12px',
           }}>
             {Object.entries(contextAnswers).map(([key, value]) => (

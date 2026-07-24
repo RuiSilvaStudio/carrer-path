@@ -299,7 +299,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
   // ── Render ──────────────────────────────────────────────────────
   if (phase === 'welcome') {
     return (
-      <div ref={sectionRef} style={{ padding: '60px 40px', maxWidth: '720px', margin: '0 auto' }}>
+      <div ref={sectionRef} className="atlas-page atlas-page-sm" style={{ padding: '60px 40px', maxWidth: '720px', margin: '0 auto' }}>
         <div style={{
           fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 500,
           letterSpacing: '0.15em', textTransform: 'uppercase',
@@ -373,7 +373,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
 
   if (phase === 'complete' && scores) {
     return (
-      <div ref={sectionRef} style={{ padding: '60px 40px', maxWidth: '720px', margin: '0 auto', textAlign: 'center' }}>
+      <div ref={sectionRef} className="atlas-page atlas-page-sm" style={{ padding: '60px 40px', maxWidth: '720px', margin: '0 auto', textAlign: 'center' }}>
         <div style={{
           fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 500,
           letterSpacing: '0.15em', textTransform: 'uppercase',
@@ -489,7 +489,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
 
   // ── Active assessment view (progress bar + content) ──────────
   return (
-    <div style={{ position: 'relative', minHeight: '100vh' }}>
+    <div style={{ position: 'relative', minHeight: '100dvh' }}>
       {/* Progress bar */}
       <div style={{
         position: 'fixed', top: 0, left: 0, right: 0,
@@ -503,7 +503,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
         }} />
       </div>
 
-      <div ref={sectionRef} style={{ padding: '60px 40px 80px', maxWidth: '720px', margin: '0 auto' }}>
+      <div ref={sectionRef} className="atlas-page atlas-page-sm" style={{ padding: '60px 40px 80px', maxWidth: '720px', margin: '0 auto' }}>
         {/* Phase header */}
         <div style={{ marginBottom: '32px' }}>
           <div style={{
