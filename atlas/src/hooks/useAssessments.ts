@@ -6,6 +6,8 @@ export function useAssessments(userId: string | null) {
   const [baseline, setBaseline] = useState<Assessment | null>(null);
   const [pulses, setPulses] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   // Track which userId the data was fetched for — prevents stale-data race condition
   const [fetchedForUserId, setFetchedForUserId] = useState<string | null>(null);
 
@@ -14,11 +16,13 @@ export function useAssessments(userId: string | null) {
       setBaseline(null);
       setPulses([]);
       setLoading(false);
+      setError(null);
       setFetchedForUserId(null);
       return;
     }
 
     setLoading(true);
+    setError(null);
 
     async function fetchAssessments() {
       try {
@@ -35,18 +39,26 @@ export function useAssessments(userId: string | null) {
         const ps = assessments.filter(a => a.type === 'pulse');
         setBaseline(bl);
         setPulses(ps);
-      } catch (e) {
+      } catch (e: any) {
         console.error('Failed to fetch assessments:', e);
+        setError(e?.message || 'Could not load your data.');
       }
       setFetchedForUserId(userId!);
       setLoading(false);
     }
 
     fetchAssessments();
-  }, [userId]);
+  }, [userId, retryCount]);
 
   // Data is only ready when fetched for the exact current userId
   const ready = fetchedForUserId === userId;
 
-  return { baseline, pulses, loading: loading || !ready, ready };
+  return {
+    baseline,
+    pulses,
+    loading: loading || !ready,
+    ready,
+    error,
+    refetch: () => setRetryCount(c => c + 1),
+  };
 }

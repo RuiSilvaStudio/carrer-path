@@ -9,6 +9,7 @@ import RadarChart from '../charts/RadarChart';
 import { SD3Bars } from '../charts/SD3Bars';
 import { ICARScore } from '../charts/ICARScore';
 import { Card } from '../../ui/Card';
+import { EmptyState } from '../../ui/EmptyState';
 import { InsightStrip } from '../../ui/InsightStrip';
 
 interface TrajectoryViewProps {
@@ -143,6 +144,7 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
   const { scrubIndex, setScrubIndex } = useDashboardState();
   const containerRef = useRef<HTMLDivElement>(null);
   const [smoothing, setSmoothing] = useState<'raw' | 'daily' | 'weekly'>('daily');
+  const [showDetails, setShowDetails] = useState(false);
 
   // GSAP entrance for cards
   useGSAP(() => {
@@ -212,7 +214,12 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
   // ═══════════════════════════════════════════════════════════════
   if (dataSource === 'demo') {
     if (demoTrajectory.length === 0) {
-      return <div style={{ color: 'var(--color-text-muted)', padding: '40px' }}>No demo data available.</div>;
+      return (
+        <EmptyState
+          title="No trajectory data yet."
+          body="Complete a few pulses and your trait trajectory will appear here."
+        />
+      );
     }
 
     const safeScrub = Math.min(scrubIndex, smoothedTrajectory.length - 1);
@@ -418,25 +425,48 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
         </div>
       </div>
 
-      {/* ── SD3 + ICAR ─────────────────────────────────── */}
+      {/* ── SD3 + ICAR (progressive disclosure — collapsed by default) ── */}
       {(baseline.scores.sd3 || baseline.scores.icar) && (
-        <div className="atlas-grid-auto" style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: '20px',
-          marginTop: '20px',
-        }}>
-          {baseline.scores.sd3 && (
-            <Card label="Dark Triad" title="SD3 Scores" data-anim>
-              <div style={{ maxWidth: '400px' }}>
-                <SD3Bars sd3={baseline.scores.sd3} />
-              </div>
-            </Card>
-          )}
-          {baseline.scores.icar && (
-            <Card label="Cognitive" title="ICAR Score" data-anim>
-              <ICARScore icar={baseline.scores.icar} />
-            </Card>
+        <div style={{ marginTop: '20px' }}>
+          <button
+            onClick={() => setShowDetails(d => !d)}
+            aria-expanded={showDetails}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontFamily: 'var(--font-mono)', fontSize: '11px',
+              textTransform: 'uppercase', letterSpacing: '0.12em',
+              color: 'var(--color-text-dim)', padding: '8px 0',
+              minHeight: 'var(--tap)',
+            }}
+          >
+            <span style={{
+              display: 'inline-block',
+              transform: showDetails ? 'rotate(90deg)' : 'rotate(0deg)',
+              transition: 'transform 0.2s ease',
+            }}>▸</span>
+            Baseline details (SD3 · ICAR)
+          </button>
+          {showDetails && (
+            <div className="atlas-grid-auto" style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: '20px',
+              marginTop: '8px',
+            }}>
+              {baseline.scores.sd3 && (
+                <Card label="Dark Triad" title="SD3 Scores" data-anim>
+                  <div style={{ maxWidth: '400px' }}>
+                    <SD3Bars sd3={baseline.scores.sd3} />
+                  </div>
+                </Card>
+              )}
+              {baseline.scores.icar && (
+                <Card label="Cognitive" title="ICAR Score" data-anim>
+                  <ICARScore icar={baseline.scores.icar} />
+                </Card>
+              )}
+            </div>
           )}
         </div>
       )}

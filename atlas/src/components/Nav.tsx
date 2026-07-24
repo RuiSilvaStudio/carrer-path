@@ -24,7 +24,7 @@ export function Nav() {
     color: active ? 'var(--color-accent)' : 'var(--color-text-dim)',
     borderBottom: active ? '1px solid var(--color-accent)' : '1px solid transparent',
     paddingBottom: '2px', fontFamily: 'var(--font-mono)',
-    fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em',
+    fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.12em',
     transition: 'color 0.2s ease',
   });
 

@@ -14,7 +14,7 @@
 
   --color-text: #e8dfd3;
   --color-text-muted: #a89a87;
-  --color-text-dim: #756657;
+  --color-text-dim: #9b8a76; /* ≥4.5:1 on bg+surface (was #756657 @3.2:1) */
 
   --color-accent: #d4a574;
   --color-accent-bright: #e8b884;
@@ -50,7 +50,7 @@
 
   --color-text: #2a2218;
   --color-text-muted: #6b5d4f;
-  --color-text-dim: #9a8a7a;
+  --color-text-dim: #7a6a58; /* ≥4.5:1 on bg+surface (was #9a8a7a @3.15:1) */
 
   --color-accent: #b8860b;
   --color-accent-bright: #a07008;
@@ -135,9 +135,14 @@ svg, img { max-width: 100%; height: auto; }
     overflow-x: auto !important;
     scroll-snap-type: x proximity;
     -webkit-overflow-scrolling: touch;
+    /* fade edge signals scrollable overflow */
+    -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    scrollbar-width: none;
   }
+  .atlas-nav::-webkit-scrollbar { display: none; }
   .atlas-nav button {
-    font-size: 11px !important;
+    font-size: 12px !important;
     padding: 10px 0 !important;
     min-height: var(--tap);
     scroll-snap-align: start;

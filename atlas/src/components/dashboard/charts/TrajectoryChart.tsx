@@ -847,7 +847,10 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
                     transform: 'translate(-50%, -50%)',
                     opacity: isActive ? 1 : 0.7,
                     cursor: 'pointer',
-                    padding: 0,
+                    /* expand touch target to ~32px, keep small visual dot */
+                    padding: '11px',
+                    margin: '-11px',
+                    backgroundClip: 'content-box',
                     transition: 'transform 0.15s ease, opacity 0.15s ease, background 0.15s ease',
                     boxShadow: isActive ? '0 0 8px rgba(212,165,116,0.5)' : 'none',
                   }}

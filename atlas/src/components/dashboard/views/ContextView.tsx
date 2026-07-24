@@ -3,6 +3,7 @@ import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import type { DemoPulse, Assessment } from '../../../types';
 import { Card } from '../../ui/Card';
+import { EmptyState } from '../../ui/EmptyState';
 import { InfoTooltip } from '../../ui/InfoTooltip';
 
 interface ContextViewProps {
@@ -75,7 +76,14 @@ function ContextHeatmap({ demoData }: { demoData: DemoPulse[] }) {
     gsap.fromTo(cells, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power2.out', stagger: { each: 0.02, from: 'start' } });
   }, { scope: containerRef, dependencies: [demoData] });
 
-  if (contextList.length === 0) return null;
+  if (contextList.length === 0) {
+    return (
+      <EmptyState
+        title="No context patterns yet."
+        body="Tag a context (Work, Home, Social…) when you complete pulses. After a few, this heatmap shows how your traits shift by situation."
+      />
+    );
+  }
 
   return (
     <div style={{ overflowX: 'auto', maxWidth: '100%' }}>

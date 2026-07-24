@@ -116,6 +116,8 @@ export function WeeklyPulse() {
   const [baselineScores, setBaselineScores] = useState<BigFiveScores | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [statusError, setStatusError] = useState('');
+  const [statusRetry, setStatusRetry] = useState(0);
 
   const itemsRef = useRef<HTMLDivElement>(null);
 
@@ -168,10 +170,11 @@ export function WeeklyPulse() {
         }
       } catch (err) {
         console.error('Failed to check pulse status:', err);
+        setStatusError('Could not load your pulse status. Check your connection and retry.');
       }
     }
     checkStatus();
-  }, [user?.id]);
+  }, [user?.id, statusRetry]);
 
   const pulseItems = generatePulseItems(pulseNumber);
   const allItemsAnswered = pulseItems.every((item) => responses[`ipip_${item.ipipId}`] !== undefined);
@@ -334,6 +337,27 @@ export function WeeklyPulse() {
           </div>
         </div>
 
+        {statusError && (
+          <div style={{
+            padding: '14px 18px', background: 'var(--color-surface)',
+            border: '1px solid var(--color-danger)', borderRadius: '4px',
+            marginBottom: '24px', fontSize: '13px', color: 'var(--color-danger)',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px',
+          }}>
+            <span>{statusError}</span>
+            <button
+              onClick={() => { setStatusError(''); setStatusRetry(r => r + 1); }}
+              style={{
+                padding: '6px 14px', background: 'none', border: '1px solid var(--color-danger)',
+                borderRadius: '4px', color: 'var(--color-danger)', fontSize: '12px',
+                cursor: 'pointer', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap',
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         <button
           onClick={() => setPhase('items')}
           style={{
@@ -441,7 +465,7 @@ export function WeeklyPulse() {
                     color: delta > 0 ? 'var(--color-success)' : delta < 0 ? 'var(--color-danger)' : 'var(--color-text-dim)',
                     marginTop: '2px',
                   }}>
-                    {delta > 0 ? '+' : ''}{delta}
+                    {delta > 0 ? '▲ +' : delta < 0 ? '▼ ' : '· '}{delta}
                   </div>
                 </div>
               );

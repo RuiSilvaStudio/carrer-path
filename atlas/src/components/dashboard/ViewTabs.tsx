@@ -1,11 +1,11 @@
 import { useDashboardState } from '../../state/DashboardContext';
 import type { ViewName } from '../../types';
 
-const TABS: { id: ViewName; num: string; label: string }[] = [
-  { id: 'trajectory', num: '01', label: 'Trajectory' },
-  { id: 'distribution', num: '02', label: 'Distribution' },
-  { id: 'context', num: '03', label: 'Context' },
-  { id: 'rhythm', num: '04', label: 'Rhythm' },
+const TABS: { id: ViewName; num: string; label: string; hint: string }[] = [
+  { id: 'trajectory', num: '01', label: 'Trajectory', hint: 'Over time' },
+  { id: 'distribution', num: '02', label: 'Distribution', hint: 'Profile shape' },
+  { id: 'context', num: '03', label: 'Context', hint: 'By situation' },
+  { id: 'rhythm', num: '04', label: 'Rhythm', hint: 'Daily rhythm' },
 ];
 
 export function ViewTabs() {
@@ -28,7 +28,7 @@ export function ViewTabs() {
               marginRight: '24px',
               minHeight: 'var(--tap)',
               fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
+              fontSize: '12px',
               textTransform: 'uppercase',
               letterSpacing: '0.12em',
               color: active ? 'var(--color-accent)' : 'var(--color-text-dim)',
@@ -41,7 +41,15 @@ export function ViewTabs() {
             <span style={{ color: active ? 'var(--color-accent)' : 'var(--color-text-dim)' }}>
               {tab.num}
             </span>
-            {tab.label}
+            <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '1px' }}>
+              <span>{tab.label}</span>
+              <span style={{
+                fontSize: '9px', textTransform: 'none', letterSpacing: '0.02em',
+                color: 'var(--color-text-dim)', fontFamily: 'var(--font-sans)',
+              }}>
+                {tab.hint}
+              </span>
+            </span>
           </button>
         );
       })}

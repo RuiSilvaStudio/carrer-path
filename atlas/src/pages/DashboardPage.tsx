@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { EmptyState } from '../components/ui/EmptyState';
 import { useAuth } from '../hooks/useAuth';
 import { useAssessments } from '../hooks/useAssessments';
 import { useDemoData } from '../hooks/useDemoData';
@@ -13,7 +14,7 @@ import { RhythmView } from '../components/dashboard/views/RhythmView';
 export function DashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { baseline, pulses, loading } = useAssessments(user?.id ?? null);
+  const { baseline, pulses, loading, error: loadError, refetch } = useAssessments(user?.id ?? null);
   const { demoData, loading: demoLoading } = useDemoData();
   const { view } = useDashboardState();
 
@@ -39,6 +40,19 @@ export function DashboardPage() {
       phase: count === 0 ? 'Baseline only' : `${count + 1} data points`,
     };
   }, [pulses, baseline, user]);
+
+  if (loadError) {
+    return (
+      <div style={{ padding: '60px 40px', maxWidth: '1200px', margin: '0 auto' }}>
+        <EmptyState
+          title="Could not load your data."
+          body={loadError}
+          cta="Retry"
+          onCta={refetch}
+        />
+      </div>
+    );
+  }
 
   if (loading || demoLoading) {
     return (
@@ -149,17 +163,28 @@ export function DashboardPage() {
 
       {/* ── Active View ──────────────────────────────────── */}
       <main>
-        {view === 'trajectory' && (
-          <TrajectoryView demoData={demoData} baseline={baseline} pulses={pulses} dataSource="user" />
-        )}
-        {view === 'distribution' && (
-          <DistributionView demoData={demoData} baseline={baseline} pulses={pulses} dataSource="user" />
-        )}
-        {view === 'context' && (
-          <ContextView demoData={demoData} baseline={baseline} pulses={pulses} dataSource="user" />
-        )}
-        {view === 'rhythm' && (
-          <RhythmView demoData={demoData} baseline={baseline} pulses={pulses} dataSource="user" />
+        {!baseline ? (
+          <EmptyState
+            title="No baseline yet — this is where you start."
+            body="The baseline is a one-time, ~25-minute assessment that establishes your starting trait profile. Every pulse after it builds your trajectory."
+            cta="Take your baseline →"
+            onCta={() => navigate('/baseline')}
+          />
+        ) : (
+          <>
+            {view === 'trajectory' && (
+              <TrajectoryView demoData={demoData} baseline={baseline} pulses={pulses} dataSource="user" />
+            )}
+            {view === 'distribution' && (
+              <DistributionView demoData={demoData} baseline={baseline} pulses={pulses} dataSource="user" />
+            )}
+            {view === 'context' && (
+              <ContextView demoData={demoData} baseline={baseline} pulses={pulses} dataSource="user" />
+            )}
+            {view === 'rhythm' && (
+              <RhythmView demoData={demoData} baseline={baseline} pulses={pulses} dataSource="user" />
+            )}
+          </>
         )}
       </main>
 
