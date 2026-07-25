@@ -188,6 +188,16 @@ def fetch_adzuna_all(env):
     return out
 
 
+def canonical_url(url):
+    """Strip tracking params (Adzuna ?se=, utm_*) so the same ad fetched via
+    different queries/countries dedupes correctly."""
+    if not url:
+        return url
+    url = re.sub(r"[?&]se=[^&]+", "", url)
+    url = re.sub(r"[?&]utm_[^&]+", "", url)
+    return url.rstrip("?&")
+
+
 def dedupe_best(candidates):
     best = {}
     for r in candidates:
@@ -332,8 +342,20 @@ def main():
 
     conn = db_connect()
     cur = conn.cursor()
+
+    # Canonicalize URLs in-table first (strip tracking params) so on-conflict
+    # dedupe works against previously-inserted tracking-laden URLs.
+    cur.execute(
+        "update job_listings set url = regexp_replace(url, '[?&](se|utm_[^=]+)=[^&]+', '', 'g') where user_id=%s and url ~ '[?&](se|utm_)='",
+        (RUI_USER_ID,),
+    )
+    cleaned = cur.rowcount
+    if cleaned:
+        print(f"Canonicalized {cleaned} existing URLs")
+
     inserted = 0
     for r in candidates:
+        r["url"] = canonical_url(r["url"])
         cur.execute(
             """
             insert into public.job_listings
