@@ -25,6 +25,31 @@ function scoreLabel(score: number | null): string {
   return `${Math.round(score * 100)}`;
 }
 
+// ── Publish-date helpers ────────────────────────────────────────
+function daysSince(dateStr: string | null): number | null {
+  if (!dateStr) return null;
+  const d = new Date(dateStr + (dateStr.length === 10 ? 'T00:00:00' : ''));
+  if (isNaN(d.getTime())) return null;
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+
+function postedLabel(dateStr: string | null): string | null {
+  const days = daysSince(dateStr);
+  if (days == null) return null;
+  if (days <= 0) return 'Posted today';
+  if (days === 1) return 'Posted 1 day ago';
+  if (days < 30) return `Posted ${days} days ago`;
+  const months = Math.floor(days / 30);
+  return months === 1 ? 'Posted 1+ month ago' : `Posted ${months}+ months ago`;
+}
+
+function stalenessColor(days: number | null): string {
+  if (days == null) return 'var(--color-text-dim)';
+  if (days <= 14) return 'var(--color-success, #6ec48a)';   // fresh
+  if (days <= 45) return 'var(--color-warning, #d4a574)';   // aging
+  return 'var(--color-danger, #c46e6e)';                    // stale — verify before applying
+}
+
 interface Props {
   jobs: JobListing[];
   addJob: (job: NewJob) => Promise<void>;
@@ -260,6 +285,15 @@ function JobCard({ job, expanded, onToggle, onStatusChange, onDelete }: {
           <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
             {job.company}{job.company && job.location ? ' · ' : ''}{job.location}
           </div>
+          {postedLabel(job.posted_at) && (
+            <div style={{
+              fontSize: '11px', fontFamily: 'var(--font-mono)',
+              color: stalenessColor(daysSince(job.posted_at)),
+              marginTop: '3px', letterSpacing: '0.02em',
+            }}>
+              {postedLabel(job.posted_at)}
+            </div>
+          )}
         </div>
         <div style={{
           flexShrink: 0,
