@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useCockpit } from '../../hooks/useCockpit';
+import { useJobListings } from '../../hooks/useJobListings';
 import type { CockpitContact, PipelineStatus } from '../../types/cockpit';
 import type { NewContact, ContactUpdate } from '../../hooks/useCockpit';
 import { CompaniesView } from './CompaniesView';
 import { InterviewPrepView } from './InterviewPrepView';
 import { KnowledgeBaseView } from './KnowledgeBaseView';
 import { ContactLogView } from './ContactLogView';
+import { JobListingsView } from './JobListingsView';
 
 // ── Goals helpers (stored as JSON array string in the text column) ──
 function parseGoals(raw: string): string[] {
@@ -25,13 +27,14 @@ function serializeGoals(goals: string[]): string {
 }
 
 // ── Cockpit tabs ──────────────────────────────────────────────────
-type CockpitTab = 'contacts' | 'companies' | 'interview' | 'kb';
+type CockpitTab = 'contacts' | 'companies' | 'interview' | 'kb' | 'jobs';
 
 const COCKPIT_TABS: { id: CockpitTab; num: string; label: string }[] = [
   { id: 'contacts', num: '01', label: 'Contacts' },
   { id: 'companies', num: '02', label: 'Companies' },
   { id: 'interview', num: '03', label: 'Interview Prep' },
   { id: 'kb', num: '04', label: 'Knowledge Base' },
+  { id: 'jobs', num: '05', label: 'Job Listings' },
 ];
 
 // ── Pipeline stages (match Supabase text values) ───────────────
@@ -54,6 +57,7 @@ const MESSAGE_TEMPLATES: Record<string, string> = {
 // ── Cockpit component ────────────────────────────────────────────
 export function Cockpit() {
   const { contacts, loading, error, addContact, updateContact, deleteContact } = useCockpit();
+  const { jobs, loading: jobsLoading, error: jobsError, addJob, setJobStatus, deleteJob } = useJobListings();
   const [activeTab, setActiveTab] = useState<CockpitTab>('contacts');
   const [view, setView] = useState<'list' | 'pipeline' | 'add'>('list');
   const [search, setSearch] = useState('');
@@ -530,6 +534,26 @@ export function Cockpit() {
 
       {/* ── Knowledge Base Tab ────────────────────────────────── */}
       {activeTab === 'kb' && <KnowledgeBaseView />}
+
+      {/* ── Job Listings Tab ──────────────────────────────────── */}
+      {activeTab === 'jobs' && (
+        jobsLoading ? (
+          <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+              Loading job listings…
+            </div>
+          </div>
+        ) : jobsError ? (
+          <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--color-danger)' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '8px' }}>
+              Error loading job listings
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>{jobsError}</div>
+          </div>
+        ) : (
+          <JobListingsView jobs={jobs} addJob={addJob} setJobStatus={setJobStatus} deleteJob={deleteJob} />
+        )
+      )}
     </div>
   );
 }
