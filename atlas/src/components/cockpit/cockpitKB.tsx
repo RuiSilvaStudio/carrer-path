@@ -3,6 +3,7 @@ import type React from 'react';
 // ── Knowledge Base sections (static JSX content) ───────────────────
 export interface KBSection {
   title: string;
+  preview?: string; // one-line summary shown when the card is collapsed
   content: React.ReactNode;
 }
 
@@ -42,6 +43,7 @@ const bodyText: React.CSSProperties = {
 export const KB_SECTIONS: KBSection[] = [
   {
     title: 'Headline',
+    preview: 'Senior Creative Operations Leader | Ex-SVP, FARFETCH',
     content: (
       <div style={{ borderLeft: '3px solid var(--color-accent)', paddingLeft: '14px', fontStyle: 'italic', fontFamily: 'var(--font-serif)', fontSize: '16px', color: 'var(--color-text)' }}>
         <strong>Senior Creative Operations Leader | Ex-SVP, FARFETCH | Content Supply Chain &amp; Automation</strong>
@@ -50,6 +52,7 @@ export const KB_SECTIONS: KBSection[] = [
   },
   {
     title: 'LinkedIn Open to Work titles',
+    preview: 'Content Director · Creative Services Director · Director of Operations',
     content: (
       <>
         <div style={bodyText}>
@@ -69,6 +72,7 @@ export const KB_SECTIONS: KBSection[] = [
   },
   {
     title: 'Target job titles (search terms)',
+    preview: 'VP Creative Services · Head of Creative Production · Content Supply Chain…',
     content: (
       <>
         <p style={bodyText}>
@@ -80,6 +84,7 @@ export const KB_SECTIONS: KBSection[] = [
   },
   {
     title: 'About opening',
+    preview: '"I build the creative production systems that let creative work ship globally…"',
     content: (
       <div style={{ borderLeft: '3px solid var(--color-accent)', paddingLeft: '14px', fontStyle: 'italic', fontFamily: 'var(--font-serif)', fontSize: '16px', color: 'var(--color-text)' }}>
         I build the creative production systems that let creative work ship globally without losing quality.
@@ -88,6 +93,7 @@ export const KB_SECTIONS: KBSection[] = [
   },
   {
     title: 'Studio framing',
+    preview: '"A side venture, a labor of love I keep running when time allows."',
     content: (
       <div style={{ borderLeft: '3px solid var(--color-accent)', paddingLeft: '14px', fontStyle: 'italic', fontFamily: 'var(--font-serif)', fontSize: '16px', color: 'var(--color-text)' }}>
         A side venture, a labor of love I keep running when time allows.
@@ -96,6 +102,7 @@ export const KB_SECTIONS: KBSection[] = [
   },
   {
     title: 'Leadership archetype',
+    preview: 'Precise, analytical, results-driven operational leader — systems + care for people',
     content: (
       <p style={bodyText}>
         A precise, analytical, results-driven operational leader who combines systems thinking with genuine care for people — and whose edge is driving hard for perfection and control, sometimes harder than the situation needs.
@@ -104,6 +111,7 @@ export const KB_SECTIONS: KBSection[] = [
   },
   {
     title: 'Top 5 (CliftonStrengths)',
+    preview: 'Relator · Deliberative · Learner · Analytical · Responsibility',
     content: (
       <>
         <p style={bodyText}>1. Relator · 2. Deliberative · 3. Learner · 4. Analytical · 5. Responsibility</p>
@@ -113,6 +121,7 @@ export const KB_SECTIONS: KBSection[] = [
   },
   {
     title: 'DiSC',
+    preview: 'High C (primary) · High i (secondary) — "Prático"',
     content: (
       <p style={bodyText}>
         <span style={pillStyle}>High C</span>{' '}
@@ -124,6 +133,7 @@ export const KB_SECTIONS: KBSection[] = [
   },
   {
     title: 'Development areas (interview-ready)',
+    preview: 'Under-claims strengths · Perfectionism answer · Relator networking',
     content: (
       <div>
         <div style={decisionStyle}>• <strong>Blind spot:</strong> Under-claims strengths. LCP 360° showed others rate you ~10 pts higher. Practice saying "I drove X" plainly.</div>
@@ -134,6 +144,7 @@ export const KB_SECTIONS: KBSection[] = [
   },
   {
     title: 'Credentials to pursue',
+    preview: 'MIT Gen AI ⭐ · Google Cloud AI Leader · PMP · Adobe Workfront',
     content: (
       <>
         <div style={bodyText}>
@@ -150,6 +161,7 @@ export const KB_SECTIONS: KBSection[] = [
   },
   {
     title: 'Credibility assets',
+    preview: 'DAM talk (2018) · Org chart · Kaizen award · ruisilvastudio.com',
     content: (
       <div style={bodyText}>
         <div style={{ marginBottom: '4px' }}>• <a href="https://www.youtube.com/watch?v=5moqOisGRYA" target="_blank" rel="noreferrer" style={{ color: 'var(--color-accent)' }}>Henry Stewart DAM talk (2018)</a> — add to LinkedIn Featured</div>

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rui Silva — CV</title>
+<style>
+  /* ── ATS-clean, single column, generous spacing ── */
+  @page {
+    size: A4;
+    margin: 16mm 22mm 16mm 22mm;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 9.5pt;
+    line-height: 1.6;
+    color: #1a1a1a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── Header ── */
+  header {
+    text-align: center;
+    border-bottom: 2px solid #2a2a2a;
+    padding-bottom: 10px;
+    margin-bottom: 18px;
+  }
+  header h1 {
+    font-size: 18pt;
+    letter-spacing: 3px;
+    font-weight: normal;
+    margin-bottom: 4px;
+    color: #1a1a1a;
+  }
+  header .headline {
+    font-size: 10pt;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    letter-spacing: 0.5px;
+    color: #444;
+    margin-bottom: 8px;
+  }
+  header .contact {
+    font-size: 8.5pt;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    color: #555;
+    line-height: 1.6;
+  }
+  header .contact span { margin: 0 4px; }
+  header .geo {
+    font-size: 8.5pt;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    color: #666;
+    margin-top: 7px;
+    font-style: italic;
+  }
+
+  /* ── Section headings ── */
+  h2 {
+    font-size: 9.5pt;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 4px;
+    margin-top: 30px;
+    margin-bottom: 14px;
+    color: #2a2a2a;
+  }
+
+  /* ── Executive Summary ── */
+  .summary {
+    font-size: 9pt;
+    line-height: 1.6;
+    text-align: justify;
+    color: #333;
+  }
+
+  /* ── Key Achievements callout ── */
+  .achievements {
+    background: #f7f5f0;
+    border-left: 3px solid #2a2a2a;
+    padding: 12px 16px;
+    margin: 14px 0 6px 0;
+  }
+  .achievements h2 {
+    margin-top: 0;
+    border: none;
+    padding: 0;
+    font-size: 9pt;
+    margin-bottom: 6px;
+  }
+  .achievements ul {
+    list-style: none;
+    margin-top: 6px;
+  }
+  .achievements li {
+    font-size: 8.8pt;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    padding: 3px 0;
+    line-height: 1.5;
+  }
+  .achievements li strong {
+    font-size: 9pt;
+    font-family: 'Georgia', serif;
+  }
+
+  /* ── Core Competencies ── */
+  .competencies {
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-size: 8.5pt;
+    line-height: 1.6;
+  }
+  .competencies p { margin-bottom: 5px; }
+  .competencies strong { font-family: 'Georgia', serif; font-size: 9pt; }
+
+  /* ── Experience ── */
+  .company-block {
+    margin-bottom: 16px;
+  }
+  .company-header {
+    font-size: 10pt;
+    font-weight: bold;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    margin-bottom: 2px;
+    color: #1a1a1a;
+  }
+  .company-header .dates {
+    font-weight: normal;
+    font-size: 8.5pt;
+    color: #666;
+    margin-left: 6px;
+  }
+  .progression {
+    font-size: 8.2pt;
+    color: #777;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-style: italic;
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+  .role-title {
+    font-size: 9pt;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-weight: bold;
+    margin-top: 12px;
+    margin-bottom: 0px;
+    color: #1a1a1a;
+  }
+  .role-scope {
+    font-size: 8.5pt;
+    font-style: italic;
+    margin: 5px 0 8px 0;
+    line-height: 1.5;
+    color: #555;
+  }
+  ul.bullets {
+    list-style: none;
+    margin-bottom: 4px;
+  }
+  /* Headline bullet — the one key achievement */
+  ul.bullets li.headline {
+    font-size: 9pt;
+    padding: 5px 0 5px 14px;
+    position: relative;
+    line-height: 1.5;
+    border-bottom: 1px dotted #ddd;
+    margin-bottom: 4px;
+  }
+  ul.bullets li.headline::before {
+    content: "▸";
+    position: absolute;
+    left: 1px;
+    top: 5px;
+    font-size: 8pt;
+    color: #2a2a2a;
+  }
+  /* Short bullets — punchy supporting points */
+  ul.bullets li.short {
+    font-size: 8.5pt;
+    padding: 3px 0 3px 14px;
+    position: relative;
+    line-height: 1.5;
+    color: #333;
+  }
+  ul.bullets li.short::before {
+    content: "·";
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    font-size: 10pt;
+    color: #999;
+  }
+
+  /* ── Education / Languages ── */
+  .simple-list {
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-size: 8.5pt;
+    list-style: none;
+    line-height: 1.6;
+  }
+  .simple-list li { padding: 3px 0; }
+  .simple-list li strong { font-family: 'Georgia', serif; font-size: 9pt; }
+
+  /* ── Two-column footer block ── */
+  .footer-block {
+    display: flex;
+    gap: 32px;
+    margin-top: 12px;
+  }
+  .footer-block > div { flex: 1; }
+  .footer-block h2 {
+    margin-top: 0;
+  }
+  .footer-block h2 + h2 {
+    margin-top: 26px;
+  }
+
+  /* ── Studio section ── */
+  .studio { margin-bottom: 16px; }
+
+  /* Avoid breaking inside role blocks */
+  .company-block, .studio { page-break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<header>
+  <h1>RUI SILVA</h1>
+  <div class="headline">Senior Creative Operations Leader | Ex-SVP, FARFETCH</div>
+  <div class="contact">
+    <span>Guimarães, Portugal</span>|
+    <span>+351 91 411 39 33</span>|
+    <span>rui.silva.gmr@gmail.com</span>|
+    <span>linkedin.com/in/ruisilvagmr</span>|
+    <span>ruisilvastudio.com</span>
+  </div>
+  <div class="geo">Based in Portugal | Open to remote (EU/global) | EU work authorization</div>
+</header>
+
+<!-- ═══════════════ EXECUTIVE SUMMARY ═══════════════ -->
+<section>
+  <h2>Executive Summary</h2>
+  <p class="summary">
+    Senior Creative Operations leader with 15 years scaling the creative engine of one of the world's largest luxury fashion platforms. Rose from Production Manager to SVP at FARFETCH, leading a 600+ FTE global organization (900+ with seasonal staff) across 5 countries with a €40M+ P&amp;L. Delivered a 10%→1% reduction in operational spend through Lean/Kaizen, AI/ML automation, and Virtual Model technology without dropping luxury quality standards. Trained originally in textile and graphic design, which is why I understand the craft side as well as the operational side.
+  </p>
+</section>
+
+<!-- ═══════════════ KEY ACHIEVEMENTS ═══════════════ -->
+<section class="achievements">
+  <h2>Key Achievements</h2>
+  <ul>
+    <li><strong>10% → 1%</strong> — operational spend as % of sales, without dropping quality</li>
+    <li><strong>€40M+ P&amp;L</strong> — annual operational spend across 5-country organization</li>
+    <li><strong>600+ FTE</strong> — 900+ with seasonal staff, across Portugal, UK, US, Hong Kong</li>
+    <li><strong>3.6M+ assets/yr</strong> — 800k SKUs, 4–5 day SLA from arrival to live</li>
+    <li><strong>€60 → <€30</strong> — cost-per-item via Virtual Model technology</li>
+    <li><strong>80%+ automation</strong> — product categorization; ML translation in 12+ languages</li>
+    <li><strong>30%+ efficiency</strong> — via Kaizen; 1st place, Kaizen Institute &amp; APGEI award</li>
+  </ul>
+</section>
+
+<!-- ═══════════════ CORE COMPETENCIES ═══════════════ -->
+<section>
+  <h2>Core Competencies</h2>
+  <div class="competencies">
+    <p><strong>Strategic Leadership</strong> — Global org design (600–900 HC), P&amp;L (€40M+), corporate strategy, cross-cultural teams (PT/UK/US/HK)</p>
+    <p><strong>Operational Excellence</strong> — Kaizen/Lean, process engineering, RPA, TD-ABC</p>
+    <p><strong>Creative Content at Scale</strong> — DAM (3.6M+ assets/yr), content supply chain, luxury QA</p>
+    <p><strong>Technology Transformation</strong> — AI/ML content automation, product categorization, machine translation, Virtual Model, RPA</p>
+    <p><strong>Craft &amp; Design</strong> — Graphic, Product Design and Furniture Prototyping; artisanal quality at industrial-scale profitability</p>
+    <p style="margin-top:7px; font-size:8pt; color:#777; line-height:1.5;">Keywords: DAM, Content Supply Chain, Photo Studio Operations, Virtual Model, RPA, Kaizen, Lean, Process Engineering, AI/ML Automation, ML Translation, Product Categorization, Cross-cultural Leadership, P&amp;L Management, Org Design, SLA Management, Luxury QA</p>
+  </div>
+</section>
+
+<!-- ═══════════════ PROFESSIONAL EXPERIENCE ═══════════════ -->
+<section>
+  <h2>Professional Experience</h2>
+
+  <!-- ── FARFETCH ── -->
+  <div class="company-block">
+    <div class="company-header">FARFETCH <span class="dates">| 2009 – February 2024</span></div>
+    <div class="progression">
+      Production Manager → SVP Creative Operations (15 years, 6 promotions)
+    </div>
+
+    <!-- VP/SVP combined -->
+    <div class="role-title">SVP Creative Operations <span style="font-weight:normal;color:#666;">| Feb 2022 – Feb 2024</span></div>
+    <div class="role-title" style="margin-top:3px;">VP Creative Operations <span style="font-weight:normal;color:#666;">| Aug 2018 – Feb 2022</span></div>
+    <div class="role-scope">
+      Owned the end-to-end creative content supply chain, from product arrival to on-platform "live": photography, retouching, styling, copy, translation, categorization, catalogue management, and digital asset production across 5 countries. Led through 4 pillars: Content Development, Content Creation, PPM (Planning, Performance &amp; Management), and SDD (Services Design &amp; Development).
+    </div>
+    <ul class="bullets">
+      <li class="headline">Drove a 10%→1% reduction in operational spend as a percentage of sales, managing a €40M+ annual budget without dropping quality standards.</li>
+      <li class="short">Led 600+ FTE team (900+ with seasonal staff) across PT/UK/US/HK; 6–7 direct reports</li>
+      <li class="short">Built Portugal and Hong Kong studios from scratch; developed and promoted internal talent</li>
+      <li class="short">Delivered 3.6M+ digital assets/yr, 800k SKUs, 4–5 day SLA</li>
+      <li class="short">Virtual Model technology: cut cost-per-item from €60 to <€30</li>
+      <li class="short">80%+ automation of product categorization; ML translation across 12+ languages</li>
+    </ul>
+
+    <!-- Senior Director -->
+    <div class="role-title">Senior Director, Creative Operations <span style="font-weight:normal;color:#666;">| Jan 2017 – Jul 2018</span></div>
+    <div class="role-scope">Guimarães / London / Los Angeles / Hong Kong</div>
+    <ul class="bullets">
+      <li class="short">Expanded creative operations into LA and Hong Kong, building 2 local teams and studios from scratch</li>
+      <li class="short">Aligned production standards across 4 cultural markets with shared workflows and quality gates</li>
+    </ul>
+
+    <!-- Earlier at FARFETCH — narrative reframing -->
+    <div class="role-title" style="font-weight:normal;font-style:italic;color:#777;">Earlier roles at FARFETCH (2009 – 2016)</div>
+    <div style="font-size:8.5pt; line-height:1.5; color:#555; margin-top:5px; margin-bottom:3px; font-style:italic;">
+      Production Manager → Production Director → Global Production Director
+    </div>
+    <div style="font-size:8.7pt; line-height:1.5; color:#444; margin-top:5px;">
+      Built the production engine from the shop floor. These were the years where the operational culture and quality standards that later scaled to 5 countries were formed. Led production across 4 countries reporting to the COO before stepping into the Senior Director role.
+    </div>
+  </div>
+
+  <!-- ── STUDIO ── -->
+  <div class="studio">
+    <div class="company-header">RUI SILVA STUDIO <span class="dates">| Founder &amp; Creative Director | May 2024 – Present</span></div>
+    <div class="role-scope">
+      A contemporary collectible furniture practice: one-of-a-kind pieces in oak, steel, brass, and porcelain. A labor of love kept running when time allows.
+    </div>
+    <ul class="bullets">
+      <li class="short">Designed and launched the Lusitano Collection, handcrafted furniture inspired by Portugal's Lusitano horse</li>
+      <li class="short">Own the full lifecycle: concept, design, sourcing, manufacturing, finishing, brand, website</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════════════ EDUCATION / LANGUAGES ═══════════════ -->
+<div class="footer-block">
+  <div>
+    <h2>Education &amp; Certifications</h2>
+    <ul class="simple-list">
+      <li><strong>Certified Product Owner (CSPO)</strong> — Scrum Alliance</li>
+      <li><strong>CAP — Certificate of Professional Trainer</strong> — AEP</li>
+      <li><strong>Photojournalism</strong> — GI Press Office of Guimarães</li>
+      <li><strong>Multimedia &amp; Web Design</strong> — School of Technology / IPFEL</li>
+      <li>Methods training: Lean Thinking, VSM, SMED, 8D, TD-ABC</li>
+    </ul>
+  </div>
+  <div>
+    <h2>Languages</h2>
+    <ul class="simple-list">
+      <li><strong>Portuguese</strong> (native)</li>
+      <li><strong>English</strong> (professional)</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>
