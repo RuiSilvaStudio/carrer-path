@@ -84,6 +84,25 @@ const cvRole: React.CSSProperties = {
 function BaselineCV() {
   return (
     <div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+        <a
+          href="/cv-rui-silva.pdf"
+          download="Rui-Silva-CV.pdf"
+          style={{
+            fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 500,
+            letterSpacing: '0.1em', textTransform: 'uppercase',
+            color: 'var(--color-accent)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '4px',
+            padding: '6px 12px',
+            textDecoration: 'none',
+            display: 'inline-flex', alignItems: 'center', gap: '6px',
+            transition: 'background 0.15s ease, border-color 0.15s ease',
+          }}
+        >
+          ↓ Download PDF
+        </a>
+      </div>
       <div style={{ ...cvBody, fontStyle: 'italic', marginBottom: '4px' }}>
         Senior Creative Operations Leader | Ex-SVP, FARFETCH — Guimarães, Portugal · linkedin.com/in/ruisilvagmr · ruisilvastudio.com
       </div>
