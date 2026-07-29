@@ -52,11 +52,11 @@
   --color-text-muted: #6b5d4f;
   --color-text-dim: #7a6a58; /* ≥4.5:1 on bg+surface (was #9a8a7a @3.15:1) */
 
-  --color-accent: #b8860b;
-  --color-accent-bright: #a07008;
+  --color-accent: #8a6100; /* ≥4.5:1 on bg+surface (was #b8860b @3.07:1 — failed AA) */
+  --color-accent-bright: #8a6100; /* unified to AA-compliant accent (was #a07008 @4.11:1) */
 
   --color-success: #4a8d7a;
-  --color-warning: #b8860b;
+  --color-warning: #8a6100; /* text use — ≥4.5:1 (was #b8860b @3.07:1) */
   --color-danger: #b5533a;
 
   /* Big Five — Tol bright, original */
@@ -118,6 +118,22 @@ body {
 
 html, body { overflow-x: hidden; }
 svg, img { max-width: 100%; height: auto; }
+
+/* ============================================================
+   GLOBAL FOCUS — single visible indicator for keyboard users.
+   Many inputs set outline:'none' inline; this :focus-visible rule
+   wins for keyboard focus (not mouse clicks) and restores a
+   consistent, on-brand focus ring everywhere.
+   ============================================================ */
+:focus-visible {
+  outline: 2px solid var(--color-accent) !important;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* Mouse/touch users keep the clean look — only keyboard focus shows the ring */
+:focus:not(:focus-visible) {
+  outline: none;
+}
 
 /* Stack two-column dashboard grids to one column on tablet/phone */
 @media (max-width: 720px) {
