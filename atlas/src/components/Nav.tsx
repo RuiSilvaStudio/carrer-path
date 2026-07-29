@@ -30,7 +30,7 @@ export function Nav() {
     background: 'none', border: 'none', cursor: 'pointer',
     color: active ? 'var(--color-accent)' : 'var(--color-text-dim)',
     borderBottom: active ? '1px solid var(--color-accent)' : '1px solid transparent',
-    paddingBottom: '2px', fontFamily: 'var(--font-mono)',
+    padding: '6px 0', minHeight: '32px', fontFamily: 'var(--font-mono)',
     fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.12em',
     transition: 'color 0.2s ease',
   });
@@ -85,6 +85,7 @@ export function Nav() {
               background: 'none', border: 'none', cursor: 'pointer',
               color: 'var(--color-text-dim)', fontFamily: 'var(--font-mono)',
               fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.12em',
+              padding: '6px 0', minHeight: '32px',
             }}
           >
             {theme === 'dark' ? '☀ Light' : '☾ Dark'}

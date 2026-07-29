@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
+import { useReducedMotion } from '../../../lib/motion';
 import type { SD3Scores } from '../../../types';
 
 interface SD3BarsProps {
@@ -14,20 +15,25 @@ const TRAIT_LABELS: { key: keyof SD3Scores; label: string }[] = [
 
 export function SD3Bars({ sd3 }: SD3BarsProps) {
   const barRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const reduced = useReducedMotion();
 
   useEffect(() => {
     TRAIT_LABELS.forEach((trait, i) => {
       const el = barRefs.current[i];
       if (el) {
         const value = sd3[trait.key];
-        gsap.fromTo(
-          el,
-          { width: '0%' },
-          { width: `${value}%`, duration: 0.8, ease: 'power2.out', delay: i * 0.1 }
-        );
+        if (reduced) {
+          el.style.width = `${value}%`;
+        } else {
+          gsap.fromTo(
+            el,
+            { width: '0%' },
+            { width: `${value}%`, duration: 0.8, ease: 'power2.out', delay: i * 0.1 }
+          );
+        }
       }
     });
-  }, [sd3]);
+  }, [sd3, reduced]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

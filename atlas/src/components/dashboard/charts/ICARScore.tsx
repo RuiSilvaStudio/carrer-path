@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import gsap from 'gsap';
+import { useReducedMotion } from '../../../lib/motion';
 import type { ICARScores } from '../../../types';
 
 interface ICARScoreProps {
@@ -9,8 +10,14 @@ interface ICARScoreProps {
 export function ICARScore({ icar }: ICARScoreProps) {
   const barRef = useRef<HTMLDivElement>(null);
   const numberRef = useRef<HTMLSpanElement>(null);
+  const reduced = useReducedMotion();
 
   useEffect(() => {
+    if (reduced) {
+      if (barRef.current) barRef.current.style.width = `${icar.percent}%`;
+      if (numberRef.current) numberRef.current.textContent = String(Math.round(icar.correct));
+      return;
+    }
     if (barRef.current) {
       gsap.fromTo(
         barRef.current,
@@ -31,7 +38,7 @@ export function ICARScore({ icar }: ICARScoreProps) {
         },
       });
     }
-  }, [icar]);
+  }, [icar, reduced]);
 
   return (
     <div>

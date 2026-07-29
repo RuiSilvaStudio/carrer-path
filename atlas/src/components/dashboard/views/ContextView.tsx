@@ -1,5 +1,5 @@
 import { useRef, useMemo } from 'react';
-import { useGSAP } from '@gsap/react';
+import { useGSAP } from '../../../lib/motion';
 import gsap from 'gsap';
 import type { DemoPulse, Assessment } from '../../../types';
 import { Card } from '../../ui/Card';
@@ -86,7 +86,7 @@ function ContextHeatmap({ demoData }: { demoData: DemoPulse[] }) {
   }
 
   return (
-    <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
+    <div className="atlas-heatmap" style={{ overflowX: 'auto', maxWidth: '100%' }}>
       <svg width="100%" viewBox={`0 0 ${svgW} ${svgH}`} style={{ minWidth: svgW, display: 'block' }}>
         <g ref={containerRef}>
           {TRAIT_CONFIG.map((t, ci) => (

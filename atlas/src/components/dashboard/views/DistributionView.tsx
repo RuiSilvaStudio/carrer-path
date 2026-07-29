@@ -1,5 +1,5 @@
 import { useRef, useMemo } from 'react';
-import { useGSAP } from '@gsap/react';
+import { useGSAP } from '../../../lib/motion';
 import gsap from 'gsap';
 import { buildTrajectory } from '../../../lib/trajectory';
 import type { DemoPulse, Assessment, TrajectoryPoint, BigFiveScores } from '../../../types';

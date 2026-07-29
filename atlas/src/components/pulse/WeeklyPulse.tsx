@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useGSAP } from '@gsap/react';
+import { useGSAP } from '../../lib/motion';
 import gsap from 'gsap';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';

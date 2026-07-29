@@ -1,5 +1,5 @@
 import { useRef, useMemo } from 'react';
-import { useGSAP } from '@gsap/react';
+import { useGSAP } from '../../../lib/motion';
 import gsap from 'gsap';
 import type { DemoPulse, Assessment } from '../../../types';
 import { Card } from '../../ui/Card';

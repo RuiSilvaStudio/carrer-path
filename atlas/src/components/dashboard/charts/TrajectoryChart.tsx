@@ -1,5 +1,5 @@
 import { useRef, useState, useMemo, useCallback, useEffect } from 'react';
-import { useGSAP } from '@gsap/react';
+import { useGSAP } from '../../../lib/motion';
 import gsap from 'gsap';
 import * as d3 from 'd3';
 import type { TrajectoryPoint, BigFiveScores } from '../../../types';

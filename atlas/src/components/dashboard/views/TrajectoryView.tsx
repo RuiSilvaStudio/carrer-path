@@ -1,5 +1,5 @@
 import { useRef, useState, useMemo } from 'react';
-import { useGSAP } from '@gsap/react';
+import { useGSAP } from '../../../lib/motion';
 import gsap from 'gsap';
 import { useDashboardState } from '../../../state/DashboardContext';
 import { buildTrajectory } from '../../../lib/trajectory';

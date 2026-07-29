@@ -31,7 +31,7 @@
   --color-stability: #7dc5e0;
 
   --color-grid: #3a2f25;
-  --color-axis: #756657;
+  --color-axis: #a89a87; /* 6.75:1 (was #756657 @3.35) — crisper chart labels on dark */
   --color-tooltip-bg: #2a2218;
 
   --font-serif: "Fraunces", Georgia, serif;
@@ -59,15 +59,15 @@
   --color-warning: #8a6100; /* text use — ≥4.5:1 (was #b8860b @3.07:1) */
   --color-danger: #b5533a;
 
-  /* Big Five — Tol bright, original */
-  --color-openness: #4477AA;
-  --color-conscientiousness: #228833;
-  --color-extraversion: #EE6677;
-  --color-agreeableness: #CCBB44;
-  --color-stability: #66CCEE;
+  /* Big Five — Tol bright, darkened for ≥3:1 on light bg (data-viz legibility) */
+  --color-openness: #3d6b99;        /* 5.27:1 (was #4477AA @4.44) */
+  --color-conscientiousness: #1e7a2e; /* 5.11:1 (was #228833 @4.27) */
+  --color-extraversion: #d45a6a;    /* 3.62:1 (was #EE6677 @2.91) */
+  --color-agreeableness: #8f8226;   /* 3.68:1 (was #CCBB44 @1.84) */
+  --color-stability: #3a8ba8;       /* 3.64:1 (was #66CCEE @1.73) */
 
   --color-grid: #e0d8cc;
-  --color-axis: #9a8a7a;
+  --color-axis: #6b5d4f;            /* 6.0:1 (was #9a8a7a @3.15) */
   --color-tooltip-bg: #ffffff;
 }
 
@@ -197,6 +197,10 @@ svg, img { max-width: 100%; height: auto; }
   .atlas-chart-controls { flex-direction: column !important; align-items: stretch !important; }
   .atlas-chart-toggles { flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
   .atlas-chart-toggles > div { align-self: flex-start; max-width: 100% !important; }
+
+  /* ── Context heatmap: scale the SVG to fit instead of horizontal scroll ── */
+  .atlas-heatmap { overflow-x: visible !important; }
+  .atlas-heatmap svg { min-width: 0 !important; width: 100% !important; height: auto !important; }
 
   .atlas-h1 { font-size: var(--fs-h1-sm) !important; }
 }
