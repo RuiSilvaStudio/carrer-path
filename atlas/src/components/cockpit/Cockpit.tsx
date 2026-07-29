@@ -199,6 +199,7 @@ export function Cockpit() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
+              data-active={active ? 'true' : 'false'}
               style={{
                 background: 'none',
                 border: 'none',
@@ -220,7 +221,7 @@ export function Cockpit() {
               <span style={{ color: active ? 'var(--color-accent)' : 'var(--color-text-dim)' }}>
                 {tab.num}
               </span>
-              {tab.label}
+              <span>{tab.label}</span>
             </button>
           );
         })}

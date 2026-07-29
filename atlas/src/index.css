@@ -161,26 +161,38 @@ svg, img { max-width: 100%; height: auto; }
     padding-bottom: 44px !important;
   }
 
-  /* ── View tabs: 2×2 grid, no horizontal scroll ── */
+  /* ── View tabs: condensed SINGLE ROW (NN/g — never stack a tab list) ──
+     Inactive tabs collapse to just their number; the active tab expands to
+     show its full label. Single row keeps the underline indicator unambiguous. */
   .atlas-tabs {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    display: flex !important;
+    grid-template-columns: none !important;
     gap: 0 !important;
     overflow-x: visible !important;
   }
   .atlas-tabs button {
     min-height: var(--tap);
-    white-space: normal !important;
+    white-space: nowrap !important;
     margin-right: 0 !important;
-    padding: 12px 6px !important;
+    padding: 12px 10px !important;
     min-width: 0 !important;
     overflow: hidden !important;
     font-size: 11px !important;
     letter-spacing: 0.08em !important;
     justify-content: center !important;
+    flex: 0 0 auto !important;
+    transition: flex 0.25s ease, padding 0.25s ease !important;
   }
-  /* hide the numeric prefix on mobile to free label width */
-  .atlas-tabs button > span:first-child { display: none !important; }
+  /* hide the label/hint column on INACTIVE tabs (keep the number) */
+  .atlas-tabs button[data-active="false"] > span:last-child { display: none !important; }
+  /* active tab expands to reveal its label */
+  .atlas-tabs button[data-active="true"] {
+    flex: 1 1 auto !important;
+    justify-content: flex-start !important;
+  }
+  .atlas-tabs button[data-active="true"] > span:last-child { display: flex !important; }
+  /* fallback for tab buttons without data-active (e.g. cockpit) — keep both spans */
+  .atlas-tabs button:not([data-active]) > span:last-child { display: flex !important; }
 
   /* ── Score grids: 5 cols → 2 cols ── */
   .atlas-score-grid { grid-template-columns: 1fr 1fr !important; }

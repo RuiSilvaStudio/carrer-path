@@ -19,6 +19,7 @@ export function ViewTabs() {
           <button
             key={tab.id}
             onClick={() => setView(tab.id)}
+            data-active={active ? 'true' : 'false'}
             style={{
               background: 'none',
               border: 'none',
