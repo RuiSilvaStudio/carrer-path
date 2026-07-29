@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../hooks/useAuth';
+import { useAssessments } from '../hooks/useAssessments';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Sigil } from './sigil/Sigil';
+import { sigilInputFromData, EMPTY_SIGIL_INPUT } from '../lib/sigil';
+import type { AssessmentScores } from '../types';
 
 // Rui's user ID — only he sees the Cockpit link
 const RUI_USER_ID = '37d25257-5fcf-4318-b1b6-5bdb48288a71';
@@ -16,10 +20,14 @@ const NAV_LINKS = [
 export function Nav() {
   const { theme, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const { baseline, pulses } = useAssessments(user?.id ?? null);
   const navigate = useNavigate();
   const location = useLocation();
   const isRui = user?.id === RUI_USER_ID;
   const [menuOpen, setMenuOpen] = useState(false);
+  const sigilInput = baseline
+    ? sigilInputFromData(baseline.scores as AssessmentScores, pulses.length, pulses)
+    : null;
 
   // Close menu on route change
   useEffect(() => { setMenuOpen(false); }, [location.pathname]);
@@ -101,10 +109,14 @@ export function Nav() {
                   fontFamily: 'var(--font-mono)',
                   fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.12em',
                   padding: '6px 0', minHeight: '32px',
-                  maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  display: 'flex', alignItems: 'center', gap: '8px',
                 }}
               >
-                {user.displayName || user.email}
+                {sigilInput
+                  ? <Sigil input={sigilInput} size={26} minimal animate={false} />
+                  : <Sigil input={EMPTY_SIGIL_INPUT} size={26} empty animate={false} />}
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.displayName || user.email}</span>
               </button>
               <button
                 onClick={() => signOut()}

@@ -10,6 +10,9 @@ import { TrajectoryView } from '../components/dashboard/views/TrajectoryView';
 import { DistributionView } from '../components/dashboard/views/DistributionView';
 import { ContextView } from '../components/dashboard/views/ContextView';
 import { RhythmView } from '../components/dashboard/views/RhythmView';
+import { Sigil } from '../components/sigil/Sigil';
+import { sigilInputFromData, EMPTY_SIGIL_INPUT } from '../lib/sigil';
+import type { AssessmentScores } from '../types';
 
 export function DashboardPage() {
   const navigate = useNavigate();
@@ -17,6 +20,10 @@ export function DashboardPage() {
   const { baseline, pulses, loading, error: loadError, refetch } = useAssessments(user?.id ?? null);
   const { demoData, loading: demoLoading } = useDemoData();
   const { view } = useDashboardState();
+
+  const sigilInput = useMemo(() => (
+    baseline ? sigilInputFromData(baseline.scores as AssessmentScores, pulses.length, pulses) : null
+  ), [baseline, pulses]);
 
   // Compute metadata for header — always user data
   const meta = useMemo(() => {
@@ -72,29 +79,36 @@ export function DashboardPage() {
           display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
           flexWrap: 'wrap', gap: '20px',
         }}>
-          <div style={{ flex: '1 1 400px', minWidth: 0 }}>
-            <h1 className="atlas-h1" style={{
-              fontFamily: 'var(--font-serif)',
-              fontSize: 'var(--fs-h1)',
-              fontWeight: 500,
-              color: 'var(--color-text)',
-              letterSpacing: '-0.03em',
-              lineHeight: 1.1,
-              marginBottom: '8px',
-            }}>
-              Who You Are Becoming
-            </h1>
-            <p style={{
-              fontFamily: 'var(--font-sans)',
-              fontSize: '15px',
-              lineHeight: 1.5,
-              color: 'var(--color-text-muted)',
-              maxWidth: '520px',
-            }}>
-              {meta.count > 0
-                ? `${meta.count} data ${meta.count === 1 ? 'point' : 'points'} · ${meta.dateRange}`
-                : 'A longitudinal view of your personality — observe how traits, contexts, and rhythms shift over time.'}
-            </p>
+          <div style={{ flex: '1 1 400px', minWidth: 0, display: 'flex', alignItems: 'center', gap: '18px' }}>
+            <div style={{ flexShrink: 0 }}>
+              {sigilInput
+                ? <Sigil input={sigilInput} size={60} showInsignia />
+                : <Sigil input={EMPTY_SIGIL_INPUT} size={60} empty animate={false} />}
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <h1 className="atlas-h1" style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: 'var(--fs-h1)',
+                fontWeight: 500,
+                color: 'var(--color-text)',
+                letterSpacing: '-0.03em',
+                lineHeight: 1.1,
+                marginBottom: '8px',
+              }}>
+                Who You Are Becoming
+              </h1>
+              <p style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: '15px',
+                lineHeight: 1.5,
+                color: 'var(--color-text-muted)',
+                maxWidth: '520px',
+              }}>
+                {meta.count > 0
+                  ? `${meta.count} data ${meta.count === 1 ? 'point' : 'points'} · ${meta.dateRange}`
+                  : 'A longitudinal view of your personality — observe how traits, contexts, and rhythms shift over time.'}
+              </p>
+            </div>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             {!baseline && (

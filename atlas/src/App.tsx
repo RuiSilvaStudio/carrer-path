@@ -9,6 +9,7 @@ import { PulsePage } from './pages/PulsePage';
 import { DocsPage } from './pages/DocsPage';
 import { CockpitPage } from './pages/CockpitPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { SigilLabPage } from './pages/SigilLabPage';
 import { PulseReminder } from './components/PulseReminder';
 
 export default function App() {
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="/pulse" element={<PulsePage />} />
           <Route path="/cockpit" element={<CockpitPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/sigil-lab" element={<SigilLabPage />} />
         </Route>
 
         {/* Fallback — redirect unknown routes to home */}
