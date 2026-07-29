@@ -330,43 +330,44 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
           <SectionCard label="04" title="Context" desc="5 quick questions about your current life situation." count="5 items" />
         </div>
 
-        <button
-          onClick={() => {
-            // Check if there's saved progress
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-              setPhase(JSON.parse(saved).phase || 'ipip');
-            } else {
-              setPhase('ipip');
-            }
-          }}
-          style={{
-            padding: '14px 32px',
-            background: 'var(--color-accent)',
-            color: 'var(--color-bg)',
-            border: 'none', borderRadius: '6px',
-            fontSize: '15px', fontWeight: 600,
-            cursor: 'pointer', fontFamily: 'var(--font-sans)',
-            letterSpacing: '0.02em',
-          }}
-        >
-          Begin Assessment
-        </button>
-        <button
-          onClick={() => navigate('/docs')}
-          style={{
-            padding: '14px 28px',
-            background: 'none',
-            color: 'var(--color-text-muted)',
-            border: '1px solid var(--color-border)',
-            borderRadius: '6px',
-            fontSize: '14px', fontWeight: 500,
-            cursor: 'pointer', fontFamily: 'var(--font-sans)',
-            marginLeft: '12px',
-          }}
-        >
-          Explore Dashboard (Demo Data) →
-        </button>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+          <button
+            onClick={() => {
+              // Check if there's saved progress
+              const saved = localStorage.getItem(STORAGE_KEY);
+              if (saved) {
+                setPhase(JSON.parse(saved).phase || 'ipip');
+              } else {
+                setPhase('ipip');
+              }
+            }}
+            style={{
+              padding: '14px 32px',
+              background: 'var(--color-accent)',
+              color: 'var(--color-bg)',
+              border: 'none', borderRadius: '6px',
+              fontSize: '15px', fontWeight: 600,
+              cursor: 'pointer', fontFamily: 'var(--font-sans)',
+              letterSpacing: '0.02em',
+            }}
+          >
+            Begin Assessment
+          </button>
+          <button
+            onClick={() => navigate('/docs')}
+            style={{
+              padding: '14px 28px',
+              background: 'none',
+              color: 'var(--color-text-muted)',
+              border: '1px solid var(--color-border)',
+              borderRadius: '6px',
+              fontSize: '14px', fontWeight: 500,
+              cursor: 'pointer', fontFamily: 'var(--font-sans)',
+            }}
+          >
+            Explore Dashboard (Demo Data) →
+          </button>
+        </div>
       </div>
     );
   }

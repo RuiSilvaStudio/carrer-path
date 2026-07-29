@@ -151,14 +151,17 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
   const isEmotions = trajectoryMode === 'emotions';
 
   // ── Scales ────────────────────────────────────────────────────
-  // Use linear scale based on index — rescaled to data length
+  // Use linear scale based on index — rescaled to data length.
+  // MUST depend on INNER_W: width changes (ResizeObserver) must recompute
+  // the range, or lines stay pinned at the initial 760px width on wider
+  // containers (chart under-fills the X axis).
   const xScale = useMemo(() => {
     const len = data.length;
     if (len === 0) return d3.scaleLinear().range([0, INNER_W]);
     return d3.scaleLinear()
       .domain([0, Math.max(0, len - 1)])
       .range([0, INNER_W]);
-  }, [data.length]);
+  }, [data.length, INNER_W]);
 
   const yScale = useMemo(
     () => d3.scaleLinear().domain([0, 100]).range([INNER_H, 0]),
