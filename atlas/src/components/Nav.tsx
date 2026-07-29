@@ -91,16 +91,32 @@ export function Nav() {
             {theme === 'dark' ? '☀ Light' : '☾ Dark'}
           </button>
           {user && (
-            <button
-              onClick={() => signOut()}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: 'var(--color-text-dim)', fontFamily: 'var(--font-mono)',
-                fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.12em',
-              }}
-            >
-              Sign Out
-            </button>
+            <>
+              <button
+                onClick={() => navigate('/profile')}
+                title="Edit profile"
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: location.pathname === '/profile' ? 'var(--color-accent)' : 'var(--color-text-muted)',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '12px', textTransform: 'none', letterSpacing: '0.02em',
+                  padding: '6px 0', minHeight: '32px',
+                  maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}
+              >
+                {user.displayName || user.email}
+              </button>
+              <button
+                onClick={() => signOut()}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'var(--color-text-dim)', fontFamily: 'var(--font-mono)',
+                  fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.12em',
+                }}
+              >
+                Sign Out
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -140,17 +156,31 @@ export function Nav() {
               {theme === 'dark' ? '☀ Light' : '☾ Dark'}
             </button>
             {user && (
-              <button
-                onClick={() => signOut()}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  color: 'var(--color-text-dim)', fontFamily: 'var(--font-mono)',
-                  fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.12em',
-                  padding: '12px 0', minHeight: '44px',
-                }}
-              >
-                Sign Out
-              </button>
+              <>
+                <button
+                  onClick={() => navigate('/profile')}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)',
+                    fontSize: '13px', letterSpacing: '0.02em',
+                    padding: '12px 0', minHeight: '44px',
+                    maxWidth: '50vw', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}
+                >
+                  {user.displayName || user.email}
+                </button>
+                <button
+                  onClick={() => signOut()}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: 'var(--color-text-dim)', fontFamily: 'var(--font-mono)',
+                    fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.12em',
+                    padding: '12px 0', minHeight: '44px',
+                  }}
+                >
+                  Sign Out
+                </button>
+              </>
             )}
           </div>
         </div>

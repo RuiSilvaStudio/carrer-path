@@ -70,7 +70,11 @@ def load_env():
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
                 k, v = line.split("=", 1)
-                env[k.strip()] = v.strip()
+                v = v.strip()
+                # strip inline comments (' #' starts one, dotenv convention)
+                if " #" in v:
+                    v = v.split(" #", 1)[0].strip()
+                env[k.strip()] = v
     return env
 
 

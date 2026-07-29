@@ -8,6 +8,7 @@ import { BaselinePage } from './pages/BaselinePage';
 import { PulsePage } from './pages/PulsePage';
 import { DocsPage } from './pages/DocsPage';
 import { CockpitPage } from './pages/CockpitPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { PulseReminder } from './components/PulseReminder';
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/baseline" element={<BaselinePage />} />
           <Route path="/pulse" element={<PulsePage />} />
           <Route path="/cockpit" element={<CockpitPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
         {/* Fallback — redirect unknown routes to home */}
