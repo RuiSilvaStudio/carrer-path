@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 import type { JobListing, JobStatus } from '../types/cockpit';
 
-export type NewJob = Omit<JobListing, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'scraped_at'>;
+export type NewJob = Omit<JobListing, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'scraped_at' | 'added_at'>;
 export type JobUpdate = Partial<NewJob>;
 
 export function useJobListings() {

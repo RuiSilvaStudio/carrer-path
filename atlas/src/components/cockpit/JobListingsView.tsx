@@ -2,12 +2,33 @@ import { useState, useMemo } from 'react';
 import type { JobListing, JobStatus } from '../../types/cockpit';
 import type { NewJob } from '../../hooks/useJobListings';
 
-const STATUS_ORDER: JobStatus[] = ['New', 'Reviewing', 'Promoted', 'Dismissed'];
+const STATUS_ORDER: JobStatus[] = ['New', 'Inbox', 'Reviewing', 'Promoted', 'Dismissed'];
+// Default view: everything except Dismissed. 'active' is a pseudo-filter.
+type StatusFilter = 'active' | 'all' | JobStatus;
+
+// 'Recently added' = entered the list within the last fetch cycle (3d margin
+// covers the Mon/Thu cron gap). Distinct from 'New', which tracks POST age.
+const RECENTLY_ADDED_DAYS = 3;
+
+function isRecentlyAdded(addedAt: string | null | undefined): boolean {
+  if (!addedAt) return false;
+  const d = new Date(addedAt);
+  if (isNaN(d.getTime())) return false;
+  return (Date.now() - d.getTime()) < RECENTLY_ADDED_DAYS * 86400000;
+}
+
+function addedLabel(addedAt: string): string {
+  const days = Math.floor((Date.now() - new Date(addedAt).getTime()) / 86400000);
+  if (days <= 0) return 'Added today';
+  if (days === 1) return 'Added 1d ago';
+  return `Added ${days}d ago`;
+}
 
 function statusColor(status: JobStatus): string {
   switch (status) {
     case 'Promoted': return 'var(--color-success, #6ec48a)';
     case 'Reviewing': return 'var(--color-accent)';
+    case 'Inbox': return 'var(--color-text-muted)';
     case 'Dismissed': return 'var(--color-text-dim)';
     default: return 'var(--color-warning, #d4a574)'; // New
   }
@@ -60,7 +81,7 @@ interface Props {
 export function JobListingsView({ jobs, addJob, setJobStatus, deleteJob }: Props) {
   const [view, setView] = useState<'list' | 'add'>('list');
   const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | JobStatus>('all');
+  const [filterStatus, setFilterStatus] = useState<StatusFilter>('active');
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const [newJob, setNewJob] = useState<Partial<NewJob>>({
@@ -75,19 +96,23 @@ export function JobListingsView({ jobs, addJob, setJobStatus, deleteJob }: Props
         j.title.toLowerCase().includes(q) ||
         j.company.toLowerCase().includes(q) ||
         j.location.toLowerCase().includes(q);
-      const matchesStatus = filterStatus === 'all' || j.status === filterStatus;
+      const matchesStatus =
+        filterStatus === 'all' ? true :
+        filterStatus === 'active' ? j.status !== 'Dismissed' :
+        j.status === filterStatus;
       return matchesSearch && matchesStatus;
     });
   }, [jobs, search, filterStatus]);
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { all: jobs.length };
+    const c: Record<string, number> = { all: jobs.length, active: jobs.filter(j => j.status !== 'Dismissed').length };
     for (const s of STATUS_ORDER) c[s] = jobs.filter(j => j.status === s).length;
     return c;
   }, [jobs]);
 
   const handleAdd = async () => {
     if (!newJob.title?.trim()) return;
+    // Manual adds go to Inbox (undated -> manual-review bucket), not New.
     await addJob({
       title: newJob.title || '',
       company: newJob.company || '',
@@ -98,10 +123,10 @@ export function JobListingsView({ jobs, addJob, setJobStatus, deleteJob }: Props
       posted_at: newJob.posted_at || null,
       match_score: newJob.match_score ?? null,
       match_reasons: newJob.match_reasons || '',
-      status: 'New',
+      status: 'Inbox',
       notes: newJob.notes || '',
     });
-    setNewJob({ title: '', company: '', location: '', url: '', source: 'Manual', description: '', status: 'New', match_score: null, match_reasons: '', notes: '', posted_at: null });
+    setNewJob({ title: '', company: '', location: '', url: '', source: 'Manual', description: '', status: 'Inbox', match_score: null, match_reasons: '', notes: '', posted_at: null });
     setView('list');
   };
 
@@ -115,7 +140,7 @@ export function JobListingsView({ jobs, addJob, setJobStatus, deleteJob }: Props
     <div>
       {/* Stats row */}
       <div style={{ display: 'flex', gap: '20px', marginBottom: '28px', flexWrap: 'wrap' }}>
-        <StatBox num={jobs.length} label="Listings" />
+        <StatBox num={counts['active'] ?? 0} label="Active" />
         <StatBox num={reviewing} label="Reviewing" />
         <StatBox num={promoted} label="Promoted" />
         <StatBox num={`${avgScore}`} label="Avg Match" suffix="%" />
@@ -183,7 +208,7 @@ export function JobListingsView({ jobs, addJob, setJobStatus, deleteJob }: Props
             }}
           />
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            {(['all', ...STATUS_ORDER] as const).map((s) => {
+            {(['active', 'all', ...STATUS_ORDER] as const).map((s) => {
               const active = filterStatus === s;
               return (
                 <button
@@ -200,7 +225,7 @@ export function JobListingsView({ jobs, addJob, setJobStatus, deleteJob }: Props
                     transition: 'all 0.18s ease',
                   }}
                 >
-                  {s === 'all' ? 'All' : s} <span style={{ opacity: 0.5, marginLeft: '2px' }}>{counts[s] ?? 0}</span>
+                  {s === 'all' ? 'All' : s === 'active' ? 'Active' : s} <span style={{ opacity: 0.5, marginLeft: '2px' }}>{counts[s] ?? 0}</span>
                 </button>
               );
             })}
@@ -295,15 +320,26 @@ function JobCard({ job, expanded, onToggle, onStatusChange, onDelete }: {
             </div>
           )}
         </div>
-        <div style={{
-          flexShrink: 0,
-          fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 500,
-          letterSpacing: '0.1em', textTransform: 'uppercase',
-          color: statusColor(job.status),
-          border: `1px solid ${statusColor(job.status)}`,
-          borderRadius: '4px', padding: '4px 8px',
-        }}>
-          {job.status}
+        <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+          <div style={{
+            fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 500,
+            letterSpacing: '0.1em', textTransform: 'uppercase',
+            color: statusColor(job.status),
+            border: `1px solid ${statusColor(job.status)}`,
+            borderRadius: '4px', padding: '4px 8px',
+          }}>
+            {job.status}
+          </div>
+          {isRecentlyAdded(job.added_at) && (
+            <div style={{
+              fontFamily: 'var(--font-mono)', fontSize: '9px', fontWeight: 500,
+              letterSpacing: '0.08em', textTransform: 'uppercase',
+              color: 'var(--color-accent)',
+              opacity: 0.85,
+            }}>
+              ● {addedLabel(job.added_at)}
+            </div>
+          )}
         </div>
       </button>
 
@@ -367,7 +403,7 @@ function JobCard({ job, expanded, onToggle, onStatusChange, onDelete }: {
                 Dismiss
               </button>
             )}
-            {job.status !== 'New' && (
+            {job.status !== 'New' && job.status !== 'Inbox' && (
               <button disabled={busy} onClick={() => act(() => onStatusChange('New'))} style={actionBtnStyle}>
                 Reset to New
               </button>

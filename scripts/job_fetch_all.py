@@ -27,6 +27,8 @@ import time
 import urllib.error
 import urllib.request
 
+from langdetect import detect, LangDetectException
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from job_sources import (  # noqa: E402
     fetch_himalayas, fetch_thehub, fetch_weworkremotely,
@@ -36,6 +38,131 @@ from job_sources import (  # noqa: E402
 CAREER_KB = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RUI_USER_ID = "37d25257-5fcf-4318-b1b6-5bdb48288a71"
 MIN_SCORE = 0.30
+MAX_AGE_DAYS = 21  # discard dated listings older than 3 weeks
+FRESH_DAYS = 7     # 'New' = posted within 7 days; older/undated -> 'Inbox'
+
+
+def initial_status(posted_at):
+    """'New' means the POSTING is fresh (<=FRESH_DAYS old).
+    Older or undated postings land in 'Inbox' (Rui's manual-review bucket)."""
+    if not posted_at:
+        return "Inbox"
+    try:
+        d = datetime.date.fromisoformat(str(posted_at)[:10])
+    except ValueError:
+        return "Inbox"
+    return "New" if (datetime.date.today() - d).days <= FRESH_DAYS else "Inbox"
+
+# ── Remote-eligibility: explicit country-restriction patterns ─────
+# If the text explicitly lists allowed countries/regions and Portugal is
+# not among them, the job is not workable from Portugal -> dismiss.
+# Generic "Europe / EMEA / worldwide / anywhere" without a list -> keep.
+_PT_TOKENS = ("portugal", "portuguese", "lisbon", "lisboa", "porto")
+_OPEN_REMOTE = ("worldwide", "anywhere", "global", "work from anywhere",
+                "any location", "any country")
+
+# Phrases that introduce an explicit eligibility list
+_RESTRICTION_RE = re.compile(
+    r"(?:"
+    r"remote\s*[\(\-–:]\s*([^\.\n]{3,160}?)\s*\)?\s*only"                 # "Remote (Germany) only" / "Remote: Germany only"
+    r"|(?:must|need to)\s+(?:be\s+)?(?:based|reside|located|live)\s+in[:\s]+([^\.\n]{3,160})"
+    r"|(?:eligible|eligibility|authorized|authorised)\s+(?:to\s+work\s+)?(?:in|from|countries)[:\s]+([^\.\n]{3,160})"
+    r"|(?:only\s+(?:open\s+to|for)|open\s+only\s+to)\s+(?:candidates\s+)?(?:in|from)[:\s]+([^\.\n]{3,160})"
+    r"|remote\s+(?:in|from)\s+(?:the\s+)?(?:following\s+)?(?:countries|locations)[:\s]+([^\.\n]{3,160})"
+    r"|(?:location|countries)\s*requirements?[:\s]+([^\.\n]{3,160})"
+    r")",
+    re.IGNORECASE,
+)
+
+_EUROPE_HINTS = ("europe", "emea", "eu", "european", "cet", "gmt", "schengen")
+
+
+def passes_remote_pt(location, description):
+    """Return (ok, reason). Only acts when an explicit country list is found."""
+    text = f"{location or ''} {description or ''}"
+    # Neutralise marketing phrases that would otherwise trigger the
+    # restriction patterns: "remote-first", "remote friendly", etc.
+    text = re.sub(r"remote[\s\-]*(?:first|friendly|forward|positive)", " ", text, flags=re.IGNORECASE)
+    low = text.lower()
+    # Fast path: Portugal explicitly mentioned anywhere -> keep
+    if any(t in low for t in _PT_TOKENS):
+        return True, "Portugal mentioned"
+    for m in _RESTRICTION_RE.finditer(text):
+        seg = next((g for g in m.groups() if g), "").lower()
+        if not seg:
+            continue
+        if any(t in seg for t in _PT_TOKENS):
+            return True, "Portugal in eligibility list"
+        if any(h in seg for h in _EUROPE_HINTS):
+            return True, "Europe/EMEA eligibility (PT implied)"
+        if any(o in seg for o in _OPEN_REMOTE):
+            return True, "Open remote"
+        # explicit list, no Portugal, no Europe hint -> dismiss
+        return False, f"Restricted remote: '{seg[:80]}' (no Portugal)"
+    return True, "No explicit restriction"
+
+
+# ── Language filter: keep Portuguese or English only ──────────────
+def passes_language(title, description):
+    """Return (ok, reason). Keep pt/en; ambiguous short text -> keep."""
+    text = f"{title or ''} {description or ''}".strip()
+    if len(text) < 40:  # too short to detect reliably -> keep, manual check
+        return True, "too short to detect"
+    try:
+        lang = detect(text)
+    except LangDetectException:
+        return True, "detection failed"
+    if lang in ("en", "pt"):
+        return True, f"lang={lang}"
+    return False, f"lang={lang}"
+
+
+def passes_age(posted_at):
+    """Discard dated listings older than MAX_AGE_DAYS. Undated -> keep."""
+    if not posted_at:
+        return True, "no date"
+    try:
+        d = datetime.date.fromisoformat(str(posted_at)[:10])
+    except ValueError:
+        return True, "unparseable date"
+    age = (datetime.date.today() - d).days
+    if age > MAX_AGE_DAYS:
+        return False, f"{age}d old"
+    return True, f"{age}d old"
+
+
+# ── Scam / misleading filter ──────────────────────────────────────
+# Calibrated on the 10x Team "VP Operations - AI Trainer" example:
+# exec-bait titles for AI-data gig work, fractional hours, talent pools.
+_SCAM_AI_GIG = re.compile(
+    r"\b(ai[\s-]?trainer|ai[\s-]?training|training[\s-]?ai|teach[\s-]?ai|ai[\s-]?tutor|"
+    r"data[\s-]?annotation|annotator|labell?er|rlhf)\b", re.IGNORECASE)
+_SCAM_PLATFORM = re.compile(
+    r"\b(10x[\s-]?team|mercor|dataannotation|outlier\.?ai|alignerr|prolific|"
+    r"invisible[\s-]?technolog|scale\.?ai|surge\.?ai|micro1|pareto\.?ai|appen|"
+    r"telus[\s-]?international|remotasks|labelbox|snorkel|handshake[\s-]?ai|"
+    r"stellar[\s-]?ai|welocalize|lionbridge|clickworker|oneforma|centific)\b", re.IGNORECASE)
+_SCAM_HOURS = re.compile(
+    r"\b\d{1,2}\s*[-–]\s*\d{1,2}\s*(?:hrs?|hours?)\s*/?\s*(?:week|wk)\b", re.IGNORECASE)
+_SCAM_TALENT_POOL = re.compile(
+    r"not\s+(?:a\s+)?traditional\s+job|talent[\s-]?(?:pool|network|community)|"
+    r"future\s+opportunit|profile\s+(?:review|approval)|"
+    r"matched\s+to\s+(?:relevant\s+)?projects?", re.IGNORECASE)
+
+
+def passes_scam(title, company, description, url=""):
+    """Return (ok, reason). Kills AI-data gigs, fractional-exec bait, talent pools."""
+    slug = (url or "").rstrip("/").split("/")[-1].replace("-", " ")
+    text = f"{title or ''} {company or ''} {slug} {description or ''}"
+    if _SCAM_PLATFORM.search(text):
+        return False, "AI-gig platform"
+    if _SCAM_AI_GIG.search(text):
+        return False, "AI-trainer gig"
+    if _SCAM_HOURS.search(f"{title or ''} {slug}"):
+        return False, "fractional hours in title"
+    if _SCAM_TALENT_POOL.search(description or ""):
+        return False, "talent-pool harvesting"
+    return True, "clean"
 
 # Reuse the exact scoring profile from adzuna_fetch.py
 from adzuna_fetch import WEIGHTED_KWS, NEGATIVE, LEADERSHIP, load_env, score_job  # noqa: E402
@@ -223,10 +350,10 @@ def db_connect():
 
 
 def expiry_pass(conn, dry_run=False):
-    """HEAD-check every 'New' listing URL; auto-dismiss dead ones."""
+    """HEAD-check every actionable (New/Inbox) listing URL; auto-dismiss dead ones."""
     cur = conn.cursor()
     cur.execute(
-        "select id, url, title from job_listings where user_id=%s and status='New' and url <> ''",
+        "select id, url, title from job_listings where user_id=%s and status in ('New','Inbox') and url <> ''",
         (RUI_USER_ID,),
     )
     rows = cur.fetchall()
@@ -305,17 +432,59 @@ def main():
 
     # Filter + score (lane-based: must anchor to a target lane to score)
     candidates = []
+    dropped = {"age": 0, "remote_pt": 0, "language": 0, "leadership": 0, "score": 0,
+               "no_desc": 0, "scam": 0}
+    drop_examples = {"age": [], "remote_pt": [], "language": [], "no_desc": [], "scam": []}
     for j in all_jobs:
         if not j.get("title") or not j.get("url"):
             continue
+        # Rui's rule: no description -> excluded (can't verify fit/language/eligibility)
+        if not (j.get("description") or "").strip():
+            dropped["no_desc"] += 1
+            if len(drop_examples["no_desc"]) < 5:
+                drop_examples["no_desc"].append(f"{j['title'][:50]} @ {j.get('company','')[:20]} [{j['source']}]")
+            continue
+        ok, why = passes_scam(j["title"], j.get("company", ""), j.get("description", ""), j.get("url", ""))
+        if not ok:
+            dropped["scam"] += 1
+            if len(drop_examples["scam"]) < 5:
+                drop_examples["scam"].append(f"{j['title'][:50]} @ {j.get('company','')[:20]} — {why}")
+            continue
+        ok, why = passes_age(j.get("posted_at"))
+        if not ok:
+            dropped["age"] += 1
+            if len(drop_examples["age"]) < 5:
+                drop_examples["age"].append(f"{j['title'][:50]} ({why})")
+            continue
+        ok, why = passes_remote_pt(j.get("location", ""), j.get("description", ""))
+        if not ok:
+            dropped["remote_pt"] += 1
+            if len(drop_examples["remote_pt"]) < 5:
+                drop_examples["remote_pt"].append(f"{j['title'][:50]} @ {j.get('company','')[:20]} — {why}")
+            continue
+        ok, why = passes_language(j["title"], j.get("description", ""))
+        if not ok:
+            dropped["language"] += 1
+            if len(drop_examples["language"]) < 5:
+                drop_examples["language"].append(f"{j['title'][:50]} ({why})")
+            continue
         if not passes_leadership_filter(j["title"], j.get("description", "")):
+            dropped["leadership"] += 1
             continue
         s, reasons = lane_score(j["title"], j.get("company", ""), j.get("location", ""), j.get("description", ""))
         if s < MIN_SCORE:
+            dropped["score"] += 1
             continue
         j["match_score"] = s
         j["match_reasons"] = reasons
         candidates.append(j)
+
+    print(f"\nDropped: no-desc={dropped['no_desc']} | scam={dropped['scam']} | age>{MAX_AGE_DAYS}d={dropped['age']} | "
+          f"remote-not-PT={dropped['remote_pt']} | lang={dropped['language']} | "
+          f"leadership={dropped['leadership']} | score={dropped['score']}")
+    for kind, exs in drop_examples.items():
+        for ex in exs:
+            print(f"  [{kind}] {ex}")
 
     candidates = dedupe_best(candidates)
 
@@ -360,12 +529,12 @@ def main():
             """
             insert into public.job_listings
               (user_id, title, company, location, url, source, description, posted_at, match_score, match_reasons, status)
-            values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'New')
+            values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             on conflict (user_id, url) where url <> '' do nothing
             """,
             (RUI_USER_ID, r["title"], r.get("company", ""), r.get("location", ""), r["url"],
              r["source"], r.get("description", "")[:4000], r.get("posted_at"),
-             r["match_score"], r["match_reasons"]),
+             r["match_score"], r["match_reasons"], initial_status(r.get("posted_at"))),
         )
         inserted += cur.rowcount
     print(f"\nInserted {inserted} new listings")
