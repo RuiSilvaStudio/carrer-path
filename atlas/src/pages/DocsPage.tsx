@@ -26,6 +26,43 @@ const SECTIONS: Section[] = [
   { id: 'future', num: '09', title: 'Future: Smoothing & Aggregation' },
 ];
 
+// ── Hover-share anchor link ─────────────────────────────────────
+// Renders the `#` that appears on hover next to a heading. Copies the
+// full URL on click and gives brief visual feedback. Per the audit
+// report: best-in-class (Stripe / Linear / MDN) all do this.
+function AnchorLink({ id }: { id: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <a
+      href={`#${id}`}
+      aria-label={`Permalink to this section`}
+      onClick={(e) => {
+        e.preventDefault();
+        const url = `${window.location.origin}${window.location.pathname}#${id}`;
+        navigator.clipboard?.writeText(url).catch(() => {});
+        history.replaceState(null, '', `#${id}`);
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 1200);
+      }}
+      className="atlas-anchor-link"
+      style={{
+        marginLeft: '10px',
+        fontFamily: 'var(--font-mono)',
+        fontSize: '14px',
+        fontWeight: 400,
+        color: copied ? 'var(--color-accent)' : 'var(--color-text-dim)',
+        textDecoration: 'none',
+        opacity: 0,
+        transition: 'opacity 0.15s ease, color 0.15s ease',
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.opacity = ''; }}
+    >
+      {copied ? '✓' : '#'}
+    </a>
+  );
+}
+
 // ── Reusable card component ─────────────────────────────────────
 function DocCard({
   id,
@@ -62,6 +99,7 @@ function DocCard({
         {num}
       </p>
       <h2
+        className="atlas-doc-h2"
         style={{
           fontFamily: 'var(--font-serif)',
           fontSize: '24px',
@@ -70,9 +108,14 @@ function DocCard({
           letterSpacing: '-0.01em',
           lineHeight: 1.3,
           marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'baseline',
+          flexWrap: 'wrap',
+          gap: '4px',
         }}
       >
-        {title}
+        <span>{title}</span>
+        <AnchorLink id={id} />
       </h2>
       <div
         className="atlas-doc-content"
@@ -436,6 +479,8 @@ export function DocsPage() {
 
       {/* ── Sections ───────────────────────────────────────── */}
       <main
+        id="atlas-main"
+        tabIndex={-1}
         ref={sectionsRef}
         className="atlas-page"
         style={{

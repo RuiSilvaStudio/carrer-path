@@ -241,6 +241,7 @@ export function DistributionView({ demoData, baseline, pulses, dataSource }: Dis
           label="02 · Distribution"
           title="Density Distributions"
           subtitle={`${demoData.length} pulses — frequency histograms with kernel density estimates`}
+          infoText="Trait score density, 0–100. The peak is your typical score; the spread shows how variable you are across pulses. Source: IPIP-NEO-120 weekly avg."
           data-anim
         >
           <div className="atlas-grid-auto" style={{
@@ -261,7 +262,12 @@ export function DistributionView({ demoData, baseline, pulses, dataSource }: Dis
 
         {/* Stats summary */}
         <div style={{ marginTop: '20px' }} data-anim>
-          <Card label="Summary Statistics" title="Trait Ranges & Means">
+          <Card
+            label="Summary Statistics"
+            title="Trait Ranges & Means"
+            subtitle="Mean · std · min · max across all your pulses for each trait."
+            infoText="Aggregate statistics across all your pulses. Min/max are the extremes you've recorded; std is the typical spread — high std means you swing more by context."
+          >
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
@@ -324,11 +330,21 @@ export function DistributionView({ demoData, baseline, pulses, dataSource }: Dis
           gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
           gap: '20px',
         }}>
-          <Card label="02 · Distribution" title="Baseline Profile" data-anim>
+          <Card
+            label="02 · Distribution"
+            title="Baseline Profile"
+            subtitle="Trait score, 0–100, at your baseline (no pulses yet)."
+            infoText="Your one-time baseline profile. Distribution charts need ≥5 pulses to show meaningful variance."
+          >
             <RadarChart scores={baseline.scores.bigFive} size={300} />
           </Card>
 
-          <Card label="Status" title="Need more data to see distributions." data-anim>
+          <Card
+            label="Status"
+            title="Need more data to see distributions."
+            subtitle="Why your distribution view is empty, and what to do about it."
+            infoText="Distribution views are most meaningful after 5+ weekly pulses. Until then, your baseline is the only point — a single sample, not a distribution."
+          >
             <p style={{
               fontFamily: 'var(--font-sans)', fontSize: '14px', lineHeight: 1.6,
               color: 'var(--color-text-muted)', marginBottom: '16px',
@@ -381,6 +397,7 @@ export function DistributionView({ demoData, baseline, pulses, dataSource }: Dis
         label="02 · Distribution"
         title="Density Distributions"
         subtitle={`${dataPoints} data points — frequency histograms with kernel density estimates`}
+        infoText="Trait score density, 0–100. The peak is your typical score; the spread shows how variable you are across pulses. Source: IPIP-NEO-120 weekly avg."
         data-anim
       >
         <div className="atlas-grid-auto" style={{

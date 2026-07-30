@@ -231,3 +231,14 @@ svg, img { max-width: 100%; height: auto; }
 .atlas-doc-content code,
 .atlas-doc-content [style*="fontFamily: 'var(--font-mono')"][style*="background"],
 .atlas-doc-content table { max-width: none; }
+
+/* ── Hover-share anchors ─────────────────────────────────────── */
+/* Show the # link when the user hovers the heading itself, not
+   only the link — so the affordance is discoverable. */
+.atlas-doc-h2:hover .atlas-anchor-link,
+.atlas-doc-h3:hover .atlas-anchor-link {
+  opacity: 1 !important;
+}
+.atlas-doc-h3 {
+  position: relative;
+}

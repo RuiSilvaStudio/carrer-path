@@ -152,7 +152,7 @@ export function DashboardPage() {
       </div>
 
       {/* ── Active View ──────────────────────────────────── */}
-      <main>
+      <main id="atlas-main" tabIndex={-1}>
         {!baseline ? (
           <EmptyState
             title="No baseline yet — this is where you start."

@@ -28,6 +28,10 @@ const TRAIT_LABELS: { key: keyof BigFiveScores; label: string; short?: string; c
 ];
 
 // ── Generate insight text from trajectory data ───────────────────
+// Bands chosen against whole-trait-theory variance (Fleeson 2001):
+//   <2pt  week-to-week = within-noise
+//   2-5pt = typical weekly drift
+//   >5pt = notable movement worth flagging
 function generateInsight(traj: TrajectoryPoint[], currentIdx: number): string {
   if (traj.length < 2) return 'Your trajectory is just beginning. Each pulse adds a new point to the map.';
   const point = traj[Math.min(currentIdx, traj.length - 1)] ?? traj[traj.length - 1];
@@ -35,15 +39,20 @@ function generateInsight(traj: TrajectoryPoint[], currentIdx: number): string {
   const changes: { trait: string; delta: number }[] = [];
   for (const t of TRAIT_LABELS) {
     const delta = point.scores[t.key] - first.scores[t.key];
-    if (Math.abs(delta) >= 5) changes.push({ trait: t.label, delta });
+    if (Math.abs(delta) >= 2) changes.push({ trait: t.label, delta });
   }
   changes.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
 
-  if (changes.length === 0) return `Traits remain stable through ${point.date}. No significant movement from baseline.`;
+  if (changes.length === 0) {
+    return `No trait moved more than ±2pt since your ${first.type === 'baseline' ? 'baseline' : 'first pulse'} on ${first.date}. Movement this small is within the typical week-to-week noise band.`;
+  }
   const top = changes.slice(0, 2);
-  const parts = top.map(c => `${c.trait} ${c.delta > 0 ? '↑' : '↓'} ${Math.abs(c.delta).toFixed(0)}pts`);
-  const direction = top[0].delta > 0 ? 'rising' : 'shifting';
-  return `Since baseline, ${parts.join(' and ')}. ${top[0].trait} is ${direction} — watch for patterns in the distribution view.`;
+  const parts = top.map(c => `${c.trait} ${c.delta > 0 ? '↑' : '↓'} ${Math.abs(c.delta).toFixed(1)}pts`);
+  const notable = top.filter(c => Math.abs(c.delta) >= 5);
+  const verdict = notable.length > 0
+    ? `${notable[0].trait} crossed the ±5pt noise band — outside typical weekly drift.`
+    : `All changes are within the typical ±5pt weekly drift band.`;
+  return `Since ${first.date}: ${parts.join(' and ')}. ${verdict} Cross-reference the Context view to see if a particular situation drove the change.`;
 }
 
 // ── Phase Bar ────────────────────────────────────────────────────
@@ -230,7 +239,12 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
       <div ref={containerRef}>
         {/* Row 1: Full-width trajectory chart */}
         <div style={{ marginBottom: '20px' }} data-anim>
-          <Card label="01 · Trajectory" title="Trait Trajectory — Demo">
+          <Card
+            label="01 · Trajectory"
+            title="Trait Trajectory — Demo"
+            subtitle="Trait score, 0–100 (mean × 20, IPIP-NEO-120, weekly avg). Click any point to scrub."
+            infoText="Big Five trait scores over time. 0–100 = mean of Likert responses × 20. Higher = stronger expression of the trait. Source: IPIP-NEO-120."
+          >
             <PhaseBar trajectory={smoothedTrajectory} currentIndex={scrubIndex} />
             <TrajectoryChart
               data={smoothedTrajectory}
@@ -249,7 +263,13 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
           gap: '20px',
         }}>
           {/* Left: Radar */}
-          <Card label="Current State" title="Big Five Profile" data-anim>
+          <Card
+            label="Current State"
+            title="Big Five Profile"
+            subtitle="Trait score, 0–100, at the scrubbed point."
+            infoText="Five-axis snapshot of your trait scores at the current point. Each axis 0–100, higher = stronger. Click a vertex for the underlying value."
+            data-anim
+          >
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <RadarChart scores={currentPoint.scores} size={320} />
             </div>
@@ -306,13 +326,23 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
           gap: '20px',
           marginBottom: '20px',
         }} className="atlas-2col">
-          <Card label="Starting Point" title="Your Baseline Profile" data-anim>
+          <Card
+            label="Starting Point"
+            title="Your Baseline Profile"
+            subtitle="Trait score, 0–100, from your one-time baseline assessment."
+            infoText="Your one-time baseline trait profile. Each axis 0–100 = mean × 20 from IPIP-NEO-120. Pulses will overlay this point."
+          >
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <RadarChart scores={baseline.scores.bigFive} size={320} />
             </div>
           </Card>
 
-          <Card label="Guidance" title="Your baseline is your starting point." data-anim>
+          <Card
+            label="Guidance"
+            title="Your baseline is your starting point."
+            subtitle="What pulses will reveal, and how to take your first one."
+            infoText="Pulses add new points to your trajectory. Without them, your baseline is a single frame — useful but not yet a pattern."
+          >
             <p style={{
               fontFamily: 'var(--font-sans)', fontSize: '14px', lineHeight: 1.6,
               color: 'var(--color-text-muted)', marginBottom: '16px',
@@ -341,14 +371,24 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
             gap: '20px',
           }}>
             {baseline.scores.sd3 && (
-              <Card label="Dark Triad" title="SD3 Scores" data-anim>
+              <Card
+                label="Motivational Drivers"
+                title="SD3 Scores"
+                subtitle="Short Dark Triad (SD3) — relabelled 'Motivational Drivers'. 0–100."
+                infoText="We label the SD3 'Motivational Drivers' to reduce the stigma of the original 'Dark Triad' name. The underlying constructs (Machiavellianism · Narcissism · Psychopathy) are unchanged."
+              >
                 <div style={{ maxWidth: '400px' }}>
                   <SD3Bars sd3={baseline.scores.sd3} />
                 </div>
               </Card>
             )}
             {baseline.scores.icar && (
-              <Card label="Cognitive" title="ICAR Score" data-anim>
+              <Card
+                label="Cognitive"
+                title="ICAR Score"
+                subtitle="ICAR-16 cognitive ability score: (correct / total) × 100."
+                infoText="ICAR-16 measures fluid cognitive ability across 4 item types: letter series, verbal reasoning, matrix reasoning, 3D rotation."
+              >
                 <ICARScore icar={baseline.scores.icar} />
               </Card>
             )}
@@ -367,7 +407,12 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
     <div ref={containerRef}>
       {/* Row 1: Full-width trajectory chart */}
       <div style={{ marginBottom: '20px' }} data-anim>
-        <Card label="01 · Trajectory" title="Trait Trajectory">
+        <Card
+          label="01 · Trajectory"
+          title="Trait Trajectory"
+          subtitle="Trait score, 0–100 (mean × 20, IPIP-NEO-120, weekly avg). Click any point to scrub."
+          infoText="Big Five trait scores over time. 0–100 = mean of Likert responses × 20. Higher = stronger expression of the trait. Source: IPIP-NEO-120."
+        >
           <PhaseBar trajectory={baselineTrajectory} currentIndex={scrubIndex} />
           <TrajectoryChart
             data={baselineTrajectory}
@@ -386,7 +431,12 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
         gap: '20px',
       }}>
         {/* Left: Radar */}
-        <Card label="Current State" title="Big Five Profile" data-anim>
+        <Card
+          label="Current State"
+          title="Big Five Profile"
+          subtitle="Trait score, 0–100, at the scrubbed point."
+          infoText="Five-axis snapshot of your trait scores at the current point. Each axis 0–100, higher = stronger. Click a vertex for the underlying value."
+        >
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <RadarChart scores={scrubbedPoint.scores} size={320} />
           </div>
@@ -401,7 +451,12 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
             {insight}
           </InsightStrip>
 
-          <Card label="Trait Summary" title="Scores at Current Point" data-anim>
+          <Card
+            label="Trait Summary"
+            title="Scores at Current Point"
+            subtitle="Trait scores at the scrubbed point. Click a value to scrub to that data."
+            infoText="Numeric trait scores at the current point. Each value 0–100. Click to scrub to the underlying data."
+          >
             <div className="atlas-score-grid" style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(5, 1fr)',
@@ -455,14 +510,24 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
               marginTop: '8px',
             }}>
               {baseline.scores.sd3 && (
-                <Card label="Dark Triad" title="SD3 Scores" data-anim>
+                <Card
+                  label="Motivational Drivers"
+                  title="SD3 Scores"
+                  subtitle="Short Dark Triad (SD3) — relabelled 'Motivational Drivers'. 0–100, weekly aggregate."
+                  infoText="We label the SD3 'Motivational Drivers' to reduce the stigma of the original 'Dark Triad' name. The underlying constructs (Machiavellianism · Narcissism · Psychopathy) are unchanged."
+                >
                   <div style={{ maxWidth: '400px' }}>
                     <SD3Bars sd3={baseline.scores.sd3} />
                   </div>
                 </Card>
               )}
               {baseline.scores.icar && (
-                <Card label="Cognitive" title="ICAR Score" data-anim>
+                <Card
+                  label="Cognitive"
+                  title="ICAR Score"
+                  subtitle="ICAR-16 cognitive ability score: (correct / total) × 100."
+                  infoText="ICAR-16 measures fluid cognitive ability across 4 item types: letter series, verbal reasoning, matrix reasoning, 3D rotation. Score is percent correct."
+                >
                   <ICARScore icar={baseline.scores.icar} />
                 </Card>
               )}

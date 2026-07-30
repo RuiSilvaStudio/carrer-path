@@ -5,6 +5,7 @@ import * as d3 from 'd3';
 import type { TrajectoryPoint, BigFiveScores } from '../../../types';
 import { useDashboardState } from '../../../state/DashboardContext';
 import { useElementWidth } from '../../../lib/useElementWidth';
+import { InfoTooltip } from '../../ui/InfoTooltip';
 
 // ── Trait metadata ──────────────────────────────────────────────
 interface TraitMeta {
@@ -447,21 +448,29 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
           const color = isEmotions
             ? (item as EmotionMeta).color
             : colors[key] || cssVar((item as TraitMeta).cssVar) || '#888';
+          // Tooltip body, ≤150 chars per NN/g. Phase 2 will route these through glossary.ts.
+          const legendTip = isEmotions
+            ? `${label}: emotion intensity over the past reporting window. 0–100, higher = more frequent/intense.`
+            : `${label}: one of the Big Five personality traits. 0–100 = mean × 20 from IPIP-NEO-120. Click to toggle.`;
           return (
-            <button
-              key={key}
-              onClick={() => isEmotions ? toggleEmotion(key) : toggleTrait(key as keyof BigFiveScores)}
-              className="flex items-center gap-1.5 text-xs cursor-pointer transition-opacity"
-              style={{ opacity: visible ? 1 : 0.35 }}
-            >
-              <span
-                className="inline-block rounded-full"
-                style={{ backgroundColor: color, width: '10px', height: '10px' }}
-              />
-              <span style={{ fontFamily: 'var(--font-sans)', color: 'var(--color-text-muted)', fontSize: '11px' }}>
-                {short} — {label}
-              </span>
-            </button>
+            <span key={key} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <button
+                onClick={() => isEmotions ? toggleEmotion(key) : toggleTrait(key as keyof BigFiveScores)}
+                className="flex items-center gap-1.5 text-xs cursor-pointer transition-opacity"
+                style={{ opacity: visible ? 1 : 0.35 }}
+                aria-label={`Toggle ${label} series`}
+                aria-pressed={visible}
+              >
+                <span
+                  className="inline-block rounded-full"
+                  style={{ backgroundColor: color, width: '10px', height: '10px' }}
+                />
+                <span style={{ fontFamily: 'var(--font-sans)', color: 'var(--color-text-muted)', fontSize: '11px' }}>
+                  {short} — {label}
+                </span>
+              </button>
+              <InfoTooltip text={legendTip} />
+            </span>
           );
         })}
       </div>

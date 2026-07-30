@@ -419,7 +419,7 @@ export function ContextView({ demoData, baseline, dataSource }: ContextViewProps
             label="03 · Context"
             title="Context Heatmap"
             subtitle="Average trait scores by context"
-            data-anim
+            infoText="Trait scores averaged by self-reported context (Work, Home, Social…). Brighter cells = higher score. Reveals which traits move most with situation."
           >
             <ContextHeatmap demoData={demoData} />
           </Card>
@@ -428,7 +428,7 @@ export function ContextView({ demoData, baseline, dataSource }: ContextViewProps
             label="Variance"
             title="Trait Flexibility"
             subtitle="Which traits flex most across contexts"
-            data-anim
+            infoText="Standard deviation of each trait across contexts. Higher bar = more flexible; lower = more stable across situations."
           >
             <VarianceChart demoData={demoData} />
           </Card>
@@ -445,7 +445,7 @@ export function ContextView({ demoData, baseline, dataSource }: ContextViewProps
             label="Stress"
             title="Stress Delta"
             subtitle="How traits shift under high vs low stress"
-            data-anim
+            infoText="Trait score deltas between high-stress and low-stress pulses. Shows which traits are most stress-reactive."
           >
             <StressDeltaChart demoData={demoData} />
           </Card>
@@ -454,7 +454,7 @@ export function ContextView({ demoData, baseline, dataSource }: ContextViewProps
             label="DIAMONDS"
             title="Situational Dimensions"
             subtitle="Average scores across 8 situational factors"
-            data-anim
+            infoText="DIAMONDS is a framework for characterizing situations along 8 dimensions: Diversity, Novelty, Depth, Adversity, Deception, Sociality, Stress, and Performance."
           >
             <DiamondsGrid demoData={demoData} />
           </Card>
@@ -465,7 +465,7 @@ export function ContextView({ demoData, baseline, dataSource }: ContextViewProps
           label="Raw Contexts"
           title="Context Tags"
           subtitle="Frequency of situational contexts across all pulses"
-          data-anim
+          infoText="How often you tagged each context in pulses. Useful for spotting which situations dominate your weeks."
         >
           <ContextTags demoData={demoData} />
         </Card>
@@ -487,7 +487,7 @@ export function ContextView({ demoData, baseline, dataSource }: ContextViewProps
           label="03 · Context"
           title="Baseline Context"
           subtitle="Your self-reported situational context at baseline"
-          data-anim
+          infoText="The five situational context questions you answered in your baseline. Stored as `current_role`, `life_event`, `stress_level`, `energy_level`, `primary_context`."
         >
           <div className="atlas-grid-auto" style={{
             display: 'grid',
@@ -516,7 +516,7 @@ export function ContextView({ demoData, baseline, dataSource }: ContextViewProps
           </div>
         </Card>
       ) : (
-        <Card label="03 · Context" title="Baseline Context" data-anim>
+        <Card label="03 · Context" title="Baseline Context" subtitle="No context data recorded in your baseline." infoText="Your baseline didn't capture the 5 context answers. Re-take the baseline context section to enable context views.">
           <p style={{
             fontFamily: 'var(--font-sans)', fontSize: '14px', lineHeight: 1.6,
             color: 'var(--color-text-muted)',
@@ -528,7 +528,12 @@ export function ContextView({ demoData, baseline, dataSource }: ContextViewProps
 
       {/* Placeholder for future context patterns */}
       <div style={{ marginTop: '20px' }} data-anim>
-        <Card label="Pending" title="Context patterns appear with more pulses.">
+        <Card
+            label="Pending"
+            title="Context patterns appear with more pulses."
+            subtitle="What the context view will reveal once you have more data."
+            infoText="Heatmaps, variance, stress delta and DIAMONDS all need 5+ pulses to surface meaningful patterns."
+          >
           <p style={{
             fontFamily: 'var(--font-sans)', fontSize: '14px', lineHeight: 1.6,
             color: 'var(--color-text-muted)', maxWidth: '480px',
