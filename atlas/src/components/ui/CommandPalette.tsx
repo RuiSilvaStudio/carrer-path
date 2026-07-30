@@ -5,28 +5,37 @@ import { useAuth } from '../../hooks/useAuth';
 import { useDashboardState } from '../../state/DashboardContext';
 import type { ViewName } from '../../types';
 
-// Same-pathname + hash navigation. `navigate('/docs#x')` from react-router
-// when you're already on /docs updates the URL hash but doesn't re-render,
-// so the scroll-into-view never fires. This helper detects that case
-// and manually scrolls + updates the hash via history.
-function navigateWithHash(navigate: ReturnType<typeof useNavigate>, location: ReturnType<typeof useLocation>, path: string) {
-  const [pathname, hash] = path.split('#');
-  if (pathname === location.pathname && hash) {
-    // Already on this page — update hash + scroll without re-rendering
-    history.replaceState(null, '', path);
+// Hash navigation helper. `navigate('/docs#x')` from react-router has
+// two failure modes when the hash is present:
+//   1. Same pathname: updates URL hash but doesn't re-render → scroll never fires
+//   2. Different pathname: navigates to the new page, but scrollIntoView
+//      runs before the destination element is in the DOM
+// Both are handled by manually scrolling after the route settles.
+function scrollToHash(hash: string) {
+  if (!hash) return;
+  const tryScroll = (attempt: number) => {
     const el = document.getElementById(hash);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-      // Element not mounted yet (route is still mounting) — defer
-      setTimeout(() => {
-        const el = document.getElementById(hash);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 50);
+    } else if (attempt < 10) {
+      // Destination not yet mounted. Retry with a short backoff.
+      window.setTimeout(() => tryScroll(attempt + 1), 50);
     }
+  };
+  tryScroll(0);
+}
+
+function navigateWithHash(navigate: ReturnType<typeof useNavigate>, location: ReturnType<typeof useLocation>, path: string) {
+  const [pathname, hash] = path.split('#');
+  history.replaceState(null, '', path);
+  if (pathname === location.pathname) {
+    // Same path — just scroll. No re-render needed.
+    scrollToHash(hash);
     return;
   }
-  navigate(path);
+  // Different path — navigate, then defer scroll until destination mounts.
+  navigate(pathname ?? '/');
+  if (hash) scrollToHash(hash);
 }
 
 type CmdItem = {
