@@ -92,7 +92,7 @@ export function HelpMenu() {
       label: 'Contact',
       description: 'Report a bug, request a feature, or ask a question.',
       action: () => {
-        window.location.href = 'mailto:hi@ruisilvastudio.com?subject=Atlas feedback';
+        window.location.href = 'mailto:rui.fc.silva@proton.me?subject=Atlas feedback';
         setOpen(false);
       },
     },

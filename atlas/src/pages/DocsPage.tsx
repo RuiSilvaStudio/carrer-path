@@ -6,6 +6,8 @@ import { TrajectoryView } from '../components/dashboard/views/TrajectoryView';
 import { DistributionView } from '../components/dashboard/views/DistributionView';
 import { ContextView } from '../components/dashboard/views/ContextView';
 import { RhythmView } from '../components/dashboard/views/RhythmView';
+import { ChapterRail } from '../components/ui/ChapterRail';
+import { CopyButton } from '../components/ui/CopyButton';
 
 // ── Section metadata for table of contents ──────────────────────
 interface Section {
@@ -24,6 +26,7 @@ const SECTIONS: Section[] = [
   { id: 'data-sources', num: '07', title: 'Data Sources' },
   { id: 'privacy', num: '08', title: 'Privacy & Ethics' },
   { id: 'future', num: '09', title: 'Future: Smoothing & Aggregation' },
+  { id: 'accessibility', num: '10', title: 'Accessibility' },
 ];
 
 // ── Hover-share anchor link ─────────────────────────────────────
@@ -68,11 +71,13 @@ function DocCard({
   id,
   num,
   title,
+  nextSection,
   children,
 }: {
   id: string;
   num: string;
   title: string;
+  nextSection?: { num: string; title: string; id: string };
   children: React.ReactNode;
 }) {
   return (
@@ -128,14 +133,66 @@ function DocCard({
       >
         {children}
       </div>
+      {nextSection && (
+        <a
+          href={`#${nextSection.id}`}
+          onClick={(e) => {
+            e.preventDefault();
+            const el = document.getElementById(nextSection.id);
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              history.replaceState(null, '', `#${nextSection.id}`);
+            }
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '16px',
+            marginTop: '32px',
+            paddingTop: '20px',
+            borderTop: '1px solid var(--color-border)',
+            textDecoration: 'none',
+            color: 'var(--color-text-muted)',
+            transition: 'color 0.2s ease',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-muted)'; }}
+        >
+          <span style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '10px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.16em',
+          }}>
+            Read next →
+          </span>
+          <span style={{
+            fontFamily: 'var(--font-serif)',
+            fontSize: '15px',
+            color: 'var(--color-text)',
+            textAlign: 'right',
+          }}>
+            {nextSection.num} — {nextSection.title}
+          </span>
+        </a>
+      )}
     </section>
   );
 }
 
 // ── Inline code/formula ─────────────────────────────────────────
-function Code({ children }: { children: React.ReactNode }) {
+function Code({ children, text }: { children: React.ReactNode; text?: string }) {
+  const copyText = text ?? (typeof children === 'string' ? children : String(children ?? ''));
   return (
     <code
+      data-atlas-code
+      onClick={() => {
+        // Click-to-copy for inline code (Linear/GitHub pattern)
+        const sel = window.getSelection();
+        if (sel && sel.toString().length > 0) return; // user is selecting, don't hijack
+        navigator.clipboard?.writeText(copyText).catch(() => {});
+      }}
       style={{
         fontFamily: 'var(--font-mono)',
         fontSize: '14px',
@@ -144,7 +201,9 @@ function Code({ children }: { children: React.ReactNode }) {
         padding: '2px 6px',
         borderRadius: '4px',
         border: '1px solid var(--color-border)',
+        cursor: 'copy',
       }}
+      title="Click to copy"
     >
       {children}
     </code>
@@ -152,15 +211,18 @@ function Code({ children }: { children: React.ReactNode }) {
 }
 
 // ── Formula block ───────────────────────────────────────────────
-function Formula({ children }: { children: React.ReactNode }) {
+function Formula({ children, text }: { children: React.ReactNode; text?: string }) {
+  const copyText = text ?? (typeof children === 'string' ? children : String(children ?? ''));
   return (
     <div
+      data-atlas-formula
       style={{
+        position: 'relative',
         fontFamily: 'var(--font-mono)',
         fontSize: '14px',
         background: 'var(--color-surface-elevated)',
         color: 'var(--color-text)',
-        padding: '14px 18px',
+        padding: '14px 60px 14px 18px',
         borderRadius: '8px',
         border: '1px solid var(--color-border)',
         margin: '16px 0',
@@ -169,6 +231,9 @@ function Formula({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
+      <div style={{ position: 'absolute', top: '8px', right: '8px' }}>
+        <CopyButton text={copyText} variant="block" />
+      </div>
     </div>
   );
 }
@@ -364,6 +429,7 @@ export function DocsPage() {
         background: 'var(--color-bg)',
       }}
     >
+      <ChapterRail sections={SECTIONS} />
       {/* ── Header ──────────────────────────────────────────── */}
       <div
         className="atlas-page"
@@ -501,7 +567,7 @@ export function DocsPage() {
         }}
       >
         {/* 01 — Overview */}
-        <DocCard id="overview" num="01" title="What is the Personality Atlas?">
+        <DocCard id="overview" num="01" title="What is the Personality Atlas?" nextSection={{ id: 'science', num: '02', title: 'The Science' }}>
           <p style={{ marginBottom: '16px' }}>
             The Personality Atlas is a <strong style={{ color: 'var(--color-text)' }}>longitudinal
             self-insight instrument</strong>. It is not a hiring tool. It is not a predictive
@@ -539,7 +605,7 @@ export function DocsPage() {
         </DocCard>
 
         {/* 02 — Science */}
-        <DocCard id="science" num="02" title="The Science">
+        <DocCard id="science" num="02" title="The Science" nextSection={{ id: 'instruments', num: '03', title: 'Assessment Instruments' }}>
           <h3
             style={{
               fontFamily: 'var(--font-serif)',
@@ -628,7 +694,7 @@ export function DocsPage() {
         </DocCard>
 
         {/* 03 — Instruments */}
-        <DocCard id="instruments" num="03" title="Assessment Instruments">
+        <DocCard id="instruments" num="03" title="Assessment Instruments" nextSection={{ id: 'scoring', num: '04', title: 'Scoring Methodology' }}>
           <h3
             style={{
               fontFamily: 'var(--font-serif)',
@@ -709,7 +775,7 @@ export function DocsPage() {
         </DocCard>
 
         {/* 04 — Scoring Methodology */}
-        <DocCard id="scoring" num="04" title="Scoring Methodology">
+        <DocCard id="scoring" num="04" title="Scoring Methodology" nextSection={{ id: 'pulse-design', num: '05', title: 'Pulse Design — Why 5–10 Items?' }}>
           <h3
             style={{
               fontFamily: 'var(--font-serif)',
@@ -831,7 +897,7 @@ export function DocsPage() {
         </DocCard>
 
         {/* 05 — Pulse Design */}
-        <DocCard id="pulse-design" num="05" title="Pulse Design — Why 5–10 Items?">
+        <DocCard id="pulse-design" num="05" title="Pulse Design — Why 5–10 Items?" nextSection={{ id: 'visualization', num: '06', title: 'Data Visualization' }}>
           <h3
             style={{
               fontFamily: 'var(--font-serif)',
@@ -903,7 +969,7 @@ export function DocsPage() {
         </DocCard>
 
         {/* 06 — Data Visualization */}
-        <DocCard id="visualization" num="06" title="Data Visualization">
+        <DocCard id="visualization" num="06" title="Data Visualization" nextSection={{ id: 'data-sources', num: '07', title: 'Data Sources' }}>
           <h3
             style={{
               fontFamily: 'var(--font-serif)',
@@ -1028,7 +1094,7 @@ export function DocsPage() {
         </DocCard>
 
         {/* 07 — Data Sources */}
-        <DocCard id="data-sources" num="07" title="Data Sources">
+        <DocCard id="data-sources" num="07" title="Data Sources" nextSection={{ id: 'privacy', num: '08', title: 'Privacy & Ethics' }}>
           <h3
             style={{
               fontFamily: 'var(--font-serif)',
@@ -1075,7 +1141,7 @@ export function DocsPage() {
         </DocCard>
 
         {/* 08 — Privacy & Ethics */}
-        <DocCard id="privacy" num="08" title="Privacy & Ethics">
+        <DocCard id="privacy" num="08" title="Privacy & Ethics" nextSection={{ id: 'future', num: '09', title: 'Future: Smoothing & Aggregation' }}>
           <Callout type="warning">
             <strong style={{ color: 'var(--color-text)' }}>This is not a clinical assessment or
             diagnostic tool.</strong> The Personality Atlas does not diagnose, treat, or recommend
@@ -1191,6 +1257,44 @@ export function DocsPage() {
           <div style={{ marginTop: '20px' }}>
             <Ref><strong style={{ color: 'var(--color-text-muted)' }}>Bringmann, L. F., et al.</strong> (2021). ESMvis: A tool for visualizing experience sampling method data. <em>Assessment</em>.</Ref>
           </div>
+        </DocCard>
+
+        {/* 10 — Accessibility Statement */}
+        <DocCard id="accessibility" num="10" title="Accessibility Statement">
+          <p style={{ marginBottom: '16px' }}>
+            The Personality Atlas aims to conform to{' '}
+            <strong style={{ color: 'var(--color-text)' }}>WCAG 2.2 Level AA</strong>.
+            We test against keyboard navigation, screen readers (NVDA, VoiceOver),
+            and reduced-motion preferences, and we publish the results here.
+          </p>
+
+          <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '17px', fontWeight: 500, color: 'var(--color-text)', marginBottom: '10px' }}>
+            Supported
+          </h3>
+          <ul style={{ paddingLeft: '20px', marginBottom: '16px' }}>
+            <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>Keyboard navigation:</strong> every interactive element is reachable via Tab; chart scrubbing via arrow keys; ⌘K opens the command palette; <kbd style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', border: '1px solid var(--color-border)', padding: '1px 5px', borderRadius: '3px' }}>?</kbd> opens help.</li>
+            <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>Screen readers:</strong> semantic landmarks (<code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: '3px' }}>&lt;nav&gt;</code>, <code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: '3px' }}>&lt;main&gt;</code>, <code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: '3px' }}>&lt;footer&gt;</code>), skip-to-main link, <code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: '3px' }}>aria-label</code> on icon-only buttons, data-table fallbacks for every chart.</li>
+            <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>Reduced motion:</strong> chart entrance animations skip when <code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: '3px' }}>prefers-reduced-motion: reduce</code> is set. Final state renders directly.</li>
+            <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>Color contrast:</strong> text on background ≥ 4.5:1 in both dark and light themes; trait labels on chart backgrounds ≥ 3:1.</li>
+            <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>Touch targets:</strong> all interactive elements ≥ 32px hit area (most ≥ 44px).</li>
+          </ul>
+
+          <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '17px', fontWeight: 500, color: 'var(--color-text)', marginBottom: '10px' }}>
+            Partially supported
+          </h3>
+          <ul style={{ paddingLeft: '20px', marginBottom: '16px' }}>
+            <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>High-contrast mode:</strong> we detect <code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: '3px' }}>forced-colors</code> media query but don't yet restyle every chart axis for it. In progress.</li>
+            <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>Multi-language:</strong> currently English only.</li>
+          </ul>
+
+          <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '17px', fontWeight: 500, color: 'var(--color-text)', marginBottom: '10px' }}>
+            Reporting issues
+          </h3>
+          <p style={{ marginBottom: '0' }}>
+            If something is hard to use with your assistive tech, please{' '}
+            <a href="mailto:rui.fc.silva@proton.me?subject=Atlas accessibility" style={{ color: 'var(--color-accent)', borderBottom: '1px solid var(--color-accent)' }}>email us</a>.
+            We treat accessibility bugs as P1.
+          </p>
         </DocCard>
       </main>
     </div>

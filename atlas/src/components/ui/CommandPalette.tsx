@@ -25,6 +25,7 @@ const DOC_ANCHORS: Array<{ anchor: string; title: string; keywords: string[] }> 
   { anchor: 'data-sources', title: 'Data Sources', keywords: ['data', 'sources', 'import', 'csv'] },
   { anchor: 'privacy', title: 'Privacy & Ethics', keywords: ['privacy', 'ethics', 'security', 'data', 'consent'] },
   { anchor: 'future', title: 'Future: Smoothing', keywords: ['future', 'smoothing', 'roadmap', 'plan'] },
+  { anchor: 'accessibility', title: 'Accessibility', keywords: ['accessibility', 'a11y', 'wcag', 'screen reader', 'keyboard'] },
 ];
 
 export function CommandPalette() {

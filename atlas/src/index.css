@@ -242,3 +242,13 @@ svg, img { max-width: 100%; height: auto; }
 .atlas-doc-h3 {
   position: relative;
 }
+
+/* ── Chapter rail (Phase 4.A) ───────────────────────────── */
+.atlas-chapter-rail {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .atlas-chapter-rail {
+    display: flex !important;
+  }
+}

@@ -894,6 +894,53 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
           </div>
         </div>
       )}
+
+      {/* ── Screen-reader data-table fallback (WCAG) ─────────────── */}
+      <table
+        className="atlas-sr-only"
+        style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          padding: 0,
+          margin: '-1px',
+          overflow: 'hidden',
+          clip: 'rect(0, 0, 0, 0)',
+          whiteSpace: 'nowrap',
+          border: 0,
+        }}
+        aria-label={isEmotions ? 'Emotion trajectory data' : 'Big Five personality trajectory data'}
+      >
+        <caption>
+          {isEmotions ? 'Emotion intensity (0–100) by date' : 'Big Five trait scores (0–100) by date'}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Date</th>
+            <th scope="col">Type</th>
+            {isEmotions
+              ? EMOTIONS.map((e) => <th key={e.key} scope="col">{e.label}</th>)
+              : TRAITS.map((t) => <th key={t.key} scope="col">{t.label}</th>)
+            }
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((d, i) => (
+            <tr key={`sr-${i}`}>
+              <th scope="row">{d.date}</th>
+              <td>{d.type}</td>
+              {isEmotions
+                ? EMOTIONS.map((e) => (
+                  <td key={e.key}>{Math.round(d.emotionScores?.[e.key] ?? 0)}</td>
+                ))
+                : TRAITS.map((t) => (
+                  <td key={t.key}>{Math.round(d.scores[t.key] ?? 0)}</td>
+                ))
+              }
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
