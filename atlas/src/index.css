@@ -116,7 +116,10 @@ body {
   --nav-pad-sm: 16px; /* match --space-page-sm so nav aligns with page content */
 }
 
-html, body { overflow-x: hidden; }
+/* overflow-x on html only. Setting it on body too would make body a
+   scroll container, which breaks position:sticky descendants (the nav
+   sticks to the viewport only when its scroll ancestor is the viewport). */
+html { overflow-x: hidden; }
 svg, img { max-width: 100%; height: auto; }
 
 /* ============================================================

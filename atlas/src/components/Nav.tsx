@@ -7,6 +7,53 @@ import { Sigil } from './sigil/Sigil';
 import { sigilInputFromData, EMPTY_SIGIL_INPUT } from '../lib/sigil';
 import type { AssessmentScores } from '../types';
 
+// ── Theme pill switch — explicit, icon-only, no text ─────────────
+// Sun (light) on one side, moon (dark) on the other; a knob slides to
+// the active mode. Distinct enough to read as a toggle at a glance,
+// quiet enough to not compete with the profile sigil.
+function ThemeToggle({ theme, onToggle }: { theme: string; onToggle: () => void }) {
+  const isDark = theme === 'dark';
+  const icon = (color: string) => ({ fill: 'none', stroke: color, strokeWidth: 1.6, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const });
+  return (
+    <button
+      onClick={onToggle}
+      role="switch"
+      aria-checked={isDark}
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      title={isDark ? 'Light mode' : 'Dark mode'}
+      style={{
+        position: 'relative', display: 'flex', alignItems: 'center',
+        width: '38px', height: '20px', padding: 0, cursor: 'pointer',
+        background: 'none',
+        border: '1px solid var(--color-border)',
+        borderRadius: '999px', flexShrink: 0,
+        transition: 'border-color 0.2s ease',
+      }}
+    >
+      {/* track icons */}
+      <span style={{ position: 'absolute', left: '4px', display: 'flex', opacity: isDark ? 0.4 : 0.9 }}>
+        <svg width="9" height="9" viewBox="0 0 24 24" {...icon('var(--color-text-dim)')}>
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+        </svg>
+      </span>
+      <span style={{ position: 'absolute', right: '4px', display: 'flex', opacity: isDark ? 0.9 : 0.4 }}>
+        <svg width="9" height="9" viewBox="0 0 24 24" {...icon('var(--color-text-dim)')}>
+          <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z" />
+        </svg>
+      </span>
+      {/* knob */}
+      <span style={{
+        position: 'absolute', top: '2px',
+        left: isDark ? '20px' : '2px',
+        width: '14px', height: '14px', borderRadius: '50%',
+        background: 'var(--color-accent)',
+        transition: 'left 0.2s ease',
+      }} />
+    </button>
+  );
+}
+
 // Rui's user ID — only he sees the Cockpit link
 const RUI_USER_ID = '37d25257-5fcf-4318-b1b6-5bdb48288a71';
 
@@ -86,20 +133,10 @@ export function Nav() {
         <div style={{ flex: 1 }} />
 
         {/* Desktop-only theme + sign out (hidden on mobile; they move into the menu) */}
-        <div className="atlas-nav-actions" style={{ display: 'flex', alignItems: 'center', gap: 'var(--nav-gap)' }}>
-          <button
-            onClick={toggleTheme}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: 'var(--color-text-dim)', fontFamily: 'var(--font-mono)',
-              fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.12em',
-              padding: '6px 0', minHeight: '32px',
-            }}
-          >
-            {theme === 'dark' ? '☀ Light' : '☾ Dark'}
-          </button>
+        <div className="atlas-nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           {user && (
             <>
+              {/* Identity first — sigil + name read as one unit */}
               <button
                 onClick={() => navigate('/profile')}
                 title="Edit profile"
@@ -110,14 +147,15 @@ export function Nav() {
                   fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.12em',
                   padding: '6px 0', minHeight: '32px',
                   maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  display: 'flex', alignItems: 'center', gap: '8px',
+                  display: 'flex', alignItems: 'center', gap: '10px',
                 }}
               >
                 {sigilInput
-                  ? <Sigil input={sigilInput} size={26} minimal animate={false} />
-                  : <Sigil input={EMPTY_SIGIL_INPUT} size={26} empty animate={false} />}
+                  ? <Sigil input={sigilInput} size={30} minimal animate={false} />
+                  : <Sigil input={EMPTY_SIGIL_INPUT} size={30} empty animate={false} />}
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.displayName || user.email}</span>
               </button>
+              <ThemeToggle theme={theme} onToggle={toggleTheme} />
               <button
                 onClick={() => signOut()}
                 style={{
@@ -130,6 +168,7 @@ export function Nav() {
               </button>
             </>
           )}
+          {!user && <ThemeToggle theme={theme} onToggle={toggleTheme} />}
         </div>
       </div>
 
@@ -155,18 +194,8 @@ export function Nav() {
               {link.label}
             </button>
           ))}
-          <div style={{ display: 'flex', gap: '16px', paddingTop: '8px' }}>
-            <button
-              onClick={toggleTheme}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: 'var(--color-text-dim)', fontFamily: 'var(--font-mono)',
-                fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.12em',
-                padding: '12px 0', minHeight: '44px',
-              }}
-            >
-              {theme === 'dark' ? '☀ Light' : '☾ Dark'}
-            </button>
+          <div style={{ display: 'flex', gap: '16px', paddingTop: '8px', alignItems: 'center' }}>
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
             {user && (
               <>
                 <button
