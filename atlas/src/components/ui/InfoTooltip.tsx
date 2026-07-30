@@ -54,7 +54,7 @@ export function InfoTooltip({ text, term, ariaLabel = 'More info' }: InfoTooltip
   if (!body) return null;
 
   return (
-    <span ref={ref} style={{ position: 'relative', display: 'inline-flex' }}>
+    <span ref={ref} style={{ position: 'relative', display: 'inline-flex', marginLeft: '6px' }}>
       <button
         data-atlas-tooltip-trigger
         onClick={() => setOpen(o => !o)}

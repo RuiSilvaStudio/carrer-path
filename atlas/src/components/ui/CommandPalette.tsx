@@ -1,9 +1,33 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { useDashboardState } from '../../state/DashboardContext';
 import type { ViewName } from '../../types';
+
+// Same-pathname + hash navigation. `navigate('/docs#x')` from react-router
+// when you're already on /docs updates the URL hash but doesn't re-render,
+// so the scroll-into-view never fires. This helper detects that case
+// and manually scrolls + updates the hash via history.
+function navigateWithHash(navigate: ReturnType<typeof useNavigate>, location: ReturnType<typeof useLocation>, path: string) {
+  const [pathname, hash] = path.split('#');
+  if (pathname === location.pathname && hash) {
+    // Already on this page — update hash + scroll without re-rendering
+    history.replaceState(null, '', path);
+    const el = document.getElementById(hash);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      // Element not mounted yet (route is still mounting) — defer
+      setTimeout(() => {
+        const el = document.getElementById(hash);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+    return;
+  }
+  navigate(path);
+}
 
 type CmdItem = {
   id: string;
@@ -35,6 +59,7 @@ export function CommandPalette() {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toggleTheme } = useTheme();
   const { signOut } = useAuth();
   const { setView } = useDashboardState();
@@ -90,7 +115,7 @@ export function CommandPalette() {
       title: 'Docs',
       group: 'Navigate',
       keywords: ['docs', 'documentation', 'guide', 'help', 'read'],
-      action: () => navigate('/docs'),
+      action: () => navigateWithHash(navigate, location, '/docs'),
     });
     out.push({
       id: 'route-profile',
@@ -107,7 +132,7 @@ export function CommandPalette() {
         title: `Docs · ${a.title}`,
         group: 'Navigate',
         keywords: ['docs', 'documentation', ...a.keywords],
-        action: () => navigate(`/docs#${a.anchor}`),
+        action: () => navigateWithHash(navigate, location, `/docs#${a.anchor}`),
       });
     }
 
