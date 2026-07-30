@@ -1,12 +1,32 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useId } from 'react';
+import { lookupGlossary } from '../../data/glossary';
 
 interface InfoTooltipProps {
-  text: string;
+  /** Direct tooltip body. Used for one-off copy. ≤150 chars per NN/g. */
+  text?: string;
+  /** Glossary term id (e.g. 'trait-openness', 'facet-n-anxiety'). Looked up at render. */
+  term?: string;
+  /** Accessible label override; defaults to "More info". */
+  ariaLabel?: string;
 }
 
-export function InfoTooltip({ text }: InfoTooltipProps) {
+/**
+ * The canonical Atlas tooltip. Two modes:
+ *   - `text="…"` — direct one-off copy (legacy, still works for ad-hoc strings).
+ *   - term="…"   — looked up in the glossary data file. Preferred.
+ *
+ * Accessibility:
+ *   - Hover + focus both open. Mouse-out + blur both close.
+ *   - Esc closes when open (WCAG 1.4.13 dismissible).
+ *   - aria-describedby ties the trigger to the popup.
+ *   - Hit area ≥32px via backgroundClip trick (matches Fitts's Law minimum).
+ */
+export function InfoTooltip({ text, term, ariaLabel = 'More info' }: InfoTooltipProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLSpanElement>(null);
+  const popupId = useId();
+
+  const body = term ? lookupGlossary(term)?.short ?? text : text;
 
   useEffect(() => {
     if (!open) return;
@@ -15,21 +35,43 @@ export function InfoTooltip({ text }: InfoTooltipProps) {
         setOpen(false);
       }
     };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpen(false);
+        // Restore focus to the trigger so keyboard users don't get stranded.
+        const trigger = ref.current?.querySelector<HTMLButtonElement>('button[data-atlas-tooltip-trigger]');
+        trigger?.focus();
+      }
+    };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKey);
+    };
   }, [open]);
+
+  if (!body) return null;
 
   return (
     <span ref={ref} style={{ position: 'relative', display: 'inline-flex' }}>
       <button
+        data-atlas-tooltip-trigger
         onClick={() => setOpen(o => !o)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        aria-label={ariaLabel}
+        aria-describedby={open ? popupId : undefined}
+        aria-expanded={open}
         style={{
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
           width: '18px',
           height: '18px',
-          /* enlarge hit area to ≥32px without changing the 18px visual */
+          /* Enlarge hit area to ≥32px without changing the 18px visual. */
           padding: '7px',
           margin: '-7px',
           backgroundClip: 'content-box',
@@ -43,20 +85,29 @@ export function InfoTooltip({ text }: InfoTooltipProps) {
           lineHeight: 1,
           transition: 'border-color 0.2s, color 0.2s',
         }}
-        onMouseEnter={e => {
+        onMouseOver={(e) => {
           e.currentTarget.style.borderColor = 'var(--color-accent)';
           e.currentTarget.style.color = 'var(--color-accent)';
         }}
-        onMouseLeave={e => {
+        onMouseOut={(e) => {
           e.currentTarget.style.borderColor = 'var(--color-border)';
           e.currentTarget.style.color = 'var(--color-text-dim)';
         }}
-        aria-label="More info"
+        onFocusCapture={(e) => {
+          e.currentTarget.style.borderColor = 'var(--color-accent)';
+          e.currentTarget.style.color = 'var(--color-accent)';
+        }}
+        onBlurCapture={(e) => {
+          e.currentTarget.style.borderColor = 'var(--color-border)';
+          e.currentTarget.style.color = 'var(--color-text-dim)';
+        }}
       >
         ⓘ
       </button>
       {open && (
         <span
+          id={popupId}
+          role="tooltip"
           style={{
             position: 'absolute',
             bottom: 'calc(100% + 8px)',
@@ -67,6 +118,7 @@ export function InfoTooltip({ text }: InfoTooltipProps) {
             borderRadius: '8px',
             padding: '10px 14px',
             maxWidth: '280px',
+            minWidth: '180px',
             fontFamily: 'var(--font-sans)',
             fontSize: '12px',
             lineHeight: 1.5,
@@ -77,8 +129,9 @@ export function InfoTooltip({ text }: InfoTooltipProps) {
             textAlign: 'left',
           }}
         >
-          {text}
+          {body}
           <span
+            aria-hidden="true"
             style={{
               position: 'absolute',
               top: '100%',

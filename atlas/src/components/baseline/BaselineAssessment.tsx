@@ -19,6 +19,7 @@ import {
 } from '../../lib/assessment-data';
 import type { BigFiveScores } from '../../types';
 import RadarChart from '../dashboard/charts/RadarChart';
+import { InfoTooltip } from '../ui/InfoTooltip';
 
 interface BaselineAssessmentProps {
 }
@@ -316,14 +317,38 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
         </h1>
         <p style={{
           fontSize: '15px', color: 'var(--color-text-muted)',
-          lineHeight: 1.7, maxWidth: '560px', marginBottom: '40px',
+          lineHeight: 1.7, maxWidth: '560px', marginBottom: '24px',
         }}>
           This assessment captures a comprehensive snapshot of your personality across four domains.
           It takes approximately 15–20 minutes. Your responses establish the baseline against which
           all future pulses will be compared.
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '40px' }}>
+        {/* ── What you'll see (preview, drives the seed-first instinct) ──── */}
+        <div style={{
+          padding: '16px 20px',
+          background: 'var(--color-surface-elevated)',
+          border: '1px solid var(--color-border)',
+          borderLeft: '3px solid var(--color-accent)',
+          borderRadius: '8px',
+          marginBottom: '32px',
+        }}>
+          <p style={{
+            fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase',
+            letterSpacing: '0.12em', color: 'var(--color-text-dim)', marginBottom: '8px',
+          }}>
+            What you'll see when you finish
+          </p>
+          <p style={{
+            fontFamily: 'var(--font-sans)', fontSize: '14px',
+            color: 'var(--color-text-muted)', lineHeight: 1.6, margin: 0,
+          }}>
+            A 5-axis radar of your Big Five profile, plus 3 motivational drivers and a cognitive score.
+            After your first weekly pulse, a trajectory chart shows how each trait moves over time.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
           <SectionCard label="01" title={IPIP_TITLE} desc="120 statements about your typical behavior. 6 sections, 20 items each." count="120 items" />
           <SectionCard label="02" title={ICAR_TITLE} desc="16 cognitive ability questions. Multiple choice, no time limit." count="16 items" />
           <SectionCard label="03" title="Motivational Drivers" desc={SD3_DESCRIPTION} count="27 items" />
@@ -331,16 +356,9 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
         </div>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+          {/* Primary: PREVIEW first (seed-first instinct from Slack/Linear pattern) */}
           <button
-            onClick={() => {
-              // Check if there's saved progress
-              const saved = localStorage.getItem(STORAGE_KEY);
-              if (saved) {
-                setPhase(JSON.parse(saved).phase || 'ipip');
-              } else {
-                setPhase('ipip');
-              }
-            }}
+            onClick={() => navigate('/docs')}
             style={{
               padding: '14px 32px',
               background: 'var(--color-accent)',
@@ -351,10 +369,18 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
               letterSpacing: '0.02em',
             }}
           >
-            Begin Assessment
+            Preview Dashboard with Sample Data →
           </button>
+          {/* Secondary: Begin */}
           <button
-            onClick={() => navigate('/docs')}
+            onClick={() => {
+              const saved = localStorage.getItem(STORAGE_KEY);
+              if (saved) {
+                setPhase(JSON.parse(saved).phase || 'ipip');
+              } else {
+                setPhase('ipip');
+              }
+            }}
             style={{
               padding: '14px 28px',
               background: 'none',
@@ -365,7 +391,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
               cursor: 'pointer', fontFamily: 'var(--font-sans)',
             }}
           >
-            Explore Dashboard (Demo Data) →
+            Begin Assessment
           </button>
         </div>
       </div>
@@ -837,6 +863,12 @@ function IPIPItemRow({ item, value, onAnswer }: {
   value: number | undefined;
   onAnswer: (v: number) => void;
 }) {
+  // Build glossary term id: facet-{trait-kebab}-{facet-kebab}
+  // e.g. trait 'N' + facet 'Anxiety' → 'facet-n-anxiety'
+  //      trait 'C' + facet 'Self-efficacy' → 'facet-c-self-efficacy'
+  const traitSlug = item.trait.toLowerCase();
+  const facetSlug = item.facet.toLowerCase().replace(/\s+/g, '-');
+  const glossaryTerm = `facet-${traitSlug}-${facetSlug}`;
   return (
     <div style={{
       padding: '18px 0',
@@ -846,8 +878,10 @@ function IPIPItemRow({ item, value, onAnswer }: {
         fontFamily: 'var(--font-mono)', fontSize: '9px',
         letterSpacing: '0.12em', textTransform: 'uppercase',
         color: 'var(--color-text-dim)', marginBottom: '6px',
+        display: 'inline-flex', alignItems: 'center', gap: '6px',
       }}>
         {item.facet} {item.reverse && '· (reverse)'}
+        <InfoTooltip term={glossaryTerm} ariaLabel={`About the ${item.facet} facet`} />
       </div>
       <p style={{
         fontFamily: 'var(--font-serif)', fontSize: '17px',

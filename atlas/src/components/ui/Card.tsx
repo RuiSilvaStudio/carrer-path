@@ -6,12 +6,14 @@ interface CardProps {
   title?: string;
   subtitle?: string;
   infoText?: string;
+  /** Glossary term id — preferred over infoText when set. */
+  infoTerm?: string;
   children: ReactNode;
   style?: CSSProperties;
   className?: string;
 }
 
-export function Card({ label, title, subtitle, infoText, children, style, className }: CardProps) {
+export function Card({ label, title, subtitle, infoText, infoTerm, children, style, className }: CardProps) {
   return (
     <div
       className={className}
@@ -54,7 +56,7 @@ export function Card({ label, title, subtitle, infoText, children, style, classN
               }}
             >
               {title}
-              {infoText && <InfoTooltip text={infoText} />}
+              {(infoText || infoTerm) && <InfoTooltip text={infoText} term={infoTerm} />}
             </p>
           )}
           {subtitle && (

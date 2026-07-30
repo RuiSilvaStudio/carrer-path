@@ -419,7 +419,7 @@ export function ContextView({ demoData, baseline, dataSource }: ContextViewProps
             label="03 · Context"
             title="Context Heatmap"
             subtitle="Average trait scores by context"
-            infoText="Trait scores averaged by self-reported context (Work, Home, Social…). Brighter cells = higher score. Reveals which traits move most with situation."
+            infoTerm="chart-context-heatmap"
           >
             <ContextHeatmap demoData={demoData} />
           </Card>
@@ -454,7 +454,7 @@ export function ContextView({ demoData, baseline, dataSource }: ContextViewProps
             label="DIAMONDS"
             title="Situational Dimensions"
             subtitle="Average scores across 8 situational factors"
-            infoText="DIAMONDS is a framework for characterizing situations along 8 dimensions: Diversity, Novelty, Depth, Adversity, Deception, Sociality, Stress, and Performance."
+            infoTerm="instrument-diamonds"
           >
             <DiamondsGrid demoData={demoData} />
           </Card>

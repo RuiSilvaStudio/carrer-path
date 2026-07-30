@@ -241,7 +241,7 @@ export function DistributionView({ demoData, baseline, pulses, dataSource }: Dis
           label="02 · Distribution"
           title="Density Distributions"
           subtitle={`${demoData.length} pulses — frequency histograms with kernel density estimates`}
-          infoText="Trait score density, 0–100. The peak is your typical score; the spread shows how variable you are across pulses. Source: IPIP-NEO-120 weekly avg."
+          infoTerm="chart-distribution"
           data-anim
         >
           <div className="atlas-grid-auto" style={{
@@ -266,7 +266,7 @@ export function DistributionView({ demoData, baseline, pulses, dataSource }: Dis
             label="Summary Statistics"
             title="Trait Ranges & Means"
             subtitle="Mean · std · min · max across all your pulses for each trait."
-            infoText="Aggregate statistics across all your pulses. Min/max are the extremes you've recorded; std is the typical spread — high std means you swing more by context."
+            infoTerm="concept-trait-score"
           >
             <div style={{
               display: 'grid',
@@ -334,7 +334,7 @@ export function DistributionView({ demoData, baseline, pulses, dataSource }: Dis
             label="02 · Distribution"
             title="Baseline Profile"
             subtitle="Trait score, 0–100, at your baseline (no pulses yet)."
-            infoText="Your one-time baseline profile. Distribution charts need ≥5 pulses to show meaningful variance."
+            infoTerm="chart-distribution"
           >
             <RadarChart scores={baseline.scores.bigFive} size={300} />
           </Card>
@@ -397,7 +397,7 @@ export function DistributionView({ demoData, baseline, pulses, dataSource }: Dis
         label="02 · Distribution"
         title="Density Distributions"
         subtitle={`${dataPoints} data points — frequency histograms with kernel density estimates`}
-        infoText="Trait score density, 0–100. The peak is your typical score; the spread shows how variable you are across pulses. Source: IPIP-NEO-120 weekly avg."
+        infoTerm="chart-distribution"
         data-anim
       >
         <div className="atlas-grid-auto" style={{

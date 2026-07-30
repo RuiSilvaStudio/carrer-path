@@ -304,7 +304,7 @@ export function RhythmView({ demoData, dataSource }: RhythmViewProps) {
         label="04 · Rhythm"
         title="Circadian Trait Patterns"
         subtitle="Average trait scores by hour of day across all demo pulses"
-        infoText="Trait scores averaged by hour of day (radial clock). The further from centre, the higher the score at that hour. Spikes reveal your peak times."
+        infoTerm="chart-rhythm-radial-clock"
         data-anim
       >
         <div style={{
@@ -330,7 +330,7 @@ export function RhythmView({ demoData, dataSource }: RhythmViewProps) {
           label="Emotions"
           title="Emotion Heatmap by Hour"
           subtitle="Frequency of emotions across hours of the day"
-          infoText="Emotion intensity by hour of day. Brighter cells = higher intensity. Reveals which emotions peak when during your day."
+          infoTerm="chart-rhythm-heatmap"
         >
           <EmotionHeatmap demoData={validData} />
         </Card>

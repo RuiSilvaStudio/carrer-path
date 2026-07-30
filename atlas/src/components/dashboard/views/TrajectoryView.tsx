@@ -243,7 +243,7 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
             label="01 · Trajectory"
             title="Trait Trajectory — Demo"
             subtitle="Trait score, 0–100 (mean × 20, IPIP-NEO-120, weekly avg). Click any point to scrub."
-            infoText="Big Five trait scores over time. 0–100 = mean of Likert responses × 20. Higher = stronger expression of the trait. Source: IPIP-NEO-120."
+            infoTerm="chart-trajectory"
           >
             <PhaseBar trajectory={smoothedTrajectory} currentIndex={scrubIndex} />
             <TrajectoryChart
@@ -267,7 +267,7 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
             label="Current State"
             title="Big Five Profile"
             subtitle="Trait score, 0–100, at the scrubbed point."
-            infoText="Five-axis snapshot of your trait scores at the current point. Each axis 0–100, higher = stronger. Click a vertex for the underlying value."
+            infoTerm="chart-trajectory"
             data-anim
           >
             <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -330,7 +330,7 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
             label="Starting Point"
             title="Your Baseline Profile"
             subtitle="Trait score, 0–100, from your one-time baseline assessment."
-            infoText="Your one-time baseline trait profile. Each axis 0–100 = mean × 20 from IPIP-NEO-120. Pulses will overlay this point."
+            infoTerm="chart-trajectory"
           >
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <RadarChart scores={baseline.scores.bigFive} size={320} />
@@ -375,7 +375,7 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
                 label="Motivational Drivers"
                 title="SD3 Scores"
                 subtitle="Short Dark Triad (SD3) — relabelled 'Motivational Drivers'. 0–100."
-                infoText="We label the SD3 'Motivational Drivers' to reduce the stigma of the original 'Dark Triad' name. The underlying constructs (Machiavellianism · Narcissism · Psychopathy) are unchanged."
+                infoTerm="instrument-sd3-27"
               >
                 <div style={{ maxWidth: '400px' }}>
                   <SD3Bars sd3={baseline.scores.sd3} />
@@ -387,7 +387,7 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
                 label="Cognitive"
                 title="ICAR Score"
                 subtitle="ICAR-16 cognitive ability score: (correct / total) × 100."
-                infoText="ICAR-16 measures fluid cognitive ability across 4 item types: letter series, verbal reasoning, matrix reasoning, 3D rotation."
+                infoTerm="instrument-icar-16"
               >
                 <ICARScore icar={baseline.scores.icar} />
               </Card>
@@ -411,7 +411,7 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
           label="01 · Trajectory"
           title="Trait Trajectory"
           subtitle="Trait score, 0–100 (mean × 20, IPIP-NEO-120, weekly avg). Click any point to scrub."
-          infoText="Big Five trait scores over time. 0–100 = mean of Likert responses × 20. Higher = stronger expression of the trait. Source: IPIP-NEO-120."
+          infoTerm="chart-trajectory"
         >
           <PhaseBar trajectory={baselineTrajectory} currentIndex={scrubIndex} />
           <TrajectoryChart
@@ -435,7 +435,7 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
           label="Current State"
           title="Big Five Profile"
           subtitle="Trait score, 0–100, at the scrubbed point."
-          infoText="Five-axis snapshot of your trait scores at the current point. Each axis 0–100, higher = stronger. Click a vertex for the underlying value."
+          infoTerm="chart-trajectory"
         >
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <RadarChart scores={scrubbedPoint.scores} size={320} />
@@ -514,7 +514,7 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
                   label="Motivational Drivers"
                   title="SD3 Scores"
                   subtitle="Short Dark Triad (SD3) — relabelled 'Motivational Drivers'. 0–100, weekly aggregate."
-                  infoText="We label the SD3 'Motivational Drivers' to reduce the stigma of the original 'Dark Triad' name. The underlying constructs (Machiavellianism · Narcissism · Psychopathy) are unchanged."
+                  infoTerm="instrument-sd3-27"
                 >
                   <div style={{ maxWidth: '400px' }}>
                     <SD3Bars sd3={baseline.scores.sd3} />
@@ -526,7 +526,7 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
                   label="Cognitive"
                   title="ICAR Score"
                   subtitle="ICAR-16 cognitive ability score: (correct / total) × 100."
-                  infoText="ICAR-16 measures fluid cognitive ability across 4 item types: letter series, verbal reasoning, matrix reasoning, 3D rotation. Score is percent correct."
+                  infoTerm="instrument-icar-16"
                 >
                   <ICARScore icar={baseline.scores.icar} />
                 </Card>

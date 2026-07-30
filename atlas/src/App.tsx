@@ -11,10 +11,12 @@ import { CockpitPage } from './pages/CockpitPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { SigilLabPage } from './pages/SigilLabPage';
 import { PulseReminder } from './components/PulseReminder';
+import { CommandPalette } from './components/ui/CommandPalette';
 
 export default function App() {
   return (
     <DashboardProvider>
+      <CommandPalette />
       <Routes>
         {/* Public route — no auth required, but shows nav */}
         <Route path="/docs" element={
