@@ -25,11 +25,9 @@ export function DashboardPage() {
     baseline ? sigilInputFromData(baseline.scores as AssessmentScores, pulses.length, pulses) : null
   ), [baseline, pulses]);
 
-  // Compute metadata for header — always user data
+  // Compute header metadata — data-point count + date range
   const meta = useMemo(() => {
     const count = pulses.length;
-    const participant = user?.email?.split('@')[0] ?? 'You';
-    const assessmentType = baseline ? 'Baseline + Pulses' : 'Baseline';
     const allDates: string[] = [];
     if (baseline) allDates.push(baseline.timestamp.split('T')[0]);
     pulses.forEach(p => allDates.push(p.timestamp.split('T')[0]));
@@ -39,14 +37,8 @@ export function DashboardPage() {
       return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
     const dateRange = allDates.length > 1 ? `${fmt(allDates[0])} — ${fmt(allDates[allDates.length - 1])}` : allDates.length === 1 ? fmt(allDates[0]) : '';
-    return {
-      count,
-      dateRange,
-      participant,
-      assessmentType,
-      phase: count === 0 ? 'Baseline only' : `${count + 1} data points`,
-    };
-  }, [pulses, baseline, user]);
+    return { count, dateRange };
+  }, [pulses, baseline]);
 
   if (loadError) {
     return (
@@ -152,22 +144,6 @@ export function DashboardPage() {
             </button>
           </div>
         </div>
-
-        {/* ── Subject Metadata Strip ─────────────────────── */}
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '0',
-          marginTop: '20px',
-          paddingBottom: '20px',
-          borderBottom: '1px solid var(--color-border)',
-        }}>
-          <MetaItem label="Subject" value={meta.participant} />
-          <MetaItem label="Assessment" value={meta.assessmentType} />
-          <MetaItem label="Data Points" value={String(meta.count)} />
-          {meta.dateRange && <MetaItem label="Date Range" value={meta.dateRange} />}
-          {meta.phase && <MetaItem label="Phase" value={meta.phase} />}
-        </div>
       </header>
 
       {/* ── View Tabs ─────────────────────────────────────── */}
@@ -231,30 +207,6 @@ export function DashboardPage() {
           Atlas — Personality Intelligence Dashboard
         </p>
       </footer>
-    </div>
-  );
-}
-
-function MetaItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ paddingRight: '32px', marginRight: '0' }}>
-      <p style={{
-        fontFamily: 'var(--font-mono)',
-        fontSize: '10px',
-        textTransform: 'uppercase',
-        letterSpacing: '0.12em',
-        color: 'var(--color-text-dim)',
-        marginBottom: '4px',
-      }}>
-        {label}
-      </p>
-      <p style={{
-        fontFamily: 'var(--font-sans)',
-        fontSize: '13px',
-        color: 'var(--color-text)',
-      }}>
-        {value}
-      </p>
     </div>
   );
 }
