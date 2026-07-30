@@ -98,6 +98,7 @@ export function PulseReminder() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
         <button
           onClick={handleTakePulse}
+          className="atlas-pulse-cta-take"
           style={{
             padding: '6px 14px',
             background: 'var(--color-accent)',

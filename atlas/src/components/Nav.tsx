@@ -6,6 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Sigil } from './sigil/Sigil';
 import { sigilInputFromData, EMPTY_SIGIL_INPUT } from '../lib/sigil';
 import type { AssessmentScores } from '../types';
+import { HelpMenu } from './ui/HelpMenu';
 
 // ── Theme pill switch — explicit, icon-only, no text ─────────────
 // Sun (light) on one side, moon (dark) on the other; a knob slides to
@@ -79,6 +80,23 @@ export function Nav() {
   // Close menu on route change
   useEffect(() => { setMenuOpen(false); }, [location.pathname]);
 
+  // Global `?` keyboard listener — opens the help menu (NN/g convention).
+  // Skip when user is typing in an input/textarea/contenteditable.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== '?') return;
+      const target = e.target as HTMLElement | null;
+      if (target) {
+        const tag = target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable) return;
+      }
+      const helpBtn = document.querySelector<HTMLButtonElement>('[aria-label="Open help menu"]');
+      helpBtn?.click();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
   const links = isRui ? [...NAV_LINKS, { path: '/cockpit', label: 'Cockpit' }] : NAV_LINKS;
 
   const navButtonStyle = (active: boolean): React.CSSProperties => ({
@@ -134,6 +152,7 @@ export function Nav() {
 
         {/* Desktop-only theme + sign out (hidden on mobile; they move into the menu) */}
         <div className="atlas-nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <HelpMenu />
           {user && (
             <>
               {/* Identity first — sigil + name read as one unit */}

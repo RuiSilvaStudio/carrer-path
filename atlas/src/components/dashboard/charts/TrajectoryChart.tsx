@@ -7,6 +7,18 @@ import { useDashboardState } from '../../../state/DashboardContext';
 import { useElementWidth } from '../../../lib/useElementWidth';
 import { InfoTooltip } from '../../ui/InfoTooltip';
 
+// ── Module-level guard: fire the "first chart interaction" event ONCE ──
+// Phase 3.E: FirstChartTour listens for `atlas:chart-interacted` to show
+// its 5-step tour. We only fire once per page-load to avoid spam.
+// Note: this is in-module (resets on reload); good enough for v1 — if
+// a true cross-load guard is needed later, read a sessionStorage key.
+let chartInteractedFired = false;
+function fireChartInteractedOnce() {
+  if (chartInteractedFired) return;
+  chartInteractedFired = true;
+  window.dispatchEvent(new CustomEvent('atlas:chart-interacted'));
+}
+
 // ── Trait metadata ──────────────────────────────────────────────
 interface TraitMeta {
   key: keyof BigFiveScores;
@@ -311,6 +323,8 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
       if (idx >= 0) {
         setScrubIndex(idx);
       }
+      // Phase 3.E: notify FirstChartTour that the user has interacted with a chart.
+      fireChartInteractedOnce();
     },
     [findNearestIndex, setScrubIndex],
   );

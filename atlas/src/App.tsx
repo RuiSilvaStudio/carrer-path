@@ -12,11 +12,13 @@ import { ProfilePage } from './pages/ProfilePage';
 import { SigilLabPage } from './pages/SigilLabPage';
 import { PulseReminder } from './components/PulseReminder';
 import { CommandPalette } from './components/ui/CommandPalette';
+import { FirstChartTour } from './components/ui/FirstChartTour';
 
 export default function App() {
   return (
     <DashboardProvider>
       <CommandPalette />
+      <FirstChartTour />
       <Routes>
         {/* Public route — no auth required, but shows nav */}
         <Route path="/docs" element={

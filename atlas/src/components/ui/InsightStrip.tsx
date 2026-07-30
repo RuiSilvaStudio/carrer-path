@@ -9,6 +9,7 @@ interface InsightStripProps {
 export function InsightStrip({ label = 'Insight', children, style }: InsightStripProps) {
   return (
     <div
+      className="atlas-insight-strip"
       style={{
         background: 'var(--color-surface-elevated)',
         borderLeft: '3px solid var(--color-accent)',
