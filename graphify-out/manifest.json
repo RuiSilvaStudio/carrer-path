@@ -10,9 +10,9 @@
     "semantic_hash": "029f4905006c1fffd96bc863e2d98d3e"
   },
   "atlas/package.json": {
-    "mtime": 1784812129.0420456,
-    "ast_hash": "d98775a00866a2d02177edf615644d90",
-    "semantic_hash": "d98775a00866a2d02177edf615644d90"
+    "mtime": 1784903444.8338342,
+    "ast_hash": "10c246bbb70dc74ea538a4e17424dfd8",
+    "semantic_hash": ""
   },
   "atlas/public/auth.js": {
     "mtime": 1784828480.4840236,
@@ -25,9 +25,9 @@
     "semantic_hash": "6a3f2716225016383169d661580118e3"
   },
   "atlas/src/App.tsx": {
-    "mtime": 1784829565.2045496,
-    "ast_hash": "c98c19b8d10aa132f219691630481195",
-    "semantic_hash": "c98c19b8d10aa132f219691630481195"
+    "mtime": 1785453214.0364833,
+    "ast_hash": "437051762fdb61c03ef63061d155689e",
+    "semantic_hash": ""
   },
   "atlas/src/components/AuthGate.tsx": {
     "mtime": 1784813079.409552,
@@ -35,34 +35,34 @@
     "semantic_hash": "6e63d4aad6273cf29a646f4ee47566e5"
   },
   "atlas/src/components/Nav.tsx": {
-    "mtime": 1784829565.2055497,
-    "ast_hash": "0e5fe5fcf85bf5404bc2f6c890ea253c",
-    "semantic_hash": "0e5fe5fcf85bf5404bc2f6c890ea253c"
+    "mtime": 1785453218.5344658,
+    "ast_hash": "4cb784bd5fe6030671b17d4bdcba9169",
+    "semantic_hash": ""
   },
   "atlas/src/components/baseline/BaselineAssessment.tsx": {
-    "mtime": 1784816121.4387257,
-    "ast_hash": "b018530174e8cfef15767534ad401be5",
-    "semantic_hash": "b018530174e8cfef15767534ad401be5"
+    "mtime": 1785408034.8934083,
+    "ast_hash": "5708ccf11f737074ed0adde01fdfe8d9",
+    "semantic_hash": ""
   },
   "atlas/src/components/cockpit/Cockpit.tsx": {
-    "mtime": 1784830086.5236132,
-    "ast_hash": "426bdfc4bb95b1556dc09ed7744a4540",
-    "semantic_hash": "426bdfc4bb95b1556dc09ed7744a4540"
+    "mtime": 1785335885.3606453,
+    "ast_hash": "5741f0d56506007a2f7445f27effceef",
+    "semantic_hash": ""
   },
   "atlas/src/components/cockpit/CompaniesView.tsx": {
-    "mtime": 1784830121.2391691,
-    "ast_hash": "d33aead8806b73f8c73fe8e493d0ce57",
-    "semantic_hash": "d33aead8806b73f8c73fe8e493d0ce57"
+    "mtime": 1784932054.209561,
+    "ast_hash": "c30335735f90d46dd4e29baa45816767",
+    "semantic_hash": ""
   },
   "atlas/src/components/cockpit/InterviewPrepView.tsx": {
-    "mtime": 1784830020.7516704,
-    "ast_hash": "0ba05b5b29df44070458a65d4089181b",
-    "semantic_hash": "0ba05b5b29df44070458a65d4089181b"
+    "mtime": 1784931954.398579,
+    "ast_hash": "90e3beb37368c81e4b88d75375ba086b",
+    "semantic_hash": ""
   },
   "atlas/src/components/cockpit/KnowledgeBaseView.tsx": {
-    "mtime": 1784830020.7516704,
-    "ast_hash": "757a0c3e66ce53b76b58218d49c920af",
-    "semantic_hash": "757a0c3e66ce53b76b58218d49c920af"
+    "mtime": 1785077939.1536238,
+    "ast_hash": "db99343a92f4c07e33be206277f5a454",
+    "semantic_hash": ""
   },
   "atlas/src/components/cockpit/cockpitData.ts": {
     "mtime": 1784829968.6113424,
@@ -70,79 +70,74 @@
     "semantic_hash": "55845544e3c78efbd8d7068b4d46990a"
   },
   "atlas/src/components/cockpit/cockpitKB.tsx": {
-    "mtime": 1784830475.8351398,
-    "ast_hash": "f70c69ca39e9a596755758bb4cc16247",
-    "semantic_hash": "f70c69ca39e9a596755758bb4cc16247"
-  },
-  "atlas/src/components/dashboard/DataSourceToggle.tsx": {
-    "mtime": 1784812739.677634,
-    "ast_hash": "ed3517d667a7e83e3e220736f6f18da4",
-    "semantic_hash": "ed3517d667a7e83e3e220736f6f18da4"
+    "mtime": 1784995864.9532106,
+    "ast_hash": "865d253216a7a04e1ae118b2cb79a635",
+    "semantic_hash": ""
   },
   "atlas/src/components/dashboard/ViewTabs.tsx": {
-    "mtime": 1784812739.6635122,
-    "ast_hash": "e6b1c8f2956b252e672f4c640146a4ea",
-    "semantic_hash": "e6b1c8f2956b252e672f4c640146a4ea"
+    "mtime": 1785335752.9230943,
+    "ast_hash": "a46b990ced0a959b39988a4662cfe8cf",
+    "semantic_hash": ""
   },
   "atlas/src/components/dashboard/charts/ICARScore.tsx": {
-    "mtime": 1784812739.6575537,
-    "ast_hash": "313c726f6c304408e01202293b9c6d7d",
-    "semantic_hash": "313c726f6c304408e01202293b9c6d7d"
+    "mtime": 1785327546.1622791,
+    "ast_hash": "c941d1629d2cde10877cdbce3ab32add",
+    "semantic_hash": ""
   },
   "atlas/src/components/dashboard/charts/RadarChart.tsx": {
-    "mtime": 1784843918.284675,
-    "ast_hash": "fe91a1027caf53b29f3d453f1c8a145b",
-    "semantic_hash": "fe91a1027caf53b29f3d453f1c8a145b"
+    "mtime": 1785327413.384368,
+    "ast_hash": "3bbb1aee7d705c11ded224bdbb360129",
+    "semantic_hash": ""
   },
   "atlas/src/components/dashboard/charts/SD3Bars.tsx": {
-    "mtime": 1784812739.6786034,
-    "ast_hash": "33f604630fa99443e58576b1781845ee",
-    "semantic_hash": "33f604630fa99443e58576b1781845ee"
+    "mtime": 1785327481.7145803,
+    "ast_hash": "1317c840b38fe9a90a765143d68c63b8",
+    "semantic_hash": ""
   },
   "atlas/src/components/dashboard/charts/TrajectoryChart.tsx": {
-    "mtime": 1784845883.1427436,
-    "ast_hash": "738c90085f2e3452aca25319b7226b1a",
-    "semantic_hash": "738c90085f2e3452aca25319b7226b1a"
+    "mtime": 1785410768.7657673,
+    "ast_hash": "9229e987a77bf86223cd76d6458d5369",
+    "semantic_hash": ""
   },
   "atlas/src/components/dashboard/views/ContextView.tsx": {
-    "mtime": 1784816788.8287618,
-    "ast_hash": "a23329f3254262681e31c08f66ef4228",
-    "semantic_hash": "a23329f3254262681e31c08f66ef4228"
+    "mtime": 1785408008.9275265,
+    "ast_hash": "62bdae1401750df64d8964c1a538b013",
+    "semantic_hash": ""
   },
   "atlas/src/components/dashboard/views/DistributionView.tsx": {
-    "mtime": 1784816290.943066,
-    "ast_hash": "bfaa460ebdfcdd0b2de70c674a540b87",
-    "semantic_hash": "bfaa460ebdfcdd0b2de70c674a540b87"
+    "mtime": 1785407956.37055,
+    "ast_hash": "1807fae64f592841e3ea0e05a1ea5d8f",
+    "semantic_hash": ""
   },
   "atlas/src/components/dashboard/views/RhythmView.tsx": {
-    "mtime": 1784835970.1010478,
-    "ast_hash": "1bb2a9edba1afafd38e4d752e90cffa2",
-    "semantic_hash": "1bb2a9edba1afafd38e4d752e90cffa2"
+    "mtime": 1785407982.2310746,
+    "ast_hash": "95ad9c3fdcdd8a05d8dc3888dd2a1f32",
+    "semantic_hash": ""
   },
   "atlas/src/components/dashboard/views/TrajectoryView.tsx": {
-    "mtime": 1784846215.7126198,
-    "ast_hash": "fff06b8ef9d0ce1d816c0c895e73a72e",
-    "semantic_hash": "fff06b8ef9d0ce1d816c0c895e73a72e"
+    "mtime": 1785407905.6061013,
+    "ast_hash": "1058ffc2af4ce815878ac7fc27b88b99",
+    "semantic_hash": ""
   },
   "atlas/src/components/pulse/WeeklyPulse.tsx": {
-    "mtime": 1784816134.1857865,
-    "ast_hash": "c1238e837169a3099552b50e00c865c1",
-    "semantic_hash": "c1238e837169a3099552b50e00c865c1"
+    "mtime": 1785327438.858481,
+    "ast_hash": "015ac9c8b4f15da1796428fbb6f7756f",
+    "semantic_hash": ""
   },
   "atlas/src/components/ui/Card.tsx": {
-    "mtime": 1784815984.9374208,
-    "ast_hash": "dcc917b2dbee71967896d947fb561a62",
-    "semantic_hash": "dcc917b2dbee71967896d947fb561a62"
+    "mtime": 1785407626.4396284,
+    "ast_hash": "87e04a3cbbf472ff0650a18a1e6a71b6",
+    "semantic_hash": ""
   },
   "atlas/src/components/ui/InfoTooltip.tsx": {
-    "mtime": 1784815493.3646605,
-    "ast_hash": "c0c93fbc8fda37cce5900e9fa254d6c3",
-    "semantic_hash": "c0c93fbc8fda37cce5900e9fa254d6c3"
+    "mtime": 1785411961.065501,
+    "ast_hash": "c7ad039b5bd3760ebf19dbb2c54c12dd",
+    "semantic_hash": ""
   },
   "atlas/src/components/ui/InsightStrip.tsx": {
-    "mtime": 1784815493.3696606,
-    "ast_hash": "4e157a26ebe6e39d33c23e753ec8528d",
-    "semantic_hash": "4e157a26ebe6e39d33c23e753ec8528d"
+    "mtime": 1785408752.9816356,
+    "ast_hash": "fe94456a58476f2eacb5a3d6655ca590",
+    "semantic_hash": ""
   },
   "atlas/src/data/assessment-items.json": {
     "mtime": 1784815625.841957,
@@ -150,14 +145,14 @@
     "semantic_hash": "8654e0980cdb51fe3fcc4b2a2af290fe"
   },
   "atlas/src/hooks/useAssessments.ts": {
-    "mtime": 1784812439.3499937,
-    "ast_hash": "86b0fca49ff5f8aca166f95a9ef0b79f",
-    "semantic_hash": "86b0fca49ff5f8aca166f95a9ef0b79f"
+    "mtime": 1784914059.9150996,
+    "ast_hash": "1d2d531ebf6a346f88a35a81a98b441f",
+    "semantic_hash": ""
   },
   "atlas/src/hooks/useAuth.ts": {
-    "mtime": 1784812425.7036257,
-    "ast_hash": "2dd8212af8bfdf56d3038450865b2413",
-    "semantic_hash": "2dd8212af8bfdf56d3038450865b2413"
+    "mtime": 1785354638.203454,
+    "ast_hash": "400c69eca8b45a76fe1266c93a58072d",
+    "semantic_hash": ""
   },
   "atlas/src/hooks/useCockpit.ts": {
     "mtime": 1784829425.0835168,
@@ -195,49 +190,49 @@
     "semantic_hash": "b8cee57cc8512305f5f4d1381800ff83"
   },
   "atlas/src/main.tsx": {
-    "mtime": 1784812508.509692,
-    "ast_hash": "e7f0b28d6fafc62b3bcdb6e3b779ed6a",
-    "semantic_hash": "e7f0b28d6fafc62b3bcdb6e3b779ed6a"
+    "mtime": 1785406838.5693934,
+    "ast_hash": "abe4fc67a67d460ae0cd1c407a61152b",
+    "semantic_hash": ""
   },
   "atlas/src/pages/BaselinePage.tsx": {
-    "mtime": 1784816290.9435694,
-    "ast_hash": "c9411b6513fc6b68d0bc42fe79e2f0c4",
-    "semantic_hash": "c9411b6513fc6b68d0bc42fe79e2f0c4"
+    "mtime": 1784904193.1864736,
+    "ast_hash": "1639a3fcbec1931344a1391ed6aa3387",
+    "semantic_hash": ""
   },
   "atlas/src/pages/CockpitPage.tsx": {
-    "mtime": 1784829553.7936864,
-    "ast_hash": "871427ad5839747c2207a5f6ec03422e",
-    "semantic_hash": "871427ad5839747c2207a5f6ec03422e"
+    "mtime": 1784904193.1864736,
+    "ast_hash": "31b172241f0c800159ef8a0cef92ec16",
+    "semantic_hash": ""
   },
   "atlas/src/pages/DashboardPage.tsx": {
-    "mtime": 1784816290.9437096,
-    "ast_hash": "4d20f3e5ed2cf617180ea96703fb79f5",
-    "semantic_hash": "4d20f3e5ed2cf617180ea96703fb79f5"
+    "mtime": 1785406867.2578025,
+    "ast_hash": "f493c912acdfa3672575eb895c1e5736",
+    "semantic_hash": ""
   },
   "atlas/src/pages/DocsPage.tsx": {
-    "mtime": 1784820403.490631,
-    "ast_hash": "301201184d37160eeadf5be0a0491d62",
-    "semantic_hash": "301201184d37160eeadf5be0a0491d62"
+    "mtime": 1785411040.0803616,
+    "ast_hash": "3f9fe2c3e2e3328f9940e116b9cd80c8",
+    "semantic_hash": ""
   },
   "atlas/src/pages/PulsePage.tsx": {
-    "mtime": 1784816290.9438066,
-    "ast_hash": "134c4eb454db94e2a106371330a49310",
-    "semantic_hash": "134c4eb454db94e2a106371330a49310"
+    "mtime": 1784904193.1864736,
+    "ast_hash": "9dda665018091f37dccdbcf1b5f55f08",
+    "semantic_hash": ""
   },
   "atlas/src/state/DashboardContext.tsx": {
-    "mtime": 1784816290.9438066,
-    "ast_hash": "fd5358820b805eceeb37b1093f1dd3d2",
-    "semantic_hash": "fd5358820b805eceeb37b1093f1dd3d2"
+    "mtime": 1784903702.8514569,
+    "ast_hash": "29b827983a73ca2bc96fee64c908d223",
+    "semantic_hash": ""
   },
   "atlas/src/types/cockpit.ts": {
-    "mtime": 1784829425.0835168,
-    "ast_hash": "10b928b15380701769146f4096ef5d58",
-    "semantic_hash": "10b928b15380701769146f4096ef5d58"
+    "mtime": 1785349160.2574444,
+    "ast_hash": "1f4dc11f4d3bf4f836a0f54a09002e77",
+    "semantic_hash": ""
   },
   "atlas/src/types/index.ts": {
-    "mtime": 1784816290.9438066,
-    "ast_hash": "642681d75b733d0fc38aa46231d234e5",
-    "semantic_hash": "642681d75b733d0fc38aa46231d234e5"
+    "mtime": 1784903702.8593292,
+    "ast_hash": "7d78aadb283a0d55695c8f2cdcbee6ce",
+    "semantic_hash": ""
   },
   "atlas/tsconfig.app.json": {
     "mtime": 1784812042.7622888,
@@ -255,9 +250,9 @@
     "semantic_hash": "f9cb81ddcea69ffdab672fc8c48dca66"
   },
   "atlas/vercel.json": {
-    "mtime": 1784833438.3149612,
-    "ast_hash": "33bb1f42069ad46fdaf28bbcfad051a1",
-    "semantic_hash": "33bb1f42069ad46fdaf28bbcfad051a1"
+    "mtime": 1784904754.8471084,
+    "ast_hash": "7c3f4faf61d06f832a7f3ef41e1a60e8",
+    "semantic_hash": ""
   },
   "atlas/vite.config.ts": {
     "mtime": 1784812146.711492,
@@ -270,14 +265,14 @@
     "semantic_hash": "119cbab23997bdab807086402c3203cd"
   },
   "build_dashboard.py": {
-    "mtime": 1784742087.521437,
-    "ast_hash": "af661b9cd583b916a2a4563b5aed97e4",
-    "semantic_hash": "af661b9cd583b916a2a4563b5aed97e4"
+    "mtime": 1785148294.383546,
+    "ast_hash": "ae29a91406d567c2af7f9f1dcd5652a3",
+    "semantic_hash": ""
   },
   "building-knowledge-base-for-creative-operations--20260720.json": {
-    "mtime": 1784715449.8319912,
-    "ast_hash": "e220c25fb0d39fa09f651279a8ff8afa",
-    "semantic_hash": "e220c25fb0d39fa09f651279a8ff8afa"
+    "mtime": 1785148313.0976048,
+    "ast_hash": "f444730d100807eb6aa005df9c3d4bce",
+    "semantic_hash": ""
   },
   "enriched-personality-data.json": {
     "mtime": 1784741259.0647664,
@@ -295,13 +290,638 @@
     "semantic_hash": "ad3439b168826e5a85791ccdf7980d78"
   },
   "serve.sh": {
-    "mtime": 1784752773.853116,
-    "ast_hash": "9baa022a90383a7ba1721f0a8db503cd",
-    "semantic_hash": "9baa022a90383a7ba1721f0a8db503cd"
+    "mtime": 1785148294.2435381,
+    "ast_hash": "ad1c229f8723bce41a40302399d4d0ee",
+    "semantic_hash": ""
   },
   "supabase-config.js": {
     "mtime": 1784806247.017752,
     "ast_hash": "6a3f2716225016383169d661580118e3",
     "semantic_hash": "6a3f2716225016383169d661580118e3"
+  },
+  "atlas/sql/career_direction.sql": {
+    "mtime": 1785453045.2632532,
+    "ast_hash": "d203690b6a7bc542abfcff8c64635472",
+    "semantic_hash": ""
+  },
+  "atlas/sql/contact_log.sql": {
+    "mtime": 1784888296.5991905,
+    "ast_hash": "73f662574b605933650b2c723e6fe71c",
+    "semantic_hash": ""
+  },
+  "atlas/sql/job_listings.sql": {
+    "mtime": 1784983088.2598987,
+    "ast_hash": "9a83140e238cf6d873438a78ce26ed42",
+    "semantic_hash": ""
+  },
+  "atlas/src/components/PulseReminder.tsx": {
+    "mtime": 1785408769.1641734,
+    "ast_hash": "f201a289b2a9ed0778fa45cb4e26d4e2",
+    "semantic_hash": ""
+  },
+  "atlas/src/components/cockpit/ContactLogView.tsx": {
+    "mtime": 1784888401.0019166,
+    "ast_hash": "7d57811e51f764d28640d87b5988d8d7",
+    "semantic_hash": ""
+  },
+  "atlas/src/components/cockpit/JobListingsView.tsx": {
+    "mtime": 1785349632.7465498,
+    "ast_hash": "db0335696c90fcb05af5fc4b0abb93e3",
+    "semantic_hash": ""
+  },
+  "atlas/src/components/sigil/Sigil.tsx": {
+    "mtime": 1785366353.357853,
+    "ast_hash": "0c5f60417f49ca9930a0deca27019b34",
+    "semantic_hash": ""
+  },
+  "atlas/src/components/ui/ChapterRail.tsx": {
+    "mtime": 1785410349.0774336,
+    "ast_hash": "befc7e080f96140f81ba82cf0523ac38",
+    "semantic_hash": ""
+  },
+  "atlas/src/components/ui/Coachmark.tsx": {
+    "mtime": 1785408713.4962256,
+    "ast_hash": "83d5f861da66d6f0333bb1d56a03bdbf",
+    "semantic_hash": ""
+  },
+  "atlas/src/components/ui/CommandPalette.tsx": {
+    "mtime": 1785453218.5284655,
+    "ast_hash": "295990890606abced666c59c145f87d5",
+    "semantic_hash": ""
+  },
+  "atlas/src/components/ui/CopyButton.tsx": {
+    "mtime": 1785410620.2615132,
+    "ast_hash": "81ba2d30bc8fb68d50f3dea096ae1437",
+    "semantic_hash": ""
+  },
+  "atlas/src/components/ui/EmptyState.tsx": {
+    "mtime": 1785407732.6353493,
+    "ast_hash": "0c5c699d44dcbf86202243cea093202c",
+    "semantic_hash": ""
+  },
+  "atlas/src/components/ui/FirstChartTour.tsx": {
+    "mtime": 1785408736.4504414,
+    "ast_hash": "e59fb97f983ca232b958c941ff1a9155",
+    "semantic_hash": ""
+  },
+  "atlas/src/components/ui/HelpMenu.tsx": {
+    "mtime": 1785412625.262555,
+    "ast_hash": "0ae57367b7bec74b09472a7c8ce6138c",
+    "semantic_hash": ""
+  },
+  "atlas/src/data/glossary.ts": {
+    "mtime": 1785407570.3255005,
+    "ast_hash": "efacb82f1993e71f0d5342d644808043",
+    "semantic_hash": ""
+  },
+  "atlas/src/hooks/useCareerDirection.ts": {
+    "mtime": 1785453056.3838446,
+    "ast_hash": "12961d92a6fb423f5eb2637ec4915c3a",
+    "semantic_hash": ""
+  },
+  "atlas/src/hooks/useContactLog.ts": {
+    "mtime": 1784888415.7415833,
+    "ast_hash": "7f93afa792832dd0b71ad1e14cc4bd0e",
+    "semantic_hash": ""
+  },
+  "atlas/src/hooks/useJobListings.ts": {
+    "mtime": 1785349657.617646,
+    "ast_hash": "57e021df1dfa40510a311f715daab209",
+    "semantic_hash": ""
+  },
+  "atlas/src/hooks/usePulseReminder.ts": {
+    "mtime": 1784904168.284074,
+    "ast_hash": "31b8a433f8bb97ea17218c02ab282056",
+    "semantic_hash": ""
+  },
+  "atlas/src/lib/careerDirection.ts": {
+    "mtime": 1785453010.7002454,
+    "ast_hash": "db9580b37fb4957c9ad107f0d0a45f62",
+    "semantic_hash": ""
+  },
+  "atlas/src/lib/motion.ts": {
+    "mtime": 1785327394.666648,
+    "ast_hash": "5d479b11055df07e39830e804d761f2d",
+    "semantic_hash": ""
+  },
+  "atlas/src/lib/sigil.ts": {
+    "mtime": 1785366689.2911835,
+    "ast_hash": "341a19763d94b3051a8598464449c123",
+    "semantic_hash": ""
+  },
+  "atlas/src/lib/useElementWidth.ts": {
+    "mtime": 1784906884.5266328,
+    "ast_hash": "e75d9b5250616172952f52831e6b6f47",
+    "semantic_hash": ""
+  },
+  "atlas/src/pages/CareerDirectionPage.tsx": {
+    "mtime": 1785453172.5160196,
+    "ast_hash": "62d13095768631e5ff09e8cfce21c64e",
+    "semantic_hash": ""
+  },
+  "atlas/src/pages/ProfilePage.tsx": {
+    "mtime": 1785366811.8679066,
+    "ast_hash": "60df5e98a7ac3d75f71694baf6976b06",
+    "semantic_hash": ""
+  },
+  "atlas/src/pages/SigilLabPage.tsx": {
+    "mtime": 1785365967.7222865,
+    "ast_hash": "71f60a69ef3e743b35b0b2f1844cfabf",
+    "semantic_hash": ""
+  },
+  "atlas/src/types/contactLog.ts": {
+    "mtime": 1784888309.0977566,
+    "ast_hash": "4b2fd6caf1555eb5deb5bc5ec25aaae1",
+    "semantic_hash": ""
+  },
+  "scripts/adzuna_fetch.py": {
+    "mtime": 1785356797.3444743,
+    "ast_hash": "d1a55b5ab77795271d864095ad7bde9c",
+    "semantic_hash": ""
+  },
+  "scripts/job_fetch_all.py": {
+    "mtime": 1785349125.133665,
+    "ast_hash": "17310075b0353a41bb463068cbb0946c",
+    "semantic_hash": ""
+  },
+  "scripts/job_sources.py": {
+    "mtime": 1784993881.8204718,
+    "ast_hash": "77925e024f2099ed957616f186223a34",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1785148294.3407571,
+    "ast_hash": "bfb7169a12165610ad4385b2db908f2c",
+    "semantic_hash": ""
+  },
+  "atlas/README.md": {
+    "mtime": 1784812042.7603917,
+    "ast_hash": "10495bfcc6c568eca4dab6dd5df795d3",
+    "semantic_hash": ""
+  },
+  "atlas/index.html": {
+    "mtime": 1784812159.255603,
+    "ast_hash": "b77626e99cd5865c850a9d221539b20c",
+    "semantic_hash": ""
+  },
+  "atlas/public/cockpit.html": {
+    "mtime": 1784828480.4752436,
+    "ast_hash": "7f973fa975676ffd4d3163652f965fc3",
+    "semantic_hash": ""
+  },
+  "atlas/public/migrate-baseline.html": {
+    "mtime": 1784828480.4792314,
+    "ast_hash": "ad810bb7b4b7148668fc084c4a2a5bf8",
+    "semantic_hash": ""
+  },
+  "atlas/public/migrate-pulses.html": {
+    "mtime": 1784828480.480548,
+    "ast_hash": "5fa942d8402f1cdd6f176082c4eb5788",
+    "semantic_hash": ""
+  },
+  "atlas/public/migrate.html": {
+    "mtime": 1784828480.477337,
+    "ast_hash": "a812274144c2cb2a5bd498ec203eca98",
+    "semantic_hash": ""
+  },
+  "baseline-assessment.html": {
+    "mtime": 1784802934.262584,
+    "ast_hash": "bdb1f208c34a5033ac664de09c9b36e4",
+    "semantic_hash": ""
+  },
+  "cockpit.html": {
+    "mtime": 1784802890.9146311,
+    "ast_hash": "7f973fa975676ffd4d3163652f965fc3",
+    "semantic_hash": ""
+  },
+  "cv-rui-silva-formatted-v2.1.html": {
+    "mtime": 1785058925.0304675,
+    "ast_hash": "68d62b241d7a1d2ce29327958575739a",
+    "semantic_hash": ""
+  },
+  "cv-rui-silva-formatted-v2.html": {
+    "mtime": 1785058679.5575964,
+    "ast_hash": "4f52cc1f61162530280e780da8506c3e",
+    "semantic_hash": ""
+  },
+  "cv-rui-silva-formatted.html": {
+    "mtime": 1785055894.1958356,
+    "ast_hash": "2c79929eb7ec4a22f447c8919b4a02d7",
+    "semantic_hash": ""
+  },
+  "cv-rui-silva.html": {
+    "mtime": 1785059261.7292492,
+    "ast_hash": "68d62b241d7a1d2ce29327958575739a",
+    "semantic_hash": ""
+  },
+  "cv-rui-silva.md": {
+    "mtime": 1784615812.6089308,
+    "ast_hash": "cd88d01e212aa233a60782fd579ce5a1",
+    "semantic_hash": ""
+  },
+  "dashboard.html": {
+    "mtime": 1784646264.9643435,
+    "ast_hash": "791df4d298708b4fe748d8fe535e8a4b",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-ai-career-intelligence-research.md": {
+    "mtime": 1785430025.8476272,
+    "ast_hash": "ac786bfba9c42a816362f247350f5b49",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-career-assessment-round-plan.md": {
+    "mtime": 1785441349.0952563,
+    "ast_hash": "da22fb685419d51b64a8faf6a9577fbb",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-kb-ux-pattern-research.md": {
+    "mtime": 1785435675.4655056,
+    "ast_hash": "645c1819a62f408086dd263b9dcb3a02",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/01-empty-kb.html": {
+    "mtime": 1785437348.6963482,
+    "ast_hash": "308dfbfdd2a42c4a077167563c987505",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/02-empty-kb.html": {
+    "mtime": 1785440056.9290135,
+    "ast_hash": "1372952470209b529aa504e3f9c47a69",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/03-career-profile-entry.html": {
+    "mtime": 1785443322.2473893,
+    "ast_hash": "c737cc264543279e7c3ce9d43ce7d44f",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/04-role-comparison.html": {
+    "mtime": 1785445528.848066,
+    "ast_hash": "fcf0eacec584bb99a0efc16280f65148",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/05-direction-detail.html": {
+    "mtime": 1785444601.9656975,
+    "ast_hash": "17fcddeac0e06c8f84e2990fdfd7a75a",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/06-career-assessment.html": {
+    "mtime": 1785444849.9330227,
+    "ast_hash": "f7d1bf456225cf788fd3349dad716fc4",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/07-assessment-handoff.html": {
+    "mtime": 1785445363.4199166,
+    "ast_hash": "fbcb716a4349df9ed6d486d5f3de5d7b",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/08-direction-shortlist.html": {
+    "mtime": 1785445669.4130595,
+    "ast_hash": "53b918365aed3b4b83f6d5bdbc694a7d",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/09-direction-workspace.html": {
+    "mtime": 1785451364.1366367,
+    "ast_hash": "4b275b5e0c851908382ffd206caa0356",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/10-market-pulse.html": {
+    "mtime": 1785446383.1071365,
+    "ast_hash": "f5048fb2c6ad465b370306db39c47c43",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/11a-licensed-assessment-handoff.html": {
+    "mtime": 1785450017.5387945,
+    "ast_hash": "d5a1afe5cd68de88a2e1ce00392a2e44",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/11b-static-reference-result.html": {
+    "mtime": 1785450103.9675002,
+    "ast_hash": "1d875bc5a0b3e148021dee2a85182d18",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/12-work-preferences.html": {
+    "mtime": 1785450804.4289048,
+    "ast_hash": "2294b81219c6ead2b254c131eaa2711f",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/13-preferences-handoff.html": {
+    "mtime": 1785450874.4355412,
+    "ast_hash": "85c1e76321614137d9350cd29d219cc9",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/14-role-comparison-native-preferences.html": {
+    "mtime": 1785451095.3285985,
+    "ast_hash": "a57f92ca58fc58b0d6148f6154baf19c",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/15-direction-detail-native-preferences.html": {
+    "mtime": 1785451341.6452935,
+    "ast_hash": "cebf7af280467d3c53b0da0dff90055f",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/16-market-pulse-evidence-first.html": {
+    "mtime": 1785451581.7038002,
+    "ast_hash": "4cd91bc24816275174d76ebca35fee1f",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/17-reassess-direction.html": {
+    "mtime": 1785451806.252574,
+    "ast_hash": "19fb199933d27988c9e902d02adac8f1",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/18-direction-shortlist-native-preferences.html": {
+    "mtime": 1785452052.7175498,
+    "ast_hash": "6302d8ae443fffc3d1ba9c9031d49a99",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-mockups/README-current-flow.md": {
+    "mtime": 1785452084.009908,
+    "ast_hash": "a98a9b5386b0e5e6aaf611eeb7a8be80",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-production-foundation-proposal.md": {
+    "mtime": 1785452205.7606256,
+    "ast_hash": "8fd214138a70ee06dc175576f4b195da",
+    "semantic_hash": ""
+  },
+  "discovery/atlas-v1-plain-english-plan.md": {
+    "mtime": 1785452195.543086,
+    "ast_hash": "ec0fda69ca14635f40c386b0c3745c2c",
+    "semantic_hash": ""
+  },
+  "discovery/executive-search-portugal.md": {
+    "mtime": 1785232647.0305345,
+    "ast_hash": "bdd15d8273284f784cf26871d25b6841",
+    "semantic_hash": ""
+  },
+  "discovery/job-sources-eu.md": {
+    "mtime": 1784991547.991095,
+    "ast_hash": "84aebc0117b4e723499348a85dc6da80",
+    "semantic_hash": ""
+  },
+  "discovery/job-sources-global.md": {
+    "mtime": 1784991025.6974301,
+    "ast_hash": "b62ac13b37d69b19a2dd2f079cf16dbd",
+    "semantic_hash": ""
+  },
+  "index.html": {
+    "mtime": 1784803527.2436178,
+    "ast_hash": "486d4fb7033a6c0115159d96dcbed3b1",
+    "semantic_hash": ""
+  },
+  "migrate-baseline.html": {
+    "mtime": 1784760607.420397,
+    "ast_hash": "ad810bb7b4b7148668fc084c4a2a5bf8",
+    "semantic_hash": ""
+  },
+  "migrate-pulses.html": {
+    "mtime": 1784804339.6017847,
+    "ast_hash": "5fa942d8402f1cdd6f176082c4eb5788",
+    "semantic_hash": ""
+  },
+  "migrate.html": {
+    "mtime": 1784757913.9969006,
+    "ast_hash": "a812274144c2cb2a5bd498ec203eca98",
+    "semantic_hash": ""
+  },
+  "notes/00-profile.md": {
+    "mtime": 1784558386.1477277,
+    "ast_hash": "712b74c4bb1031fd697975c3cfe2eb60",
+    "semantic_hash": ""
+  },
+  "notes/01-target-roles.md": {
+    "mtime": 1784558386.153909,
+    "ast_hash": "f2d2bd0f6776c4f7847e531c13f45300",
+    "semantic_hash": ""
+  },
+  "notes/02-resume-gap.md": {
+    "mtime": 1784581575.0171762,
+    "ast_hash": "ce62e212cec7e61e5a824dd9303dfc83",
+    "semantic_hash": ""
+  },
+  "notes/03-narrative-variants.md": {
+    "mtime": 1784671005.1322753,
+    "ast_hash": "816400da35a771260eb0f3acbece6bdf",
+    "semantic_hash": ""
+  },
+  "notes/04-search-log.md": {
+    "mtime": 1784558386.147043,
+    "ast_hash": "13117d1ae3fc4e7c82256609b19a1c2a",
+    "semantic_hash": ""
+  },
+  "notes/05-strengths.md": {
+    "mtime": 1784580671.201719,
+    "ast_hash": "dfd66b1332d9baa48ed180c5abe45d22",
+    "semantic_hash": ""
+  },
+  "notes/06-assessments-guide.md": {
+    "mtime": 1784560049.471852,
+    "ast_hash": "6254aea40bfefc5090543bd9104d2ee0",
+    "semantic_hash": ""
+  },
+  "notes/06-studio.md": {
+    "mtime": 1784581938.5430222,
+    "ast_hash": "0a3b093cd640da956ba7ea88b9da86b2",
+    "semantic_hash": ""
+  },
+  "notes/07-market-research.md": {
+    "mtime": 1784583922.798836,
+    "ast_hash": "180c30ae91e995519abd58b54ff0e72c",
+    "semantic_hash": ""
+  },
+  "notes/08-courses.md": {
+    "mtime": 1784626873.404331,
+    "ast_hash": "77cae8cc78366f5afbca5062ba7951c9",
+    "semantic_hash": ""
+  },
+  "notes/09-public-speaking.md": {
+    "mtime": 1784622974.6029716,
+    "ast_hash": "720d5e4718f080d4a0f7a385d3b72540",
+    "semantic_hash": ""
+  },
+  "notes/10-watchlist.md": {
+    "mtime": 1784717132.6714008,
+    "ast_hash": "80999ff5861d838762d8b443f2cf5d63",
+    "semantic_hash": ""
+  },
+  "notes/11-peer-comparison.md": {
+    "mtime": 1784626154.88928,
+    "ast_hash": "2d174a4524cd6e9bc29f5080c7cdd04f",
+    "semantic_hash": ""
+  },
+  "notes/12-adjacent-skills-research.md": {
+    "mtime": 1784584175.6861138,
+    "ast_hash": "db974214b805ee79afd4ee3121293190",
+    "semantic_hash": ""
+  },
+  "notes/13-certifications-research.md": {
+    "mtime": 1784626760.4635215,
+    "ast_hash": "0b751a3f05ebc8df0ba58aa421e31ddc",
+    "semantic_hash": ""
+  },
+  "notes/13-networking-methodologies-research.md": {
+    "mtime": 1784645078.115201,
+    "ast_hash": "433a54e0d5108416503cf8d881192db2",
+    "semantic_hash": ""
+  },
+  "notes/14-portuguese-companies.md": {
+    "mtime": 1784643467.5239532,
+    "ast_hash": "33473066dfbccfecc31f26eae5db4a4a",
+    "semantic_hash": ""
+  },
+  "notes/15-portuguese-creative-ops.md": {
+    "mtime": 1784653649.0097651,
+    "ast_hash": "181529e8f46538dcb13ee7a4df2bb832",
+    "semantic_hash": ""
+  },
+  "notes/16-chalhoub-group.md": {
+    "mtime": 1784669751.6541111,
+    "ast_hash": "b7c57acb9ab5d52426be2cb579289ccd",
+    "semantic_hash": ""
+  },
+  "notes/17-writing-standards.md": {
+    "mtime": 1784717060.2746556,
+    "ast_hash": "16e9c762b81dcb1bbdfad31099502675",
+    "semantic_hash": ""
+  },
+  "notes/IDEA.md": {
+    "mtime": 1784715322.194489,
+    "ast_hash": "965e7fe916e88ef3882a091319c4a2e3",
+    "semantic_hash": ""
+  },
+  "notes/PRIVATE-coaching-note.md": {
+    "mtime": 1784671403.8640976,
+    "ast_hash": "d4b1016e8fd6c27586748888c5602a73",
+    "semantic_hash": ""
+  },
+  "notes/assessment-tools-research.md": {
+    "mtime": 1784735663.370443,
+    "ast_hash": "fcde602200518ee1b28cbbf15c8a04a8",
+    "semantic_hash": ""
+  },
+  "notes/linkedin-revisions.md": {
+    "mtime": 1784642621.9712858,
+    "ast_hash": "af74862abb0d9abcdf9521dbeb54538b",
+    "semantic_hash": ""
+  },
+  "notes/longitudinal-personality-datasets.md": {
+    "mtime": 1784736375.2261548,
+    "ast_hash": "adc4bc471d004baa94379a6d86fe237f",
+    "semantic_hash": ""
+  },
+  "notes/watchlist-report-latest.md": {
+    "mtime": 1784625088.1642327,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "personality-dashboard-prototype.html": {
+    "mtime": 1784808712.9820771,
+    "ast_hash": "9f87645d60574bde112d6509a934a77b",
+    "semantic_hash": ""
+  },
+  "startup-ops-research/README.md": {
+    "mtime": 1784583511.229224,
+    "ast_hash": "6e03dd0fed309d0667fce89f88772ef9",
+    "semantic_hash": ""
+  },
+  "startup-ops-research/compensation.md": {
+    "mtime": 1784583627.5923684,
+    "ast_hash": "ee7288253a69f6d75c2225e54f2ea7dd",
+    "semantic_hash": ""
+  },
+  "startup-ops-research/how-to-find.md": {
+    "mtime": 1784583767.042732,
+    "ast_hash": "6d3d08486c64c4f5b97c67a99c659a2a",
+    "semantic_hash": ""
+  },
+  "startup-ops-research/outreach-template.md": {
+    "mtime": 1784583791.9690483,
+    "ast_hash": "d84ae6d11312a361f5ac313486f4d918",
+    "semantic_hash": ""
+  },
+  "startup-ops-research/risk-reward.md": {
+    "mtime": 1784583675.9829237,
+    "ast_hash": "89a6130a35bef0394c927bdc46ccdca5",
+    "semantic_hash": ""
+  },
+  "startup-ops-research/sectors.md": {
+    "mtime": 1784583568.306238,
+    "ast_hash": "1513fd91182d36db0d44fcee81d34c14",
+    "semantic_hash": ""
+  },
+  "startup-ops-research/stage-fit.md": {
+    "mtime": 1784583542.8202152,
+    "ast_hash": "0a6819764cabd0a425ea67b5e2d04fdf",
+    "semantic_hash": ""
+  },
+  "startup-ops-research/startups-list-part1.md": {
+    "mtime": 1784583697.84424,
+    "ast_hash": "029907abf057f62d0276310ecae7c79b",
+    "semantic_hash": ""
+  },
+  "startup-ops-research/startups-list-part2.md": {
+    "mtime": 1784583718.3861628,
+    "ast_hash": "2902c2f37e79c76d22fc205b812ec711",
+    "semantic_hash": ""
+  },
+  "startup-ops-research/titles.md": {
+    "mtime": 1784583593.34156,
+    "ast_hash": "38e047059081cf98fa5971e3cf7ddf84",
+    "semantic_hash": ""
+  },
+  "ux-audit-report.html": {
+    "mtime": 1784849438.0782006,
+    "ast_hash": "88d2e4a0725692316123daf249c14517",
+    "semantic_hash": ""
+  },
+  "weekly-pulse.html": {
+    "mtime": 1784802973.2278583,
+    "ast_hash": "db8aca94169f952c6dd4dc390eabc089",
+    "semantic_hash": ""
+  },
+  "atlas/public/cv-rui-silva.pdf": {
+    "mtime": 1785077889.5025852,
+    "ast_hash": "d6c7f4165d7f1050a4e9df2effffa601",
+    "semantic_hash": ""
+  },
+  "cv-rui-silva-formatted-v2.1.pdf": {
+    "mtime": 1785058934.3782043,
+    "ast_hash": "d6c7f4165d7f1050a4e9df2effffa601",
+    "semantic_hash": ""
+  },
+  "cv-rui-silva-formatted-v2.pdf": {
+    "mtime": 1785057784.5814743,
+    "ast_hash": "4a9f1c945c23c813a87a1323cb8f4b82",
+    "semantic_hash": ""
+  },
+  "cv-rui-silva-formatted.pdf": {
+    "mtime": 1785055899.6101193,
+    "ast_hash": "fb2b7dd996469a324267109474f73881",
+    "semantic_hash": ""
+  },
+  "atlas/public/favicon.svg": {
+    "mtime": 1784812042.7611766,
+    "ast_hash": "7e840862161341271697daa99a40d76b",
+    "semantic_hash": ""
+  },
+  "atlas/public/icons.svg": {
+    "mtime": 1784812042.761284,
+    "ast_hash": "3b4fcfcf393eca4d264dca4a4663bc37",
+    "semantic_hash": ""
+  },
+  "atlas/src/assets/hero.png": {
+    "mtime": 1784812042.761735,
+    "ast_hash": "aead493361b27e7510691c5d7072dfc1",
+    "semantic_hash": ""
+  },
+  "atlas/src/assets/react.svg": {
+    "mtime": 1784812042.7618468,
+    "ast_hash": "f0402b67b6ce880f65666bb49e841696",
+    "semantic_hash": ""
+  },
+  "atlas/src/assets/vite.svg": {
+    "mtime": 1784812042.7619598,
+    "ast_hash": "9960a24288958394ac50e57ff638b036",
+    "semantic_hash": ""
   }
 }

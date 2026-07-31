@@ -3,7 +3,7 @@
 import json
 
 # Read the enriched data
-with open('/home/rui/career-kb/enriched-personality-data.json') as f:
+with open('/home/rui/projects/career-kb/enriched-personality-data.json') as f:
     data = json.load(f)
 
 # Convert to JS array literal (compact)
@@ -1874,7 +1874,7 @@ window.addEventListener('resize', () => {
 html = html.replace('__ENRICHED_DATA__', data_js)
 
 # Write the file
-with open('/home/rui/career-kb/personality-dashboard-prototype.html', 'w') as f:
+with open('/home/rui/projects/career-kb/personality-dashboard-prototype.html', 'w') as f:
     f.write(html)
 
 print(f"Written {len(html)} bytes to personality-dashboard-prototype.html")

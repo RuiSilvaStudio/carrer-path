@@ -120,6 +120,13 @@ export function CommandPalette() {
       action: () => navigate('/pulse'),
     });
     out.push({
+      id: 'route-career-direction',
+      title: 'Career Direction',
+      group: 'Navigate',
+      keywords: ['career', 'direction', 'work preferences', 'role comparison', 'evidence cycle'],
+      action: () => navigate('/career-direction'),
+    });
+    out.push({
       id: 'route-docs',
       title: 'Docs',
       group: 'Navigate',
@@ -162,7 +169,7 @@ export function CommandPalette() {
     });
 
     return out;
-  }, [navigate, setView, toggleTheme, signOut]);
+  }, [navigate, location, setView, toggleTheme, signOut]);
 
   // Filter items by query (case-insensitive; prefix boost)
   const filtered = useMemo(() => {

@@ -27,7 +27,7 @@ additions. Present options with trade-offs and ask — do not assume.
 
 ## Project Boundary
 
-- **This project root is `/home/rui/career-kb/`.** Do not read, write, or execute anything inside other project directories under `/home/rui/projects/*` unless Rui explicitly asks for that specific cross-project work in the current session.
+- **This project root is `/home/rui/projects/career-kb/`.** Do not read, write, or execute anything inside other project directories under `/home/rui/projects/*` unless Rui explicitly asks for that specific cross-project work in the current session.
 - If a task seems to require another project's files, stop and ask — the answer is almost always "you're in the wrong context."
 - System-level operations outside the project are fine when the task requires them (package installs, DB connections, `~/.hermes` config, `/tmp` for OS temp files), but never touch *other project* directories.
 - All throwaway work (verification scripts, scraped data, scratch files) goes in `career-kb/.audit-tmp/` (gitignored). Never leave temp files in the repo root.
