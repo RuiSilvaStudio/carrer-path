@@ -383,14 +383,6 @@ export function DocsPage() {
   const [activeSection, setActiveSection] = useState<string>('overview');
   const sectionsRef = useRef<HTMLElement>(null);
 
-  // Phase 3.E: notify FirstChartTour that the user has navigated to the docs.
-  // This handles the case where a user opens /docs first (without ever
-  // touching the dashboard charts). The dispatch is harmless if the tour
-  // is already done or dismissed — FirstChartTour guards on localStorage.
-  useEffect(() => {
-    window.dispatchEvent(new CustomEvent('atlas:chart-interacted'));
-  }, []);
-
   // Track active section on scroll
   useEffect(() => {
     const observer = new IntersectionObserver(
