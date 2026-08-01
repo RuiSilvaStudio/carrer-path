@@ -1,7 +1,22 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useCareerDirection } from '../hooks/useCareerDirection';
 import { matchReference } from '../lib/careerRoleReference';
-import { CAREER_STAGES, advanceStage, directionCountForComparison, directionFromTitle, type CareerDirection, type CareerDirectionData, type CareerStage } from '../lib/careerDirection';
+import {
+  CAREER_STAGES,
+  advanceStage,
+  directionCountForComparison,
+  directionFromTitle,
+  getChosenDirection,
+  getActiveDirections,
+  getStageStatus,
+  isExplorerStale,
+  isMarketStale,
+  type CareerDirection,
+  type CareerDirectionData,
+  type CareerStage,
+  type StageStatus,
+  type WizardStep,
+} from '../lib/careerDirection';
 import { WorkValuesAssessment } from '../components/career/WorkValuesAssessment';
 import { ProfileBuilder } from '../components/career/ProfileBuilder';
 import { VALUE_LABELS, type WorkValuesResult } from '../lib/work-values-data';
@@ -21,165 +36,392 @@ const ui = {
   tag: { display: 'inline-flex', alignItems: 'center', padding: '4px 8px', background: 'var(--color-surface-elevated)', border: '1px solid var(--color-border)', font: '11px var(--font-sans)', color: 'var(--color-text)' },
 };
 
-function stage(data: CareerDirectionData, next: CareerStage): CareerDirectionData { return { ...data, currentStage: next }; }
-function selected(data: CareerDirectionData) { return data.directions.filter((item) => item.selected && item.status === 'active'); }
+// ── Nav status dot ─────────────────────────────────────────────────────
+const STATUS_SYMBOL: Record<StageStatus, string> = {
+  empty: '○',
+  in_progress: '●',
+  complete: '✓',
+  stale: '⚠',
+};
+const STATUS_COLOR: Record<StageStatus, string> = {
+  empty: 'var(--color-text-dim)',
+  in_progress: 'var(--color-accent)',
+  complete: 'var(--color-success)',
+  stale: 'var(--color-warning)',
+};
+
+function stage(data: CareerDirectionData, next: CareerStage): CareerDirectionData {
+  return { ...data, currentStage: next };
+}
+
+// ── Staleness banner ───────────────────────────────────────────────────
+function StaleBanner({ message, onAction, actionLabel, onDismiss }: { message: string; onAction?: () => void; actionLabel?: string; onDismiss?: () => void }) {
+  return (
+    <div style={{ ...ui.panel, borderLeft: '3px solid var(--color-warning)', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+      <span style={{ color: 'var(--color-warning)', fontSize: '16px' }}>⚠</span>
+      <p style={{ ...ui.quiet, fontSize: '13px', margin: 0, flex: 1, minWidth: '200px' }}>{message}</p>
+      {onAction && actionLabel && (
+        <button onClick={onAction} style={{ ...ui.secondary, fontSize: '10px', padding: '6px 12px', borderColor: 'var(--color-warning)', color: 'var(--color-warning)' }}>{actionLabel}</button>
+      )}
+      {onDismiss && (
+        <button onClick={onDismiss} style={{ ...ui.secondary, fontSize: '10px', padding: '6px 10px' }}>Dismiss</button>
+      )}
+    </div>
+  );
+}
 
 export function CareerDirectionPage() {
   const { data, setData, loading, saving, error, notice, save, deleteCareerData } = useCareerDirection();
   const [newDirection, setNewDirection] = useState('');
-  const activeDirections = useMemo(() => selected(data), [data]);
-  const current = activeDirections[0] ?? data.directions[0];
+
   const move = async (next: CareerDirectionData, message: string) => save(stage(next, advanceStage(next.currentStage)), message);
-  const add = (title = newDirection) => { const cleaned = title.trim(); if (!cleaned) return; setData((current) => current.directions.some((item) => item.title.toLowerCase() === cleaned.toLowerCase()) ? current : { ...current, directions: [...current.directions, directionFromTitle(cleaned)] }); setNewDirection(''); };
+
+  // Touch profile to mark downstream as stale
+  const touchProfile = (next: CareerDirectionData): CareerDirectionData => ({
+    ...next,
+    profileUpdatedAt: new Date().toISOString(),
+  });
+
   if (loading) return <main className="atlas-page" style={ui.page}><p style={ui.quiet}>Opening your direction work…</p></main>;
 
-  return <main id="atlas-main" className="atlas-page career-direction-page" tabIndex={-1} style={ui.page}>
-    <nav className="career-progress" aria-label="Career direction stages" style={{ borderBottom: '1px solid var(--color-border)', marginBottom: '40px', display: 'flex', overflowX: 'auto' }}>{CAREER_STAGES.map((item, index) => <button key={item.id} onClick={() => setData(stage(data, item.id))} style={{ background: 'transparent', border: 0, borderBottom: item.id === data.currentStage ? '2px solid var(--color-accent)' : '2px solid transparent', color: item.id === data.currentStage ? 'var(--color-accent)' : index <= CAREER_STAGES.findIndex((stage) => stage.id === data.currentStage) ? 'var(--color-text-muted)' : 'var(--color-text-dim)', padding: '12px 12px 12px', whiteSpace: 'nowrap', font: '10px var(--font-mono)', letterSpacing: '.08em', textTransform: 'uppercase', cursor: 'pointer' }}>{String(index + 1).padStart(2, '0')} <span>{item.label}</span></button>)}</nav>
-    {error && <p role="alert" style={{ color: 'var(--color-danger)', marginBottom: '20px' }}>{error}</p>}
-    {notice && <p role="status" style={{ color: 'var(--color-success)', marginBottom: '20px' }}>{notice}</p>}
+  const currentStageStatus = (s: CareerStage) => getStageStatus(data, s);
 
-    {data.currentStage === 'profile' && <Profile data={data} setData={setData} saving={saving} move={move} />}
-    {data.currentStage === 'preferences' && <Preferences data={data} setData={setData} saving={saving} move={move} />}
-    {data.currentStage === 'shortlist' && <Shortlist data={data} setData={setData} saving={saving} move={move} newDirection={newDirection} setNewDirection={setNewDirection} add={add} />}
-    {data.currentStage === 'compare' && <Compare data={data} setData={setData} saving={saving} move={move} directions={activeDirections} />}
-    {data.currentStage === 'brief' && <Brief data={data} setData={setData} saving={saving} move={move} direction={current} />}
-    {data.currentStage === 'marketAction' && <MarketAction data={data} setData={setData} saving={saving} move={move} save={save} direction={current} />}
+  return (
+    <main id="atlas-main" className="atlas-page career-direction-page" tabIndex={-1} style={ui.page}>
+      {/* ── Nav with status dots ── */}
+      <nav className="career-progress" aria-label="Career direction stages" style={{ borderBottom: '1px solid var(--color-border)', marginBottom: '40px', display: 'flex', overflowX: 'auto' }}>
+        {CAREER_STAGES.map((item, index) => {
+          const status = currentStageStatus(item.id);
+          const isActive = item.id === data.currentStage;
+          const isAccessible = index <= CAREER_STAGES.findIndex(s => s.id === data.currentStage) || status === 'complete';
+          return (
+            <button
+              key={item.id}
+              onClick={() => isAccessible && setData(stage(data, item.id))}
+              disabled={!isAccessible}
+              style={{
+                background: 'transparent', border: 0,
+                borderBottom: isActive ? '2px solid var(--color-accent)' : '2px solid transparent',
+                color: isActive ? 'var(--color-accent)' : isAccessible ? 'var(--color-text-muted)' : 'var(--color-text-dim)',
+                padding: '12px 12px', whiteSpace: 'nowrap',
+                font: '10px var(--font-mono)', letterSpacing: '.08em', textTransform: 'uppercase',
+                cursor: isAccessible ? 'pointer' : 'not-allowed', opacity: isAccessible ? 1 : 0.4,
+              }}
+            >
+              <span style={{ color: STATUS_COLOR[status], marginRight: '4px' }}>{STATUS_SYMBOL[status]}</span>
+              {String(index + 1).padStart(2, '0')} <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
 
-    <section style={{ ...ui.rule, paddingTop: '20px', borderTop: '1px solid var(--color-border)' }} aria-label="Career direction data controls">
-      <p style={{ ...ui.quiet, fontSize: '12px', marginBottom: '12px' }}>Exporting or deleting here applies only to the information on this page.</p>
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-        <button onClick={() => { const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = 'atlas-career-direction.json'; link.click(); URL.revokeObjectURL(url); }} style={ui.secondary}>Export my career data</button>
-        <button onClick={() => { if (window.confirm('Delete your Career Direction data? This applies only to the information on this page.')) void deleteCareerData(); }} disabled={saving} style={{ ...ui.secondary, color: 'var(--color-danger)' }}>Delete career direction data</button>
-      </div>
-    </section>
-  </main>;
+      {error && <p role="alert" style={{ color: 'var(--color-danger)', marginBottom: '20px' }}>{error}</p>}
+      {notice && <p role="status" style={{ color: 'var(--color-success)', marginBottom: '20px' }}>{notice}</p>}
+
+      {data.currentStage === 'profile' && <ProfileStep data={data} setData={setData} saving={saving} move={move} touchProfile={touchProfile} />}
+      {data.currentStage === 'explorer' && <ExplorerStep data={data} setData={setData} saving={saving} save={save} newDirection={newDirection} setNewDirection={setNewDirection} />}
+      {data.currentStage === 'brief' && <BriefStep data={data} setData={setData} saving={saving} move={move} />}
+      {data.currentStage === 'marketAction' && <MarketActionStep data={data} setData={setData} saving={saving} save={save} />}
+
+      <section style={{ ...ui.rule, paddingTop: '20px', borderTop: '1px solid var(--color-border)' }} aria-label="Career direction data controls">
+        <p style={{ ...ui.quiet, fontSize: '12px', marginBottom: '12px' }}>Exporting or deleting here applies only to the information on this page.</p>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button onClick={() => { const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = 'atlas-career-direction.json'; link.click(); URL.revokeObjectURL(url); }} style={ui.secondary}>Export my career data</button>
+          <button onClick={() => { if (window.confirm('Delete your Career Direction data? This applies only to the information on this page.')) void deleteCareerData(); }} disabled={saving} style={{ ...ui.secondary, color: 'var(--color-danger)' }}>Delete career direction data</button>
+        </div>
+      </section>
+    </main>
+  );
 }
 
-function Title({ kicker, title, children }: { kicker: string; title: string; children: React.ReactNode }) { return <><p style={ui.kicker}>{kicker}</p><h2 style={{ font: '400 31px/1.12 var(--font-serif)', letterSpacing: '-.025em', margin: '8px 0' }}>{title}</h2><p style={{ ...ui.quiet, maxWidth: '680px', fontSize: '14px' }}>{children}</p></>; }
-function Actions({ back, onBack, next, onNext, disabled, saving }: { back?: string; onBack?: () => void; next: string; onNext: () => void; disabled?: boolean; saving: boolean }) { return <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginTop: '32px' }}>{back && <button onClick={onBack} style={ui.secondary}>{back}</button>}<button disabled={disabled || saving} onClick={onNext} style={{ ...ui.primary, opacity: disabled || saving ? .45 : 1, marginLeft: 'auto' }}>{saving ? 'Saving…' : next}</button></div>; }
+type PageProps = {
+  data: CareerDirectionData;
+  setData: React.Dispatch<React.SetStateAction<CareerDirectionData>>;
+  saving: boolean;
+  move: (data: CareerDirectionData, message: string) => Promise<boolean>;
+};
 
-function Profile({ data, setData, saving, move }: PageProps) {
+type StepProps = Omit<PageProps, 'move'>;
+
+function Title({ kicker, title, children }: { kicker: string; title: string; children: React.ReactNode }) {
+  return <><p style={ui.kicker}>{kicker}</p><h2 style={{ font: '400 31px/1.12 var(--font-serif)', letterSpacing: '-.025em', margin: '8px 0' }}>{title}</h2><p style={{ ...ui.quiet, maxWidth: '680px', fontSize: '14px' }}>{children}</p></>;
+}
+
+function Actions({ back, onBack, next, onNext, disabled, saving }: { back?: string; onBack?: () => void; next: string; onNext: () => void; disabled?: boolean; saving: boolean }) {
+  return <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginTop: '32px' }}>{back && <button onClick={onBack} style={ui.secondary}>{back}</button>}<button disabled={disabled || saving} onClick={onNext} style={{ ...ui.primary, opacity: disabled || saving ? .45 : 1, marginLeft: 'auto' }}>{saving ? 'Saving…' : next}</button></div>;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// STEP 01 — PROFILE (merged: career history + work values)
+// ═══════════════════════════════════════════════════════════════════════
+
+function ProfileStep({ data, setData, saving, move, touchProfile }: PageProps & { touchProfile: (next: CareerDirectionData) => CareerDirectionData }) {
+  const hasProfile = data.profile.roles.length > 0 || data.profile.careerSummary;
+  const hasValues = !!data.preferences.workValues;
+  const profileStatus = hasProfile ? '✓' : '○';
+  const valuesStatus = hasValues ? '✓' : '○';
+
+  // Track whether the user has made changes since last save.
+  // On save, we snapshot the profile + values. Button re-activates only when
+  // current data differs from the snapshot.
+  const [savedSnapshot, setSavedSnapshot] = useState<string | null>(
+    hasProfile || hasValues ? JSON.stringify({ p: data.profile, wv: data.preferences.workValues }) : null,
+  );
+  const currentSnapshot = JSON.stringify({ p: data.profile, wv: data.preferences.workValues });
+  const hasUnsavedChanges = currentSnapshot !== savedSnapshot;
+  const canSave = (hasProfile || hasValues) && hasUnsavedChanges;
+
+  const handleProfileChange = (profile: StructuredProfile) => {
+    setData(touchProfile({ ...data, profile }));
+  };
+
+  const handleValuesComplete = (result: WorkValuesResult) => {
+    const updated = touchProfile({
+      ...data,
+      preferences: { ...data.preferences, workValues: result },
+    });
+    setData(updated);
+  };
+
+  const handleSave = () => {
+    setSavedSnapshot(currentSnapshot);
+    move(data, 'Profile saved.');
+  };
+
   return (
     <section>
-      <ProfileBuilder
-        profile={data.profile}
-        onChange={(profile: StructuredProfile) => setData({ ...data, profile })}
-      />
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px', maxWidth: '840px', margin: '28px auto 0' }}>
+      <Title kicker="01 / Your profile" title="Build your career foundation.">
+        Atlas needs your career history and what matters to you. Both sections below are editable — fill them in any order.
+      </Title>
+      <hr style={ui.rule} />
+
+      {/* ── Progress indicator ── */}
+      <div style={{ display: 'flex', gap: '24px', marginBottom: '32px', font: '11px var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.1em', color: 'var(--color-text-dim)' }}>
+        <span style={{ color: hasProfile ? 'var(--color-success)' : 'var(--color-text-dim)' }}>{profileStatus} Career history</span>
+        <span style={{ color: hasValues ? 'var(--color-success)' : 'var(--color-text-dim)' }}>{valuesStatus} Work values</span>
+      </div>
+
+      {/* ── Section A: Career history ── */}
+      <div style={{ marginBottom: '48px' }}>
+        <p style={{ ...ui.kicker, marginBottom: '16px' }}>Career history</p>
+        <ProfileBuilder
+          profile={data.profile}
+          onChange={handleProfileChange}
+        />
+      </div>
+
+      <hr style={ui.rule} />
+
+      {/* ── Section B: Work values ── */}
+      <div>
+        <p style={{ ...ui.kicker, marginBottom: '16px' }}>What matters to you</p>
+        <WorkValuesAssessment
+          onComplete={handleValuesComplete}
+          onBack={() => { /* no-op: both sections are on one page */ }}
+          initialResult={data.preferences.workValues ?? null}
+          saving={saving}
+        />
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px' }}>
         <button
-          onClick={() => move(data, 'Career picture saved.')}
-          disabled={saving}
-          style={{ ...ui.primary, opacity: saving ? 0.5 : 1 }}
+          onClick={handleSave}
+          disabled={saving || !canSave}
+          style={{ ...ui.primary, opacity: saving || !canSave ? 0.5 : 1 }}
         >
-          {saving ? 'Saving…' : 'Save and continue →'}
+          {saving ? 'Saving…' : hasUnsavedChanges ? 'Save and continue →' : 'Saved ✓'}
         </button>
       </div>
     </section>
   );
 }
-function Preferences({ data, setData, saving, move }: PageProps) {
-  const handleComplete = (result: WorkValuesResult) => {
-    const updated = { ...data, preferences: { ...data.preferences, workValues: result } };
-    move(updated, 'Work values saved.');
+
+// ═══════════════════════════════════════════════════════════════════════
+// STEP 02 — EXPLORER (re-runnable wizard: Directions → Compare)
+// ═══════════════════════════════════════════════════════════════════════
+
+function ExplorerStep({ data, setData, saving, save, newDirection, setNewDirection }: StepProps & { save: (next: CareerDirectionData, message?: string) => Promise<boolean>; newDirection: string; setNewDirection: (v: string) => void }) {
+  const [wizardStep, setWizardStep] = useState<WizardStep>('directions');
+  const explorerStale = isExplorerStale(data);
+
+  const handleChooseDirection = async (directionId: string) => {
+    const updated: CareerDirectionData = {
+      ...data,
+      chosenDirectionId: directionId,
+      explorerCompletedAt: new Date().toISOString(),
+      directions: data.directions.map(d => ({
+        ...d,
+        selected: d.id === directionId,
+        status: d.id === directionId ? 'active' as const : d.status,
+      })),
+    };
+    // Save and navigate to Brief
+    await save(stage(updated, 'brief'), 'Direction chosen. Building brief.');
   };
-  return <section><WorkValuesAssessment onComplete={handleComplete} onBack={() => setData(stage(data, 'profile'))} initialResult={data.preferences.workValues ?? null} saving={saving} /></section>;
+
+  return (
+    <section>
+      <Title kicker="02 / Explorer" title="Choose what deserves attention.">
+        Atlas suggests directions based on your profile and work values. Add your own ideas too. When you're ready, compare side by side and pick one to take forward.
+      </Title>
+      <hr style={ui.rule} />
+
+      {explorerStale && (
+        <StaleBanner
+          message="Your profile changed since your last exploration. Your directions may be different now."
+          onDismiss={() => { /* user acknowledges */ }}
+        />
+      )}
+
+      {/* ── Wizard step indicator ── */}
+      <div style={{ display: 'flex', gap: '24px', marginBottom: '32px', font: '11px var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.1em' }}>
+        <button
+          onClick={() => setWizardStep('directions')}
+          style={{ background: 'none', border: 0, cursor: 'pointer', color: wizardStep === 'directions' ? 'var(--color-accent)' : 'var(--color-text-dim)' }}
+        >
+          {wizardStep === 'directions' ? '●' : '○'} Directions
+        </button>
+        <button
+          onClick={() => directionCountForComparison(data) >= 2 && setWizardStep('compare')}
+          disabled={directionCountForComparison(data) < 2}
+          style={{ background: 'none', border: 0, cursor: directionCountForComparison(data) >= 2 ? 'pointer' : 'not-allowed', color: wizardStep === 'compare' ? 'var(--color-accent)' : 'var(--color-text-dim)', opacity: directionCountForComparison(data) >= 2 ? 1 : 0.4 }}
+        >
+          {wizardStep === 'compare' ? '●' : '○'} Compare
+        </button>
+      </div>
+
+      {wizardStep === 'directions' && (
+        <DirectionsContent
+          data={data}
+          setData={setData}
+          saving={saving}
+          newDirection={newDirection}
+          setNewDirection={setNewDirection}
+          onContinue={() => setWizardStep('compare')}
+        />
+      )}
+
+      {wizardStep === 'compare' && (
+        <CompareContent
+          data={data}
+          setData={setData}
+          saving={saving}
+          onChoose={handleChooseDirection}
+          onBack={() => setWizardStep('directions')}
+        />
+      )}
+    </section>
+  );
 }
 
-function Shortlist({ data, setData, saving, move, newDirection, setNewDirection, add }: PageProps & { newDirection: string; setNewDirection: (value: string) => void; add: (title?: string) => void }) {
-  const count = directionCountForComparison(data);
+// ── Wizard Screen 1: Directions ────────────────────────────────────────
+
+function DirectionsContent({ data, setData, saving, newDirection, setNewDirection, onContinue }: StepProps & { newDirection: string; setNewDirection: (v: string) => void; onContinue: () => void }) {
+  const [loading, setLoading] = useState(false);
+  const [suggestionError, setSuggestionError] = useState<string | null>(null);
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [enrichingIds, setEnrichingIds] = useState<Set<string>>(new Set());
+  const [hasFetched, setHasFetched] = useState(false);
+
+  const SUGGEST_URL = 'https://ncwtmagvjtpqnwroyuha.supabase.co/functions/v1/suggest-direction';
+  const ENRICH_URL = 'https://ncwtmagvjtpqnwroyuha.supabase.co/functions/v1/enrich-direction';
+  const ANON_KEY = 'sb_publishable_MtH4laIgqpmwU1a5XpWmPg_-eOrrSxE';
+
   const hasProfile = data.profile.roles.length > 0;
-  return <ShortlistContent data={data} setData={setData} saving={saving} move={move} count={count} hasProfile={hasProfile} newDirection={newDirection} setNewDirection={setNewDirection} add={add} />;
-}
+  const savedSuggestions = data.savedSuggestions ?? [];
+  const activeSuggestions = savedSuggestions.filter((_, i) => !dismissed.has(String(i)));
 
-function ShortlistContent({ data, setData, saving, move, count, hasProfile, newDirection, setNewDirection, add }: PageProps & { count: number; hasProfile: boolean; newDirection: string; setNewDirection: (value: string) => void; add: (title?: string) => void }) {
-    const [loading, setLoading] = useState(false);
-    const [suggestionError, setSuggestionError] = useState<string | null>(null);
-    const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-    const [enrichingIds, setEnrichingIds] = useState<Set<string>>(new Set());
-    const [hasFetched, setHasFetched] = useState(false);
+  useEffect(() => {
+    if (hasProfile && savedSuggestions.length === 0 && !hasFetched && !loading && !suggestionError) {
+      fetchSuggestions();
+    }
+  }, [hasProfile]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const SUGGEST_URL = 'https://ncwtmagvjtpqnwroyuha.supabase.co/functions/v1/suggest-direction';
-    const ENRICH_URL = 'https://ncwtmagvjtpqnwroyuha.supabase.co/functions/v1/enrich-direction';
-    const ANON_KEY = 'sb_publishable_MtH4laIgqpmwU1a5XpWmPg_-eOrrSxE';
+  // ── Auto-enrich all unenriched directions on mount ─────────────────
+  // This handles directions loaded from DB that never had enrichment,
+  // and also re-enriches if the profile is stale.
+  useEffect(() => {
+    if (!hasProfile) return;
+    const unenriched = data.directions.filter(d => !d.enrichment && !enrichingIds.has(d.id));
+    if (unenriched.length === 0) return;
+    // Enrich each one — fire all in parallel, they update independently via prev
+    unenriched.forEach(d => enrichDirection(d.id));
+  }, [hasProfile, data.directions.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // ── Load saved suggestions from DB on first mount ────────────
-    // If we already have savedSuggestions, use them. Only call LLM if none exist.
-    const savedSuggestions = data.savedSuggestions ?? [];
-    const activeSuggestions = savedSuggestions.filter((_, i) => !dismissed.has(String(i)));
-
-    useEffect(() => {
-      if (hasProfile && savedSuggestions.length === 0 && !hasFetched && !loading && !suggestionError) {
-        fetchSuggestions();
+  const fetchSuggestions = async () => {
+    setLoading(true);
+    setSuggestionError(null);
+    setHasFetched(true);
+    try {
+      const response = await fetch(SUGGEST_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ANON_KEY}` },
+        body: JSON.stringify({ profile: data.profile, workValues: data.preferences.workValues ?? null }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || `Request failed (${response.status})`);
       }
-    }, [hasProfile]); // eslint-disable-line react-hooks/exhaustive-deps
+      const result = await response.json();
+      const newSuggestions = result.suggestions || [];
+      setData(prev => ({ ...prev, savedSuggestions: newSuggestions }));
+      setDismissed(new Set());
+    } catch (err: any) {
+      setSuggestionError(err.message || 'Could not load suggestions.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // ── Fetch 3 suggestions and SAVE them persistently ──────────
-    const fetchSuggestions = async () => {
-      setLoading(true);
-      setSuggestionError(null);
-      setHasFetched(true);
-      try {
-        const response = await fetch(SUGGEST_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ANON_KEY}` },
-          body: JSON.stringify({ profile: data.profile, workValues: data.preferences.workValues ?? null }),
-        });
-        if (!response.ok) {
-          const err = await response.json().catch(() => ({}));
-          throw new Error(err.error || `Request failed (${response.status})`);
-        }
-        const result = await response.json();
-        const newSuggestions = result.suggestions || [];
-        // Save to persistent state
-        setData(prev => ({ ...prev, savedSuggestions: newSuggestions }));
-        setDismissed(new Set());
-      } catch (err: any) {
-        setSuggestionError(err.message || 'Could not load suggestions.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  // ── Enrich a single direction ──────────────────────────────────────
+  const enrichDirection = async (directionId: string) => {
+    // Use a ref to get the latest data — the closure's `data` may be stale
+    const direction = data.directions.find(d => d.id === directionId);
+    if (!direction || !hasProfile) return;
+    setEnrichingIds(prev => new Set(prev).add(directionId));
+    try {
+      const response = await fetch(ENRICH_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ANON_KEY}` },
+        body: JSON.stringify({ title: direction.title, profile: data.profile, workValues: data.preferences.workValues ?? null }),
+      });
+      if (!response.ok) return;
+      const enrichment = await response.json();
+      setData(prev => ({
+        ...prev,
+        directions: prev.directions.map(d => d.id === directionId ? {
+          ...d,
+          enrichment: { ...enrichment, enrichedAt: new Date().toISOString() },
+          summary: enrichment.rationale || d.summary,
+          unknown: enrichment.whatIsUnknown || d.unknown,
+          nextTest: enrichment.suggestedTest || d.nextTest,
+        } : d),
+      }));
+    } catch { /* silent */ }
+    finally {
+      setEnrichingIds(prev => { const n = new Set(prev); n.delete(directionId); return n; });
+    }
+  };
 
-    // ── Enrich a single direction on explicit button click ──────
-    const enrichDirection = async (directionId: string) => {
-      const direction = data.directions.find(d => d.id === directionId);
-      if (!direction || !hasProfile) return;
-      setEnrichingIds(prev => new Set(prev).add(directionId));
-      try {
-        const response = await fetch(ENRICH_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ANON_KEY}` },
-          body: JSON.stringify({ title: direction.title, profile: data.profile, workValues: data.preferences.workValues ?? null }),
-        });
-        if (!response.ok) return;
-        const enrichment = await response.json();
-        setData(prev => ({
-          ...prev,
-          directions: prev.directions.map(d => d.id === directionId ? {
-            ...d,
-            enrichment: { ...enrichment, enrichedAt: new Date().toISOString() },
-            summary: enrichment.rationale || d.summary,
-            unknown: enrichment.whatIsUnknown || d.unknown,
-            nextTest: enrichment.suggestedTest || d.nextTest,
-          } : d),
-        }));
-      } catch { /* silent */ }
-      finally {
-        setEnrichingIds(prev => { const n = new Set(prev); n.delete(directionId); return n; });
-      }
-    };
+  const addDirection = (title?: string) => {
+    const cleaned = (title ?? newDirection).trim();
+    if (!cleaned) return;
+    if (data.directions.some(item => item.title.toLowerCase() === cleaned.toLowerCase())) return;
+    const newDir = directionFromTitle(cleaned);
+    setData(prev => ({ ...prev, directions: [...prev.directions, newDir] }));
+    setNewDirection('');
+    // Auto-enrich on add
+    if (hasProfile) {
+      // Use setTimeout to let state settle before enriching
+      setTimeout(() => enrichDirection(newDir.id), 100);
+    }
+  };
 
-    // ── Add direction: no LLM call, just add to the grid ────────
-    const addDirection = (title?: string) => {
-      const cleaned = (title ?? newDirection).trim();
-      if (!cleaned) return;
-      add(cleaned);
-      setNewDirection('');
-    };
+  const count = directionCountForComparison(data);
 
-    return <section><Title kicker="03 / Possible directions" title="Choose what deserves attention.">Atlas suggests directions based on your skills and work values. Add your own ideas too — the best direction might be one only you can see.</Title><hr style={ui.rule} />
-
-      {/* ── AI Suggestions (from saved, persistent) ─────────────── */}
+  return (
+    <div>
+      {/* ── AI Suggestions ── */}
       {hasProfile && (
         <div style={{ marginBottom: '32px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -209,22 +451,30 @@ function ShortlistContent({ data, setData, saving, move, count, hasProfile, newD
         </div>
       )}
 
-      {/* ── Add your own direction (no LLM) ─────────────────────── */}
+      {/* ── Add your own direction ── */}
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
         <input value={newDirection} onChange={(event) => setNewDirection(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addDirection(); } }} placeholder="Add a direction in your own words" style={{ ...ui.input, flex: '1 1 300px' }} />
         <button onClick={() => addDirection()} style={ui.secondary}>Add direction</button>
       </div>
 
-      {/* ── Your directions ─────────────────────────────────────── */}
+      {/* ── Your directions ── */}
       {data.directions.length > 0 && <p style={{ ...ui.kicker, marginBottom: '12px' }}>Your directions</p>}
       <div className="career-choice-grid">
-        {data.directions.map((direction) => <DirectionChoice key={direction.id} direction={direction} enriching={enrichingIds.has(direction.id)} onEnrich={() => enrichDirection(direction.id)} onToggle={() => setData({ ...data, directions: data.directions.map((item) => item.id === direction.id ? { ...item, selected: !item.selected } : item) })} />)}
+        {data.directions.map((direction) => (
+          <DirectionChoice
+            key={direction.id}
+            direction={direction}
+            enriching={enrichingIds.has(direction.id)}
+            onToggle={() => setData(prev => ({ ...prev, directions: prev.directions.map((item) => item.id === direction.id ? { ...item, selected: !item.selected } : item) }))}
+          />
+        ))}
       </div>
       {data.directions.length === 0 && <p style={{ ...ui.quiet, padding: '20px 0' }}>No directions yet. Select at least two ideas worth examining.</p>}
 
-      <Actions back="← Preferences" onBack={() => setData(stage(data, 'preferences'))} next={count >= 2 ? 'Save and compare →' : 'Select at least two directions'} disabled={count < 2} onNext={() => move(data, 'Selected directions saved.')} saving={saving} />
-    </section>;
-  }
+      <Actions next={count >= 2 ? 'Compare →' : 'Select at least two directions'} disabled={count < 2} onNext={onContinue} saving={saving} />
+    </div>
+  );
+}
 
 interface Suggestion {
   title: string;
@@ -275,8 +525,8 @@ function SuggestionCard({ suggestion, onAdd, onDismiss }: { suggestion: Suggesti
     </div>
   );
 }
-function DirectionChoice({ direction, enriching, onEnrich, onToggle }: { direction: CareerDirection; enriching?: boolean; onEnrich?: () => void; onToggle: () => void }) {
-  const [expanded, setExpanded] = useState(false);
+
+function DirectionChoice({ direction, enriching, onToggle }: { direction: CareerDirection; enriching?: boolean; onToggle: () => void }) {
   const reference = matchReference(direction.title);
   const hasEnrichment = !!direction.enrichment;
   return (
@@ -287,62 +537,24 @@ function DirectionChoice({ direction, enriching, onEnrich, onToggle }: { directi
         <h3 style={{ font: '400 25px/1.12 var(--font-serif)', margin: '8px 0 8px' }}>{direction.title}</h3>
         <p style={{ ...ui.quiet, fontSize: '13px' }}>{reference?.description ?? direction.summary}</p>
         {enriching && <p style={{ ...ui.quiet, fontSize: '11px', color: 'var(--color-accent)', marginTop: '8px' }}>Analysing…</p>}
-        {!enriching && !hasEnrichment && onEnrich && (
-          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEnrich(); }} style={{ ...ui.secondary, fontSize: '9px', padding: '4px 8px', marginTop: '8px' }}>
-            Analyse this direction
-          </button>
+        {!enriching && hasEnrichment && (
+          <p style={{ ...ui.quiet, fontSize: '11px', color: 'var(--color-success)', marginTop: '8px' }}>✓ Analysed — see in Compare</p>
         )}
-        {hasEnrichment && !enriching && (
-          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setExpanded(!expanded); }} style={{ ...ui.secondary, fontSize: '9px', padding: '4px 8px', marginTop: '8px' }}>
-            {expanded ? 'Hide analysis' : 'Show analysis'}
-          </button>
-        )}
-        {expanded && hasEnrichment && direction.enrichment && (
-          <div style={{ marginTop: '8px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-            <div>
-              <p style={{ ...ui.kicker, marginBottom: '4px' }}>Skill overlap</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                {direction.enrichment.skillOverlap.map((s, i) => <span key={i} style={{ ...ui.tag, fontSize: '10px' }}>{s}</span>)}
-              </div>
-              <p style={{ ...ui.kicker, marginBottom: '4px', marginTop: '8px' }}>What's unknown</p>
-              <p style={{ ...ui.quiet, fontSize: '11px', margin: 0 }}>{direction.enrichment.whatIsUnknown}</p>
-            </div>
-            <div>
-              <p style={{ ...ui.kicker, marginBottom: '4px' }}>Skill gaps</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                {direction.enrichment.skillGaps.map((s, i) => <span key={i} style={{ ...ui.tag, fontSize: '10px', borderColor: 'var(--color-warning)' }}>{s}</span>)}
-              </div>
-              <p style={{ ...ui.kicker, marginBottom: '4px', marginTop: '8px' }}>Suggested test</p>
-              <p style={{ ...ui.quiet, fontSize: '11px', margin: 0 }}>{direction.enrichment.suggestedTest}</p>
-            </div>
-          </div>
-        )}
-        <p style={{ color: 'var(--color-text-dim)', font: '10px/1.55 var(--font-mono)', letterSpacing: '.04em', marginTop: '12px' }}>{reference ? `ESCO / ISCO-08 ${reference.iscoCode} · scoped reference` : 'Your own direction · mapping not yet confirmed'}</p>
+        <p style={{ color: 'var(--color-text-dim)', font: '10px/1.55 var(--font-mono)', letterSpacing: '.04em', marginTop: '12px' }}>{reference ? `ESCO / ISCO-08 ${reference.iscoCode}` : 'Your own direction'}</p>
       </div>
     </label>
   );
 }
-function Compare({ data, setData, saving, move, directions }: PageProps & { directions: CareerDirection[] }) {
-  const wv = data.preferences.workValues;
 
-  const takeForward = (directionId: string) => {
-    const updated = {
-      ...data,
-      directions: data.directions.map(d => ({
-        ...d,
-        selected: d.id === directionId,
-        status: d.id === directionId ? 'active' as const : d.status,
-      })),
-    };
-    move(stage(updated, 'brief'), 'Direction chosen. Building brief.');
-  };
+// ── Wizard Screen 2: Compare & Decide ──────────────────────────────────
+
+function CompareContent({ data, saving, onChoose, onBack }: StepProps & { onChoose: (directionId: string) => Promise<void>; onBack: () => void }) {
+  const wv = data.preferences.workValues;
+  const directions = getActiveDirections(data);
 
   return (
-    <section>
-      <Title kicker="04 / Compare" title="Which direction should you take first?">Scan the fit badges. Expand for detail. Take one forward when you're ready.</Title>
-      <hr style={ui.rule} />
-
-      {/* ── Your context (top, always visible) ─────────────────── */}
+    <div>
+      {/* ── Your context (top, always visible) ── */}
       <div style={{ ...ui.panel, marginBottom: '24px' }}>
         <p style={{ ...ui.kicker, marginBottom: '8px' }}>Your context</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
@@ -353,19 +565,18 @@ function Compare({ data, setData, saving, move, directions }: PageProps & { dire
         </div>
       </div>
 
-      {/* ── Direction cards ────────────────────────────────────── */}
       {directions.length > 0 ? (
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
           {directions.map(d => (
-            <ComparisonCard key={d.id} direction={d} onTakeForward={() => takeForward(d.id)} saving={saving} />
+            <ComparisonCard key={d.id} direction={d} onTakeForward={() => onChoose(d.id)} saving={saving} />
           ))}
         </div>
       ) : (
         <p style={{ ...ui.quiet, padding: '30px 0' }}>Return to Directions and select at least two hypotheses.</p>
       )}
 
-      <Actions back="← Directions" onBack={() => setData(stage(data, 'shortlist'))} next="Back to directions" onNext={() => setData(stage(data, 'shortlist'))} saving={saving} />
-    </section>
+      <Actions back="← Directions" onBack={onBack} next="Back to directions" onNext={onBack} saving={saving} />
+    </div>
   );
 }
 
@@ -396,19 +607,16 @@ function ComparisonCard({ direction, onTakeForward, saving }: {
 
   return (
     <div style={{ ...ui.panel, flex: '1 1 300px', minWidth: '280px', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      {/* ── Header ──────────────────────────────────────────── */}
       <div style={{ padding: '16px', borderBottom: hasEnrichment ? `1px solid var(--color-border)` : 'none' }}>
         <h3 style={{ font: '400 19px/1.2 var(--font-serif)', color: 'var(--color-text)', margin: 0 }}>{direction.title}</h3>
       </div>
 
-      {/* ── Un-analysed: link back to Tab 03 ─────────────────── */}
       {!hasEnrichment && (
         <div style={{ padding: '16px', flex: 1 }}>
           <p style={{ ...ui.quiet, fontSize: '12px', margin: '0 0 12px' }}>Not yet analysed. Go back to Directions to analyse this direction and see fit badges.</p>
         </div>
       )}
 
-      {/* ── Analysed but missing ratings (old enrichment) ──── */}
       {hasEnrichment && !hasRatings && (
         <div style={{ padding: '16px', flex: 1 }}>
           <p style={{ ...ui.quiet, fontSize: '12px', margin: '0 0 12px' }}>This direction was analysed with an older version. Go back to Directions and re-analyse for fit badges.</p>
@@ -431,13 +639,9 @@ function ComparisonCard({ direction, onTakeForward, saving }: {
         </div>
       )}
 
-      {/* ── Full analysis with badges + bullets ────────────── */}
       {hasEnrichment && hasRatings && ratings && (
         <>
-          {/* Badges + bullets always visible */}
           <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-
-            {/* Skills badge + bullets */}
             {(() => {
               const cfg = RATING_CONFIG[ratings.skills] ?? RATING_CONFIG.good;
               return (
@@ -465,7 +669,6 @@ function ComparisonCard({ direction, onTakeForward, saving }: {
               );
             })()}
 
-            {/* Work values badge + bullets */}
             {(() => {
               const cfg = RATING_CONFIG[ratings.workValues] ?? RATING_CONFIG.good;
               const wvBullets = direction.enrichment?.workValuesBullets;
@@ -494,7 +697,6 @@ function ComparisonCard({ direction, onTakeForward, saving }: {
               );
             })()}
 
-            {/* Practical badge + bullets */}
             {(() => {
               const cfg = RATING_CONFIG[ratings.practical] ?? RATING_CONFIG.good;
               const pBullets = direction.enrichment?.practicalFitBullets;
@@ -523,7 +725,6 @@ function ComparisonCard({ direction, onTakeForward, saving }: {
               );
             })()}
 
-            {/* Evidence badge */}
             {(() => {
               const cfg = RATING_CONFIG[ratings.evidence] ?? RATING_CONFIG.good;
               return (
@@ -539,14 +740,12 @@ function ComparisonCard({ direction, onTakeForward, saving }: {
               );
             })()}
 
-            {/* Unknown — single bullet */}
             {direction.enrichment?.unknownBullet && (
               <p style={{ ...ui.quiet, fontSize: '11px', lineHeight: 1.4, margin: 0, paddingLeft: '12px', paddingTop: '4px', borderTop: '1px solid var(--color-border)' }}>
                 <span style={{ color: 'var(--color-text-dim)' }}>Unknown:</span> {direction.enrichment.unknownBullet}
               </p>
             )}
 
-            {/* Test — single bullet */}
             {direction.enrichment?.testBullet && (
               <p style={{ ...ui.quiet, fontSize: '11px', lineHeight: 1.4, margin: 0, paddingLeft: '12px' }}>
                 <span style={{ color: 'var(--color-text-dim)' }}>First step:</span> {direction.enrichment.testBullet}
@@ -554,7 +753,6 @@ function ComparisonCard({ direction, onTakeForward, saving }: {
             )}
           </div>
 
-          {/* Expandable full analysis */}
           <button onClick={() => setExpanded(!expanded)} style={{ width: '100%', padding: '12px 16px', background: 'none', border: 'none', borderTop: `1px solid var(--color-border)`, color: 'var(--color-text-muted)', font: '11px var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.08em', cursor: 'pointer' }}>
             {expanded ? 'Hide full analysis' : 'Read full analysis'}
           </button>
@@ -574,7 +772,6 @@ function ComparisonCard({ direction, onTakeForward, saving }: {
         </>
       )}
 
-      {/* ── Take this forward button ──────────────────────────── */}
       <div style={{ padding: '12px 16px', borderTop: `1px solid var(--color-border)`, marginTop: 'auto' }}>
         <button
           onClick={onTakeForward}
@@ -606,24 +803,44 @@ function Tags({ tags, variant }: { tags: string[]; variant?: 'warning' }) {
     </div>
   );
 }
-function Brief({ data, setData, saving, move, direction }: PageProps & { direction?: CareerDirection }) {
-  const [showNote, setShowNote] = useState(!!direction?.evidence);
-  if (!direction) return <Empty title="Choose a direction first" text="A direction brief needs one active direction from your comparison." back={() => setData(stage(data, 'compare'))} />;
+
+// ═══════════════════════════════════════════════════════════════════════
+// STEP 03 — BRIEF (persistent home base)
+// ═══════════════════════════════════════════════════════════════════════
+
+function BriefStep({ data, setData, saving, move }: PageProps) {
+  const [showNote, setShowNote] = useState(!!getChosenDirection(data)?.evidence);
+  const direction = getChosenDirection(data);
+  const briefStale = isExplorerStale(data);
+
+  if (!direction) {
+    return <section>
+      <Title kicker="03 / Direction brief" title="Choose a direction first">A direction brief needs one active direction from your Explorer. Run the Explorer to select one.</Title>
+      <Actions next="Open Explorer" onNext={() => setData(stage(data, 'explorer'))} saving={saving} />
+    </section>;
+  }
+
   const e = direction.enrichment;
 
   return (
     <section>
-      <DirectionHero direction={direction} label="05 / Direction brief" state="A working hypothesis" />
+      <DirectionHero direction={direction} label="03 / Direction brief" state="A working hypothesis" />
+
+      {briefStale && (
+        <StaleBanner
+          message="Your profile changed since this brief was created. Re-run the Explorer to refresh."
+          onAction={() => setData(stage(data, 'explorer'))}
+          actionLabel="Re-run Explorer"
+        />
+      )}
 
       {e ? (
         <div style={{ marginTop: '32px', maxWidth: '760px' }}>
-          {/* Rationale */}
           <div style={{ ...ui.panel, borderLeft: '3px solid var(--color-accent)', marginBottom: '20px' }}>
             <p style={{ ...ui.kicker, marginBottom: '8px' }}>Why this fits</p>
             <p style={{ ...ui.quiet, fontSize: '14px', lineHeight: 1.7, margin: 0 }}>{e.rationale}</p>
           </div>
 
-          {/* Skills */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
             <div style={ui.panel}>
               <p style={{ ...ui.kicker, marginBottom: '10px' }}>Skills that transfer</p>
@@ -635,7 +852,6 @@ function Brief({ data, setData, saving, move, direction }: PageProps & { directi
             </div>
           </div>
 
-          {/* Work values + Practical */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
             <div style={ui.panel}>
               <p style={{ ...ui.kicker, marginBottom: '8px' }}>Work values fit</p>
@@ -648,7 +864,6 @@ function Brief({ data, setData, saving, move, direction }: PageProps & { directi
             </div>
           </div>
 
-          {/* Unknown + Test */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
             <div style={{ ...ui.panel, borderLeft: '2px solid var(--color-warning)' }}>
               <p style={{ ...ui.kicker, marginBottom: '8px' }}>Biggest unknown</p>
@@ -660,7 +875,6 @@ function Brief({ data, setData, saving, move, direction }: PageProps & { directi
             </div>
           </div>
 
-          {/* Optional note */}
           {showNote ? (
             <div>
               <span style={ui.label}>Your notes on this brief</span>
@@ -680,18 +894,39 @@ function Brief({ data, setData, saving, move, direction }: PageProps & { directi
       ) : (
         <div style={{ marginTop: '32px', maxWidth: '760px' }}>
           <div style={{ ...ui.panel, borderLeft: '3px solid var(--color-warning)' }}>
-            <p style={{ ...ui.quiet, fontSize: '14px', margin: '0 0 12px' }}>This direction hasn't been analysed yet. Go back to Directions (Tab 03) and click "Analyse this direction" to generate the full brief.</p>
-            <button onClick={() => setData(stage(data, 'shortlist'))} style={{ ...ui.secondary, fontSize: '10px', padding: '6px 12px' }}>← Back to Directions</button>
+            <p style={{ ...ui.quiet, fontSize: '14px', margin: '0 0 12px' }}>This direction hasn't been analysed yet. Go back to the Explorer and click "Analyse this direction" to generate the full brief.</p>
+            <button onClick={() => setData(stage(data, 'explorer'))} style={{ ...ui.secondary, fontSize: '10px', padding: '6px 12px' }}>← Back to Explorer</button>
           </div>
         </div>
       )}
 
-      <Actions back="← Comparison" onBack={() => setData(stage(data, 'compare'))} next="Continue to market & action →" onNext={() => move(data, 'Brief saved.')} saving={saving} />
+      <Actions back="← Re-run Explorer" onBack={() => setData(stage(data, 'explorer'))} next="Continue to market & action →" onNext={() => move(data, 'Brief saved.')} saving={saving} />
     </section>
   );
 }
 
-function MarketAction({ data, setData, saving, move, save, direction }: Omit<PageProps, 'move'> & { move: (data: CareerDirectionData, message: string) => Promise<boolean>; save: (next: CareerDirectionData, message?: string) => Promise<boolean>; direction?: CareerDirection }) {
+// ═══════════════════════════════════════════════════════════════════════
+// STEP 04 — MARKET & ACTION
+// ═══════════════════════════════════════════════════════════════════════
+
+// ── Monochrome SVG action icon (matches Nav stroke style) ───────────────
+function ActionIcon({ category, size = 14 }: { category: string; size?: number }) {
+  const stroke = { fill: 'none', stroke: 'var(--color-text-dim)', strokeWidth: 1.6, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  const paths: Record<string, React.ReactNode> = {
+    search: <><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></>,
+    network: <><circle cx="12" cy="5" r="2" /><circle cx="5" cy="19" r="2" /><circle cx="19" cy="19" r="2" /><path d="M12 7v4M12 11l-5 6M12 11l5 6" /></>,
+    learn: <><path d="M4 19V6l8-3 8 3v13l-8 3-8-3z" /><path d="M12 3v18" /></>,
+    prepare: <><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" /></>,
+    custom: <><path d="M12 2l2.4 7.4H22l-6 4.8 2.3 7.4L12 17l-6.3 4.6 2.3-7.4-6-4.8h7.6L12 2z" /></>,
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" {...stroke} style={{ flexShrink: 0 }}>
+      {paths[category] ?? paths.custom}
+    </svg>
+  );
+}
+
+function MarketActionStep({ data, setData, saving, save }: StepProps & { save: (next: CareerDirectionData, message?: string) => Promise<boolean> }) {
   const [loadingMarket, setLoadingMarket] = useState(false);
   const [loadingActions, setLoadingActions] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -700,24 +935,24 @@ function MarketAction({ data, setData, saving, move, save, direction }: Omit<Pag
   const MARKET_URL = 'https://ncwtmagvjtpqnwroyuha.supabase.co/functions/v1/market-insight';
   const ACTIONS_URL = 'https://ncwtmagvjtpqnwroyuha.supabase.co/functions/v1/suggest-actions';
 
-  // Load saved data if exists — NO auto-fetch if data already persisted
+  const direction = getChosenDirection(data);
   const insight = data.marketInsight;
   const actions = data.actionItems ?? [];
   const hasMarket = !!insight;
   const hasActions = actions.length > 0;
+  const marketStale = isMarketStale(data);
 
   useEffect(() => {
-    // Only auto-fetch on first visit when NO saved data exists.
-    // On page refresh/reload, saved data loads from DB before this component renders
-    // (parent shows loading spinner until DB load completes).
-    // This guard prevents LLM calls when persisted data is already present.
     if (!hasFetched && !hasMarket && !hasActions && direction) {
       setHasFetched(true);
       fetchBoth();
     }
   }, [hasFetched, hasMarket, hasActions, direction]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!direction) return <Empty title="Choose a direction first" text="Market insight needs an active direction." back={() => setData(stage(data, 'brief'))} />;
+  if (!direction) return <section>
+      <Title kicker="04 / Market & Action" title="Choose a direction first">Market insight needs an active direction from your Brief.</Title>
+      <Actions next="Open Brief" onNext={() => setData(stage(data, 'brief'))} saving={saving} />
+    </section>;
 
   const fetchBoth = async () => {
     setError(null);
@@ -756,7 +991,6 @@ function MarketAction({ data, setData, saving, move, save, direction }: Omit<Pag
         }));
       }
 
-      // Single save with both results — no race condition
       save({ ...data, marketInsight, actionItems });
 
       if (!marketRes.ok && !actionsRes.ok) {
@@ -794,11 +1028,18 @@ function MarketAction({ data, setData, saving, move, save, direction }: Omit<Pag
   };
 
   const confidenceColor = { low: 'var(--color-warning)', moderate: 'var(--color-accent)', high: 'var(--color-success)' };
-  const categoryIcon: Record<string, string> = { search: '🔍', network: '🤝', learn: '📚', prepare: '✏️', custom: '⭐' };
 
   return (
     <section>
-      <DirectionHero direction={direction} label="06 / Market & Action" state="What's happening and what to do" />
+      <DirectionHero direction={direction} label="04 / Market & Action" state="What's happening and what to do" />
+
+      {marketStale && insight && (
+        <StaleBanner
+          message={`Market insight is for "${insight.summary?.slice(0, 40) || 'a previous direction'}" but your current brief is "${direction.title}". Refresh for the current direction.`}
+          onAction={fetchBoth}
+          actionLabel="Refresh for current direction"
+        />
+      )}
 
       {error && (
         <div style={{ ...ui.panel, borderLeft: '3px solid var(--color-danger)', marginTop: '24px' }}>
@@ -807,7 +1048,7 @@ function MarketAction({ data, setData, saving, move, save, direction }: Omit<Pag
         </div>
       )}
 
-      {/* ── Market Insight ────────────────────────────────────── */}
+      {/* ── Market Insight ── */}
       <div style={{ marginTop: '32px', maxWidth: '860px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -827,7 +1068,6 @@ function MarketAction({ data, setData, saving, move, save, direction }: Omit<Pag
 
         {insight && !loadingMarket && (
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
-            {/* Main insight */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ ...ui.panel, borderLeft: '3px solid var(--color-accent)' }}>
                 <p style={{ ...ui.quiet, fontSize: '14px', lineHeight: 1.7, margin: 0 }}>{insight.summary}</p>
@@ -865,7 +1105,6 @@ function MarketAction({ data, setData, saving, move, save, direction }: Omit<Pag
               </div>
             </div>
 
-            {/* Sources sidebar */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ ...ui.panel, borderLeft: '2px solid var(--color-accent)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -891,7 +1130,7 @@ function MarketAction({ data, setData, saving, move, save, direction }: Omit<Pag
         )}
       </div>
 
-      {/* ── Action Items ──────────────────────────────────────── */}
+      {/* ── Action Items ── */}
       <div style={{ marginTop: '40px', maxWidth: '860px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <p style={{ ...ui.kicker, marginBottom: 0 }}>Actions to move forward</p>
@@ -921,7 +1160,7 @@ function MarketAction({ data, setData, saving, move, save, direction }: Omit<Pag
                 </button>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '14px' }}>{categoryIcon[action.category] ?? '⭐'}</span>
+                    <ActionIcon category={action.category} />
                     {action.category === 'custom' ? (
                       <input
                         value={action.title}
@@ -949,11 +1188,27 @@ function MarketAction({ data, setData, saving, move, save, direction }: Omit<Pag
         )}
       </div>
 
-      <Actions back="← Brief" onBack={() => setData(stage(data, 'brief'))} next="Done" onNext={() => move(data, 'Market & action saved.')} saving={saving} />
+      <div style={{ display: 'flex', marginTop: '32px' }}>
+        <button onClick={() => setData(stage(data, 'brief'))} style={ui.secondary}>← Back to Brief</button>
+      </div>
     </section>
   );
 }
 
-function DirectionHero({ direction, label, state: stateLabel }: { direction?: CareerDirection; label: string; state: string }) { const fallback = label.includes('Market') ? 'Read the evidence\nbefore the story.' : 'Choose a direction'; const description = label.includes('Market') ? 'Atlas does not manufacture a local trend, forecast, or title-level claim when the evidence is not ready.' : 'Start from a direction you want to examine.'; return <header className="career-direction-hero"><div><p style={ui.kicker}>{label}</p><h2 style={ui.h1}>{direction ? <>Explore <em style={{ color: 'var(--color-accent)', fontWeight: 300 }}>{direction.title}</em></> : fallback}</h2><p style={{ ...ui.quiet, maxWidth: '650px' }}>{direction?.summary ?? description}</p></div><div className="career-state"><p style={ui.kicker}>{stateLabel}</p><p style={{ ...ui.quiet, fontSize: '13px', marginTop: '4px' }}>{direction?.unknown || 'Make the next unknown explicit.'}</p></div></header>; }
-function Empty({ title, text, back }: { title: string; text: string; back: () => void }) { return <section><Title kicker="Direction work" title={title}>{text}</Title><Actions next="Return" onNext={back} saving={false} /></section>; }
-type PageProps = { data: CareerDirectionData; setData: React.Dispatch<React.SetStateAction<CareerDirectionData>>; saving: boolean; move: (data: CareerDirectionData, message: string) => Promise<boolean>; };
+function DirectionHero({ direction, label, state: stateLabel }: { direction?: CareerDirection; label: string; state: string }) {
+  const fallback = label.includes('Market') ? 'Read the evidence\nbefore the story.' : 'Choose a direction';
+  const description = label.includes('Market') ? 'Atlas does not manufacture a local trend, forecast, or title-level claim when the evidence is not ready.' : 'Start from a direction you want to examine.';
+  return (
+    <header className="career-direction-hero">
+      <div>
+        <p style={ui.kicker}>{label}</p>
+        <h2 style={ui.h1}>{direction ? <>Explore <em style={{ color: 'var(--color-accent)', fontWeight: 300 }}>{direction.title}</em></> : fallback}</h2>
+        <p style={{ ...ui.quiet, maxWidth: '650px' }}>{direction?.summary ?? description}</p>
+      </div>
+      <div className="career-state">
+        <p style={ui.kicker}>{stateLabel}</p>
+        <p style={{ ...ui.quiet, fontSize: '13px', marginTop: '4px' }}>{direction?.unknown || 'Make the next unknown explicit.'}</p>
+      </div>
+    </header>
+  );
+}

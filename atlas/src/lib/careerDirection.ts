@@ -1,12 +1,16 @@
 import type { WorkValuesResult } from './work-values-data';
 import { createEmptyProfile, type StructuredProfile } from './profile-data';
 
-export type CareerStage = 'profile' | 'preferences' | 'shortlist' | 'compare' | 'brief' | 'marketAction';
+// ── 4-step flow (V2): Profile → Explorer → Brief → MarketAction ──────────
+// Explorer is a re-runnable wizard that absorbs the old Directions + Compare tabs.
+// Brief is the persistent result of the most recent Explorer run.
+export type CareerStage = 'profile' | 'explorer' | 'brief' | 'marketAction';
 export type DirectionStatus = 'active' | 'paused' | 'deprioritised';
 export type ReassessmentChoice = 'continue' | 'adjust' | 'pause' | 'deprioritise';
 
-// New structured profile — replaces the old free-text fields.
-// When present, structured data drives the UI; legacy strings remain for migration.
+// Wizard-internal step state (lives inside the Explorer stage).
+export type WizardStep = 'directions' | 'compare';
+
 export interface WorkPreferences {
   contribution: string;
   environment: string;
@@ -88,37 +92,49 @@ export interface ActionItem {
 }
 
 export interface CareerDirectionData {
-  version: 1;
+  version: 2;
   updatedAt: string;
   currentStage: CareerStage;
+
+  // Step 01 — Profile (merged: career history + work values)
   profile: StructuredProfile;
+  profileUpdatedAt: string | null;     // timestamp of last profile/values edit
   preferences: WorkPreferences;
+
+  // Step 02 — Explorer (wizard, re-runnable)
   directions: CareerDirection[];
   savedSuggestions: SavedSuggestion[];
+  chosenDirectionId: string | null;   // set when user picks in Compare
+  explorerCompletedAt: string | null; // timestamp of last Explorer completion
+
+  // Step 03 — Brief (persistent output of Explorer)
   workspaceEvidence: string;
   workspaceAssumption: string;
+
+  // Step 04 — Market & Action
   marketInsight?: MarketInsight | null;
   actionItems?: ActionItem[];
 }
 
 export const CAREER_STAGES: Array<{ id: CareerStage; label: string }> = [
   { id: 'profile', label: 'Profile' },
-  { id: 'preferences', label: 'Preferences' },
-  { id: 'shortlist', label: 'Directions' },
-  { id: 'compare', label: 'Compare' },
+  { id: 'explorer', label: 'Explorer' },
   { id: 'brief', label: 'Brief' },
   { id: 'marketAction', label: 'Market & Action' },
 ];
 
 export function createEmptyCareerDirection(): CareerDirectionData {
   return {
-    version: 1,
+    version: 2,
     updatedAt: new Date().toISOString(),
     currentStage: 'profile',
     profile: createEmptyProfile(),
+    profileUpdatedAt: null,
     preferences: { contribution: '', environment: '', constraints: '' },
     directions: [],
     savedSuggestions: [],
+    chosenDirectionId: null,
+    explorerCompletedAt: null,
     workspaceEvidence: '',
     workspaceAssumption: '',
     marketInsight: null,
@@ -126,28 +142,51 @@ export function createEmptyCareerDirection(): CareerDirectionData {
   };
 }
 
+// ── Migration from V1 (6-stage) to V2 (4-stage) ──────────────────────────
+const STAGE_MIGRATION: Record<string, CareerStage> = {
+  // V1 direct
+  'profile': 'profile',
+  'preferences': 'profile',        // merged into Profile
+  'shortlist': 'explorer',         // absorbed by Explorer wizard
+  'compare': 'explorer',           // absorbed by Explorer wizard
+  'brief': 'brief',
+  'marketAction': 'marketAction',
+  // Legacy names from older versions
+  'pulse': 'marketAction',
+  'workspace': 'brief',
+  'marketContext': 'marketAction',
+  'reassess': 'marketAction',
+};
+
 export function normaliseCareerDirection(input: Partial<CareerDirectionData> | null | undefined): CareerDirectionData {
   const empty = createEmptyCareerDirection();
-  const legacyStageMap: Record<string, CareerStage> = {
-    'pulse': 'marketAction',
-    'workspace': 'brief',
-    'marketContext': 'marketAction',
-    'reassess': 'marketAction',
-  };
-  const rawStage = (input as { currentStage?: string } | null | undefined)?.currentStage;
-  const currentStage = rawStage && legacyStageMap[rawStage] ? legacyStageMap[rawStage] : rawStage as CareerStage | undefined;
+  if (!input) return empty;
+
+  const rawStage = (input as { currentStage?: string }).currentStage;
+  const currentStage: CareerStage = (rawStage && STAGE_MIGRATION[rawStage]) || rawStage as CareerStage || empty.currentStage;
+
   // Migrate legacy profile (old free-text fields) to structured profile
-  const inputProfile = input?.profile as any;
+  const inputProfile = input.profile as any;
   const profile: StructuredProfile = inputProfile && typeof inputProfile === 'object' && 'roles' in inputProfile
     ? { ...createEmptyProfile(), ...inputProfile }
     : createEmptyProfile();
+
+  // Derive chosenDirectionId from legacy data if not present
+  const directions = Array.isArray(input.directions) ? input.directions : [];
+  const chosenDirectionId = input.chosenDirectionId
+    ?? (directions.find(d => d.selected && d.status === 'active')?.id ?? null);
+
   return {
     ...empty,
     ...input,
-    currentStage: currentStage as CareerStage | undefined ?? empty.currentStage,
+    version: 2,
+    currentStage,
     profile,
-    preferences: { ...empty.preferences, ...input?.preferences },
-    directions: Array.isArray(input?.directions) ? input.directions : [],
+    profileUpdatedAt: input.profileUpdatedAt ?? null,
+    preferences: { ...empty.preferences, ...input.preferences },
+    directions,
+    chosenDirectionId,
+    explorerCompletedAt: input.explorerCompletedAt ?? null,
   };
 }
 
@@ -179,4 +218,74 @@ export function directionCountForComparison(data: CareerDirectionData): number {
 
 export function updateTimestamp(data: CareerDirectionData): CareerDirectionData {
   return { ...data, updatedAt: new Date().toISOString() };
+}
+
+// ── Staleness helpers ────────────────────────────────────────────────────
+// Compare upstream timestamps against downstream generation timestamps.
+// If profile changed after explorer/brief/market were generated, they're stale.
+
+export function isExplorerStale(data: CareerDirectionData): boolean {
+  if (!data.profileUpdatedAt || !data.explorerCompletedAt) return false;
+  return new Date(data.profileUpdatedAt) > new Date(data.explorerCompletedAt);
+}
+
+export function isBriefStale(data: CareerDirectionData): boolean {
+  // Brief is stale if profile changed after explorer completed
+  return isExplorerStale(data);
+}
+
+export function isMarketStale(data: CareerDirectionData): boolean {
+  if (!data.marketInsight?.generatedAt) return false;
+  // Market is stale if the chosen direction changed after market was generated,
+  // or if profile changed after market was generated
+  const chosenDir = data.directions.find(d => d.id === data.chosenDirectionId);
+  const directionChanged = chosenDir?.enrichment?.enrichedAt
+    && new Date(chosenDir.enrichment.enrichedAt) > new Date(data.marketInsight.generatedAt);
+  const profileChanged = data.profileUpdatedAt
+    && new Date(data.profileUpdatedAt) > new Date(data.marketInsight.generatedAt);
+  return !!(directionChanged || profileChanged);
+}
+
+export function getChosenDirection(data: CareerDirectionData): CareerDirection | undefined {
+  if (data.chosenDirectionId) {
+    return data.directions.find(d => d.id === data.chosenDirectionId);
+  }
+  // Fallback: first selected active direction
+  return data.directions.find(d => d.selected && d.status === 'active') ?? data.directions[0];
+}
+
+export function getActiveDirections(data: CareerDirectionData): CareerDirection[] {
+  return data.directions.filter(d => d.selected && d.status === 'active');
+}
+
+// ── Stage status for nav dots ────────────────────────────────────────────
+export type StageStatus = 'empty' | 'in_progress' | 'complete' | 'stale';
+
+export function getStageStatus(data: CareerDirectionData, stageId: CareerStage): StageStatus {
+  switch (stageId) {
+    case 'profile': {
+      const hasProfile = data.profile.roles.length > 0 || data.profile.careerSummary;
+      const hasValues = !!data.preferences.workValues;
+      if (!hasProfile && !hasValues) return 'empty';
+      if (hasProfile && hasValues) return 'complete';
+      return 'in_progress';
+    }
+    case 'explorer': {
+      if (data.directions.length === 0) return 'empty';
+      if (isExplorerStale(data)) return 'stale';
+      if (data.chosenDirectionId) return 'complete';
+      return 'in_progress';
+    }
+    case 'brief': {
+      const chosen = getChosenDirection(data);
+      if (!chosen) return 'empty';
+      if (isBriefStale(data)) return 'stale';
+      return 'complete';
+    }
+    case 'marketAction': {
+      if (!data.marketInsight && !(data.actionItems ?? []).length) return 'empty';
+      if (isMarketStale(data)) return 'stale';
+      return 'complete';
+    }
+  }
 }
