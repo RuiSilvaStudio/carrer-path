@@ -293,7 +293,7 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
                 {TRAIT_LABELS.map(t => (
                   <div key={t.key} style={{
                     textAlign: 'center', padding: '12px 8px',
-                    background: 'var(--color-surface-elevated)', borderRadius: '8px',
+                    background: 'var(--color-surface-elevated)', borderRadius: 'var(--radius-button)',
                   }}>
                     <p style={{ color: t.color, fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}>
                       {t.short || t.label}
@@ -352,7 +352,7 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
             <div style={{
               display: 'flex', alignItems: 'center', gap: '8px',
               padding: '12px 16px', background: 'var(--color-surface-elevated)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-button)',
             }}>
               <span style={{
                 fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-text-muted)',
@@ -465,7 +465,7 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
               {TRAIT_LABELS.map(t => (
                 <div key={t.key} style={{
                   textAlign: 'center', padding: '12px 8px',
-                  background: 'var(--color-surface-elevated)', borderRadius: '8px',
+                  background: 'var(--color-surface-elevated)', borderRadius: 'var(--radius-button)',
                 }}>
                   <p style={{ color: t.color, fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}>
                     {t.short || t.label}

@@ -76,7 +76,7 @@ export function ChapterRail({ sections }: ChapterRailProps) {
         padding: '14px 8px',
         background: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
-        borderRadius: '999px',
+        borderRadius: 'var(--radius-pill)',
         boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
         transition: 'box-shadow 0.2s',
       }}
@@ -138,7 +138,7 @@ export function ChapterRail({ sections }: ChapterRailProps) {
                   padding: '6px 12px',
                   background: 'var(--color-surface-elevated)',
                   border: '1px solid var(--color-border)',
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-button)',
                   fontFamily: 'var(--font-mono)',
                   fontSize: '11px',
                   textTransform: 'uppercase',

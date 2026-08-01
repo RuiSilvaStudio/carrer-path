@@ -261,7 +261,7 @@ export function WeeklyPulse() {
           Weekly Pulse
         </div>
         <h1 style={{
-          fontFamily: 'var(--font-serif)', fontSize: '38px', fontWeight: 400,
+          fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h1)', fontWeight: 400,
           color: 'var(--color-text)', letterSpacing: '-0.02em',
           lineHeight: 1.1, marginBottom: '16px',
         }}>
@@ -279,7 +279,7 @@ export function WeeklyPulse() {
         <div style={{
           padding: '18px 22px', background: 'var(--color-surface)',
           border: '1px solid var(--color-border)', borderLeft: '2px solid var(--color-accent)',
-          borderRadius: '4px', marginBottom: '32px',
+          borderRadius: 'var(--radius-element)', marginBottom: '32px',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
             <span style={{
@@ -316,7 +316,7 @@ export function WeeklyPulse() {
         {alreadyCompleted && (
           <div style={{
             padding: '14px 18px', background: 'var(--color-surface)',
-            border: '1px solid var(--color-warning)', borderRadius: '4px',
+            border: '1px solid var(--color-warning)', borderRadius: 'var(--radius-element)',
             marginBottom: '24px', fontSize: '13px', color: 'var(--color-warning)',
           }}>
             You've already completed a pulse this period. You can submit another, but{' '}
@@ -340,7 +340,7 @@ export function WeeklyPulse() {
         {statusError && (
           <div style={{
             padding: '14px 18px', background: 'var(--color-surface)',
-            border: '1px solid var(--color-danger)', borderRadius: '4px',
+            border: '1px solid var(--color-danger)', borderRadius: 'var(--radius-element)',
             marginBottom: '24px', fontSize: '13px', color: 'var(--color-danger)',
             display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px',
           }}>
@@ -349,7 +349,7 @@ export function WeeklyPulse() {
               onClick={() => { setStatusError(''); setStatusRetry(r => r + 1); }}
               style={{
                 padding: '6px 14px', background: 'none', border: '1px solid var(--color-danger)',
-                borderRadius: '4px', color: 'var(--color-danger)', fontSize: '12px',
+                borderRadius: 'var(--radius-element)', color: 'var(--color-danger)', fontSize: '12px',
                 cursor: 'pointer', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap',
               }}
             >
@@ -364,7 +364,7 @@ export function WeeklyPulse() {
             padding: '14px 32px',
             background: 'var(--color-accent)',
             color: 'var(--color-bg)',
-            border: 'none', borderRadius: '6px',
+            border: 'none', borderRadius: 'var(--radius-button)',
             fontSize: '15px', fontWeight: 600,
             cursor: 'pointer', fontFamily: 'var(--font-sans)',
           }}
@@ -387,7 +387,7 @@ export function WeeklyPulse() {
           Pulse {pulseNumber} Complete
         </div>
         <h1 style={{
-          fontFamily: 'var(--font-serif)', fontSize: '34px', fontWeight: 400,
+          fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h1)', fontWeight: 400,
           color: 'var(--color-text)', letterSpacing: '-0.02em',
           marginBottom: '8px', lineHeight: 1.1,
         }}>
@@ -445,7 +445,7 @@ export function WeeklyPulse() {
                   padding: '12px 8px',
                   background: 'var(--color-surface)',
                   border: '1px solid var(--color-border)',
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-button)',
                 }}>
                   <div style={{
                     fontFamily: 'var(--font-mono)', fontSize: '9px',
@@ -455,7 +455,7 @@ export function WeeklyPulse() {
                     {key.replace('_', ' ').slice(0, 8)}
                   </div>
                   <div style={{
-                    fontFamily: 'var(--font-serif)', fontSize: '20px',
+                    fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h3)',
                     color: 'var(--color-text)', fontWeight: 500,
                   }}>
                     {val}
@@ -480,7 +480,7 @@ export function WeeklyPulse() {
               padding: '14px 32px',
               background: 'var(--color-accent)',
               color: 'var(--color-bg)',
-              border: 'none', borderRadius: '6px',
+              border: 'none', borderRadius: 'var(--radius-button)',
               fontSize: '15px', fontWeight: 600,
               cursor: 'pointer', fontFamily: 'var(--font-sans)',
             }}
@@ -494,7 +494,7 @@ export function WeeklyPulse() {
               background: 'none',
               color: 'var(--color-text-muted)',
               border: '1px solid var(--color-border)',
-              borderRadius: '6px',
+              borderRadius: 'var(--radius-button)',
               fontSize: '15px', fontWeight: 500,
               cursor: 'pointer', fontFamily: 'var(--font-sans)',
             }}
@@ -559,7 +559,7 @@ export function WeeklyPulse() {
                       padding: '14px 4px 10px',
                       background: selected ? 'var(--color-surface-elevated)' : 'var(--color-surface)',
                       border: `1px solid ${selected ? 'var(--color-accent)' : 'var(--color-border)'}`,
-                      borderRadius: '4px',
+                      borderRadius: 'var(--radius-element)',
                       color: selected ? 'var(--color-accent)' : 'var(--color-text-muted)',
                       fontSize: '11px', fontFamily: 'var(--font-sans)', fontWeight: 500,
                       cursor: 'pointer', display: 'flex', flexDirection: 'column',
@@ -602,7 +602,7 @@ export function WeeklyPulse() {
                   padding: '10px 18px',
                   background: selected ? 'var(--color-accent)' : 'var(--color-surface)',
                   border: `1px solid ${selected ? 'var(--color-accent)' : 'var(--color-border)'}`,
-                  borderRadius: '20px',
+                  borderRadius: 'var(--radius-pill)',
                   color: selected ? 'var(--color-bg)' : 'var(--color-text-muted)',
                   fontSize: '13px', fontFamily: 'var(--font-sans)',
                   cursor: 'pointer', fontWeight: selected ? 600 : 400,
@@ -636,7 +636,7 @@ export function WeeklyPulse() {
                   padding: '10px 16px',
                   background: selected ? 'var(--color-surface-elevated)' : 'var(--color-surface)',
                   border: `1px solid ${selected ? 'var(--color-accent)' : 'var(--color-border)'}`,
-                  borderRadius: '20px',
+                  borderRadius: 'var(--radius-pill)',
                   color: selected ? 'var(--color-accent)' : 'var(--color-text-muted)',
                   fontSize: '13px', fontFamily: 'var(--font-sans)',
                   cursor: 'pointer', fontWeight: selected ? 600 : 400,
@@ -667,7 +667,7 @@ export function WeeklyPulse() {
           style={{
             width: '100%', padding: '12px 14px',
             background: 'var(--color-surface)',
-            border: '1px solid var(--color-border)', borderRadius: '6px',
+            border: '1px solid var(--color-border)', borderRadius: 'var(--radius-button)',
             color: 'var(--color-text)', fontSize: '14px',
             fontFamily: 'var(--font-sans)', outline: 'none', resize: 'vertical',
           }}
@@ -683,7 +683,7 @@ export function WeeklyPulse() {
             padding: '14px 32px',
             background: allItemsAnswered && !saving ? 'var(--color-accent)' : 'var(--color-surface)',
             color: allItemsAnswered && !saving ? 'var(--color-bg)' : 'var(--color-text-dim)',
-            border: 'none', borderRadius: '6px',
+            border: 'none', borderRadius: 'var(--radius-button)',
             fontSize: '15px', fontWeight: 600,
             cursor: allItemsAnswered && !saving ? 'pointer' : 'not-allowed',
             fontFamily: 'var(--font-sans)',

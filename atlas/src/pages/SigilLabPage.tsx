@@ -76,7 +76,7 @@ export function SigilLabPage() {
   const toggleBtn = (active: boolean) => ({
     padding: '6px 14px', background: active ? 'var(--color-accent)' : 'none',
     color: active ? 'var(--color-bg)' : 'var(--color-text-dim)',
-    border: '1px solid var(--color-border)', borderRadius: '6px', cursor: 'pointer',
+    border: '1px solid var(--color-border)', borderRadius: 'var(--radius-button)', cursor: 'pointer',
     fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase',
     letterSpacing: '0.12em',
   } as const);
@@ -111,11 +111,11 @@ export function SigilLabPage() {
         !src.input ? null : (
           <section key={src.name} style={{ marginBottom: '40px' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '18px', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px' }}>
-              <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '22px', fontWeight: 500, color: 'var(--color-text)' }}>{src.name}</h2>
+              <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h3)', fontWeight: 500, color: 'var(--color-text)' }}>{src.name}</h2>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-text-dim)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{src.sub}</span>
             </div>
 
-            <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '12px', padding: '24px' }}>
+            <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-card)', padding: '24px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: '24px', flexWrap: 'wrap' }}>
                 {STAGES.map(stage => (
                   <div key={stage.key} style={{ textAlign: 'center', flex: '1 1 130px', maxWidth: '170px' }}>

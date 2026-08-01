@@ -17,6 +17,11 @@
 framework choices, data formats, architectural patterns, and dependency
 additions. Present options with trade-offs and ask — do not assume.
 
+**Before any UI styling work, load the `atlas-design-system` skill.** It declares
+the token system (color, radius, type scale, spacing) that all components must
+use. Never hardcode hex colors, font sizes, border-radius, or spacing — always
+use `var(--*)` tokens from `atlas/src/index.css`.
+
 ## Directory Routing Map
 
 

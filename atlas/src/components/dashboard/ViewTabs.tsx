@@ -12,7 +12,7 @@ export function ViewTabs() {
   const { view, setView } = useDashboardState();
 
   return (
-    <div className="atlas-tabs" style={{ display: 'flex', gap: '0', borderBottom: '1px solid var(--color-border)' }}>
+    <div className="atlas-tabs" style={{ display: 'flex', gap: '24px', borderBottom: '1px solid var(--color-border)' }}>
       {TABS.map(tab => {
         const active = view === tab.id;
         return (
@@ -25,8 +25,7 @@ export function ViewTabs() {
               border: 'none',
               borderBottom: active ? '2px solid var(--color-accent)' : '2px solid transparent',
               cursor: 'pointer',
-              padding: '10px 20px 10px 0',
-              marginRight: '24px',
+              padding: '10px 0 10px 0',
               minHeight: 'var(--tap)',
               fontFamily: 'var(--font-mono)',
               fontSize: '12px',

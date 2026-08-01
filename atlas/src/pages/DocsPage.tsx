@@ -87,7 +87,7 @@ function DocCard({
         scrollMarginTop: '60px',
         background: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
-        borderRadius: '12px',
+        borderRadius: 'var(--radius-card)',
         padding: '32px 36px',
       }}
     >
@@ -107,7 +107,7 @@ function DocCard({
         className="atlas-doc-h2"
         style={{
           fontFamily: 'var(--font-serif)',
-          fontSize: '24px',
+          fontSize: 'var(--fs-h2)',
           fontWeight: 500,
           color: 'var(--color-text)',
           letterSpacing: '-0.01em',
@@ -199,7 +199,7 @@ function Code({ children, text }: { children: React.ReactNode; text?: string }) 
         background: 'var(--color-surface-elevated)',
         color: 'var(--color-accent-bright)',
         padding: '2px 6px',
-        borderRadius: '4px',
+        borderRadius: 'var(--radius-element)',
         border: '1px solid var(--color-border)',
         cursor: 'copy',
       }}
@@ -223,7 +223,7 @@ function Formula({ children, text }: { children: React.ReactNode; text?: string 
         background: 'var(--color-surface-elevated)',
         color: 'var(--color-text)',
         padding: '14px 60px 14px 18px',
-        borderRadius: '8px',
+        borderRadius: 'var(--radius-button)',
         border: '1px solid var(--color-border)',
         margin: '16px 0',
         lineHeight: 1.6,
@@ -253,7 +253,7 @@ function Callout({
         borderLeft: `3px solid ${color}`,
         background: 'var(--color-surface-elevated)',
         padding: '14px 18px',
-        borderRadius: '0 8px 8px 0',
+        borderRadius: `0 var(--radius-button) var(--radius-button) 0`,
         margin: '16px 0',
       }}
     >
@@ -311,7 +311,7 @@ function DemoDashboard() {
         style={{
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
-          borderRadius: '12px',
+          borderRadius: 'var(--radius-card)',
           overflow: 'hidden',
         }}
       >
@@ -446,7 +446,7 @@ export function DocsPage() {
         <h1
           style={{
             fontFamily: 'var(--font-serif)',
-            fontSize: '36px',
+            fontSize: 'var(--fs-h1)',
             fontWeight: 500,
             color: 'var(--color-text)',
             letterSpacing: '-0.02em',
@@ -486,7 +486,7 @@ export function DocsPage() {
           style={{
             background: 'var(--color-surface)',
             border: '1px solid var(--color-border)',
-            borderRadius: '12px',
+            borderRadius: 'var(--radius-card)',
             padding: '20px 24px',
           }}
         >
@@ -1260,26 +1260,26 @@ export function DocsPage() {
             and reduced-motion preferences, and we publish the results here.
           </p>
 
-          <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '17px', fontWeight: 500, color: 'var(--color-text)', marginBottom: '10px' }}>
+          <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h3-sm)', fontWeight: 500, color: 'var(--color-text)', marginBottom: '10px' }}>
             Supported
           </h3>
           <ul style={{ paddingLeft: '20px', marginBottom: '16px' }}>
-            <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>Keyboard navigation:</strong> every interactive element is reachable via Tab; chart scrubbing via arrow keys; ⌘K opens the command palette; <kbd style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', border: '1px solid var(--color-border)', padding: '1px 5px', borderRadius: '3px' }}>?</kbd> opens help.</li>
-            <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>Screen readers:</strong> semantic landmarks (<code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: '3px' }}>&lt;nav&gt;</code>, <code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: '3px' }}>&lt;main&gt;</code>, <code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: '3px' }}>&lt;footer&gt;</code>), skip-to-main link, <code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: '3px' }}>aria-label</code> on icon-only buttons, data-table fallbacks for every chart.</li>
-            <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>Reduced motion:</strong> chart entrance animations skip when <code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: '3px' }}>prefers-reduced-motion: reduce</code> is set. Final state renders directly.</li>
+            <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>Keyboard navigation:</strong> every interactive element is reachable via Tab; chart scrubbing via arrow keys; ⌘K opens the command palette; <kbd style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', border: '1px solid var(--color-border)', padding: '1px 5px', borderRadius: 'var(--radius-element)' }}>?</kbd> opens help.</li>
+            <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>Screen readers:</strong> semantic landmarks (<code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: 'var(--radius-element)' }}>&lt;nav&gt;</code>, <code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: 'var(--radius-element)' }}>&lt;main&gt;</code>, <code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: 'var(--radius-element)' }}>&lt;footer&gt;</code>), skip-to-main link, <code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: 'var(--radius-element)' }}>aria-label</code> on icon-only buttons, data-table fallbacks for every chart.</li>
+            <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>Reduced motion:</strong> chart entrance animations skip when <code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: 'var(--radius-element)' }}>prefers-reduced-motion: reduce</code> is set. Final state renders directly.</li>
             <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>Color contrast:</strong> text on background ≥ 4.5:1 in both dark and light themes; trait labels on chart backgrounds ≥ 3:1.</li>
             <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>Touch targets:</strong> all interactive elements ≥ 32px hit area (most ≥ 44px).</li>
           </ul>
 
-          <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '17px', fontWeight: 500, color: 'var(--color-text)', marginBottom: '10px' }}>
+          <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h3-sm)', fontWeight: 500, color: 'var(--color-text)', marginBottom: '10px' }}>
             Partially supported
           </h3>
           <ul style={{ paddingLeft: '20px', marginBottom: '16px' }}>
-            <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>High-contrast mode:</strong> we detect <code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: '3px' }}>forced-colors</code> media query but don't yet restyle every chart axis for it. In progress.</li>
+            <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>High-contrast mode:</strong> we detect <code style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', background: 'var(--color-surface-elevated)', padding: '1px 5px', borderRadius: 'var(--radius-element)' }}>forced-colors</code> media query but don't yet restyle every chart axis for it. In progress.</li>
             <li style={{ marginBottom: '6px' }}><strong style={{ color: 'var(--color-text)' }}>Multi-language:</strong> currently English only.</li>
           </ul>
 
-          <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '17px', fontWeight: 500, color: 'var(--color-text)', marginBottom: '10px' }}>
+          <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h3-sm)', fontWeight: 500, color: 'var(--color-text)', marginBottom: '10px' }}>
             Reporting issues
           </h3>
           <p style={{ marginBottom: '0' }}>

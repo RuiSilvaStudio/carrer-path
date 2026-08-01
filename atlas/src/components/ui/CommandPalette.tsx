@@ -309,7 +309,7 @@ export function CommandPalette() {
           maxWidth: '580px',
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
-          borderRadius: '12px',
+          borderRadius: 'var(--radius-card)',
           boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
           overflow: 'hidden',
           fontFamily: 'var(--font-sans)',
@@ -425,7 +425,7 @@ export function CommandPalette() {
                               color: 'var(--color-text-dim)',
                               padding: '2px 6px',
                               border: '1px solid var(--color-border)',
-                              borderRadius: '4px',
+                              borderRadius: 'var(--radius-element)',
                             }}
                           >
                             {item.shortcut}

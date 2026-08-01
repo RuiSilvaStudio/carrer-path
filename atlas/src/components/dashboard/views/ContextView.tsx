@@ -203,10 +203,10 @@ function VarianceChart({ demoData }: { demoData: DemoPulse[] }) {
               σ={v.std.toFixed(1)}
             </span>
           </div>
-          <div style={{ height: '6px', background: 'var(--color-surface-elevated)', borderRadius: '3px', overflow: 'hidden' }}>
+          <div style={{ height: '6px', background: 'var(--color-surface-elevated)', borderRadius: 'var(--radius-element)', overflow: 'hidden' }}>
             <div
               ref={el => { barRefs.current[i] = el; }}
-              style={{ height: '100%', width: '0%', background: v.color, borderRadius: '3px' }}
+              style={{ height: '100%', width: '0%', background: v.color, borderRadius: 'var(--radius-element)' }}
             />
           </div>
         </div>
@@ -351,10 +351,10 @@ function DiamondsGrid({ demoData }: { demoData: DemoPulse[] }) {
               {d.avg.toFixed(1)}
             </span>
           </div>
-          <div style={{ height: '5px', background: 'var(--color-surface-elevated)', borderRadius: '3px', overflow: 'hidden' }}>
+          <div style={{ height: '5px', background: 'var(--color-surface-elevated)', borderRadius: 'var(--radius-element)', overflow: 'hidden' }}>
             <div
               ref={el => { barRefs.current[i] = el; }}
-              style={{ height: '100%', width: '0%', background: 'var(--color-accent)', borderRadius: '3px' }}
+              style={{ height: '100%', width: '0%', background: 'var(--color-accent)', borderRadius: 'var(--radius-element)' }}
             />
           </div>
         </div>
@@ -381,7 +381,7 @@ function ContextTags({ demoData }: { demoData: DemoPulse[] }) {
       {tags.map(([tag, count]) => (
         <span key={tag} style={{
           padding: '5px 12px', background: 'var(--color-surface-elevated)',
-          border: '1px solid var(--color-border)', borderRadius: '14px',
+          border: '1px solid var(--color-border)', borderRadius: 'var(--radius-card)',
           fontFamily: 'var(--font-mono)', fontSize: '11px',
           color: 'var(--color-text-muted)',
         }}>
@@ -497,7 +497,7 @@ export function ContextView({ demoData, baseline, dataSource }: ContextViewProps
             {Object.entries(contextAnswers).map(([key, value]) => (
               <div key={key} style={{
                 padding: '16px', background: 'var(--color-surface-elevated)',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-button)',
               }}>
                 <p style={{
                   fontFamily: 'var(--font-mono)', fontSize: '10px',

@@ -309,7 +309,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
           Baseline Assessment
         </div>
         <h1 style={{
-          fontFamily: 'var(--font-serif)', fontSize: '42px', fontWeight: 400,
+          fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-display)', fontWeight: 400,
           color: 'var(--color-text)', letterSpacing: '-0.02em',
           lineHeight: 1.1, marginBottom: '20px',
         }}>
@@ -330,7 +330,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
           background: 'var(--color-surface-elevated)',
           border: '1px solid var(--color-border)',
           borderLeft: '3px solid var(--color-accent)',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-card)',
           marginBottom: '32px',
         }}>
           <p style={{
@@ -363,7 +363,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
               padding: '14px 32px',
               background: 'var(--color-accent)',
               color: 'var(--color-bg)',
-              border: 'none', borderRadius: '6px',
+              border: 'none', borderRadius: 'var(--radius-button)',
               fontSize: '15px', fontWeight: 600,
               cursor: 'pointer', fontFamily: 'var(--font-sans)',
               letterSpacing: '0.02em',
@@ -386,7 +386,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
               background: 'none',
               color: 'var(--color-text-muted)',
               border: '1px solid var(--color-border)',
-              borderRadius: '6px',
+              borderRadius: 'var(--radius-button)',
               fontSize: '14px', fontWeight: 500,
               cursor: 'pointer', fontFamily: 'var(--font-sans)',
             }}
@@ -409,7 +409,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
           Assessment Complete
         </div>
         <h1 style={{
-          fontFamily: 'var(--font-serif)', fontSize: '36px', fontWeight: 400,
+          fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h1)', fontWeight: 400,
           color: 'var(--color-text)', letterSpacing: '-0.02em',
           marginBottom: '8px', lineHeight: 1.1,
         }}>
@@ -436,7 +436,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
               padding: '12px 8px',
               background: 'var(--color-surface)',
               border: '1px solid var(--color-border)',
-              borderRadius: '6px',
+              borderRadius: 'var(--radius-button)',
             }}>
               <div style={{
                 fontFamily: 'var(--font-mono)', fontSize: '9px',
@@ -446,7 +446,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
                 {key.replace('_', ' ').slice(0, 8)}
               </div>
               <div style={{
-                fontFamily: 'var(--font-serif)', fontSize: '22px',
+                fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h3)',
                 color: 'var(--color-text)', fontWeight: 500,
               }}>
                 {val}
@@ -462,7 +462,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
         }}>
           <div style={{
             padding: '16px 20px', background: 'var(--color-surface)',
-            border: '1px solid var(--color-border)', borderRadius: '6px',
+            border: '1px solid var(--color-border)', borderRadius: 'var(--radius-button)',
           }}>
             <div style={{
               fontFamily: 'var(--font-mono)', fontSize: '9px',
@@ -475,7 +475,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--color-text-dim)' }}>
                     {k.slice(0, 4)}
                   </span>
-                  <span style={{ fontFamily: 'var(--font-serif)', fontSize: '18px', color: 'var(--color-text)', marginLeft: '4px' }}>
+                  <span style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h3-sm)', color: 'var(--color-text)', marginLeft: '4px' }}>
                     {v as number}
                   </span>
                 </div>
@@ -484,14 +484,14 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
           </div>
           <div style={{
             padding: '16px 20px', background: 'var(--color-surface)',
-            border: '1px solid var(--color-border)', borderRadius: '6px',
+            border: '1px solid var(--color-border)', borderRadius: 'var(--radius-button)',
           }}>
             <div style={{
               fontFamily: 'var(--font-mono)', fontSize: '9px',
               textTransform: 'uppercase', letterSpacing: '0.1em',
               color: 'var(--color-text-dim)', marginBottom: '8px',
             }}>Cognitive (ICAR)</div>
-            <div style={{ fontFamily: 'var(--font-serif)', fontSize: '18px', color: 'var(--color-text)' }}>
+            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h3-sm)', color: 'var(--color-text)' }}>
               {scores.icar.correct}/{scores.icar.total} ({scores.icar.percent}%)
             </div>
           </div>
@@ -503,7 +503,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
             padding: '14px 32px',
             background: 'var(--color-accent)',
             color: 'var(--color-bg)',
-            border: 'none', borderRadius: '6px',
+            border: 'none', borderRadius: 'var(--radius-button)',
             fontSize: '15px', fontWeight: 600,
             cursor: 'pointer', fontFamily: 'var(--font-sans)',
           }}
@@ -638,7 +638,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
                       padding: '16px 20px',
                       background: selected ? 'var(--color-surface-elevated)' : 'var(--color-surface)',
                       border: `1px solid ${selected ? 'var(--color-accent)' : 'var(--color-border)'}`,
-                      borderRadius: '6px',
+                      borderRadius: 'var(--radius-button)',
                       color: selected ? 'var(--color-text)' : 'var(--color-text-muted)',
                       fontSize: '15px', fontFamily: 'var(--font-sans)',
                       cursor: 'pointer', textAlign: 'left',
@@ -729,7 +729,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
                             padding: '12px 18px',
                             background: selected ? 'var(--color-surface-elevated)' : 'var(--color-surface)',
                             border: `1px solid ${selected ? 'var(--color-accent)' : 'var(--color-border)'}`,
-                            borderRadius: '6px',
+                            borderRadius: 'var(--radius-button)',
                             color: selected ? 'var(--color-text)' : 'var(--color-text-muted)',
                             fontSize: '14px', fontFamily: 'var(--font-sans)',
                             cursor: 'pointer', textAlign: 'left',
@@ -771,7 +771,7 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
                               padding: '12px 4px',
                               background: selected ? 'var(--color-accent)' : 'var(--color-surface)',
                               border: `1px solid ${selected ? 'var(--color-accent)' : 'var(--color-border)'}`,
-                              borderRadius: '6px',
+                              borderRadius: 'var(--radius-button)',
                               color: selected ? 'var(--color-bg)' : 'var(--color-text-muted)',
                               fontSize: '15px', fontWeight: selected ? 600 : 400,
                               fontFamily: 'var(--font-mono)', cursor: 'pointer',
@@ -827,7 +827,7 @@ function SectionCard({ label, title, desc, count }: { label: string; title: stri
     <div style={{
       display: 'flex', alignItems: 'flex-start', gap: '20px',
       padding: '18px 22px', background: 'var(--color-surface)',
-      border: '1px solid var(--color-border)', borderRadius: '6px',
+      border: '1px solid var(--color-border)', borderRadius: 'var(--radius-button)',
     }}>
       <span style={{
         fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 500,
@@ -901,7 +901,7 @@ function IPIPItemRow({ item, value, onAnswer }: {
                 padding: '14px 4px 10px',
                 background: selected ? 'var(--color-surface-elevated)' : 'var(--color-surface)',
                 border: `1px solid ${selected ? 'var(--color-accent)' : 'var(--color-border)'}`,
-                borderRadius: '4px',
+                borderRadius: 'var(--radius-element)',
                 color: selected ? 'var(--color-accent)' : 'var(--color-text-muted)',
                 fontSize: '11px', fontFamily: 'var(--font-sans)', fontWeight: 500,
                 cursor: 'pointer', display: 'flex', flexDirection: 'column',
@@ -959,7 +959,7 @@ function SD3ItemRow({ item, value, onAnswer }: {
                 padding: '14px 4px 10px',
                 background: selected ? 'var(--color-surface-elevated)' : 'var(--color-surface)',
                 border: `1px solid ${selected ? 'var(--color-accent)' : 'var(--color-border)'}`,
-                borderRadius: '4px',
+                borderRadius: 'var(--radius-element)',
                 color: selected ? 'var(--color-accent)' : 'var(--color-text-muted)',
                 fontSize: '11px', fontFamily: 'var(--font-sans)', fontWeight: 500,
                 cursor: 'pointer', display: 'flex', flexDirection: 'column',
@@ -987,7 +987,7 @@ const btnPrimaryStyle: React.CSSProperties = {
   padding: '12px 28px',
   background: 'var(--color-accent)',
   color: 'var(--color-bg)',
-  border: 'none', borderRadius: '4px',
+  border: 'none', borderRadius: 'var(--radius-element)',
   fontSize: '14px', fontWeight: 600,
   cursor: 'pointer', fontFamily: 'var(--font-sans)',
   letterSpacing: '0.02em',
@@ -999,7 +999,7 @@ const btnGhostStyle: React.CSSProperties = {
   background: 'none',
   color: 'var(--color-text-muted)',
   border: '1px solid var(--color-border)',
-  borderRadius: '4px',
+  borderRadius: 'var(--radius-element)',
   fontSize: '14px', fontWeight: 500,
   cursor: 'pointer', fontFamily: 'var(--font-sans)',
   transition: 'all 0.2s ease',

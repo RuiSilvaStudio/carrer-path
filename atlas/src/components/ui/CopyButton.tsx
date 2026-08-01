@@ -59,7 +59,7 @@ export function CopyButton({ text, ariaLabel = 'Copy to clipboard', variant = 'i
         padding: variant === 'block' ? '4px 8px' : '2px 6px',
         background: 'transparent',
         border: '1px solid var(--color-border)',
-        borderRadius: '4px',
+        borderRadius: 'var(--radius-element)',
         color: copied ? 'var(--color-accent)' : 'var(--color-text-dim)',
         fontFamily: 'var(--font-mono)',
         fontSize: variant === 'block' ? '10px' : '9px',

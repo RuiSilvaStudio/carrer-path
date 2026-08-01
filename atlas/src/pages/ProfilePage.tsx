@@ -68,7 +68,7 @@ export function ProfilePage() {
   return (
     <div className="atlas-page" style={{ padding: '60px 40px', maxWidth: '640px', margin: '0 auto' }}>
       <h1 style={{
-        fontFamily: 'var(--font-serif)', fontSize: '32px', fontWeight: 500,
+        fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h1)', fontWeight: 500,
         color: 'var(--color-text)', marginBottom: '8px',
       }}>
         Profile
@@ -189,14 +189,14 @@ export function ProfilePage() {
 const cardStyle: React.CSSProperties = {
   background: 'var(--color-surface)',
   border: '1px solid var(--color-border)',
-  borderRadius: '8px',
+  borderRadius: 'var(--radius-card)',
   padding: '24px',
   marginBottom: '24px',
 };
 
 const sectionTitleStyle: React.CSSProperties = {
   fontFamily: 'var(--font-serif)',
-  fontSize: '20px',
+  fontSize: 'var(--fs-h3)',
   fontWeight: 500,
   color: 'var(--color-text)',
   marginBottom: '8px',
@@ -225,7 +225,7 @@ const inputStyle: React.CSSProperties = {
   padding: '10px 14px',
   background: 'var(--color-bg)',
   border: '1px solid var(--color-border)',
-  borderRadius: '6px',
+  borderRadius: 'var(--radius-input)',
   color: 'var(--color-text)',
   fontSize: '14px',
   fontFamily: 'var(--font-sans)',
@@ -237,7 +237,7 @@ const primaryBtnStyle: React.CSSProperties = {
   background: 'var(--color-accent)',
   color: 'var(--color-bg)',
   border: 'none',
-  borderRadius: '6px',
+  borderRadius: 'var(--radius-button)',
   fontFamily: 'var(--font-mono)',
   fontSize: '12px',
   fontWeight: 500,

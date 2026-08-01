@@ -281,7 +281,7 @@ export function RhythmView({ demoData, dataSource }: RhythmViewProps) {
           <div style={{
             display: 'flex', alignItems: 'center', gap: '8px',
             padding: '12px 16px', background: 'var(--color-surface-elevated)',
-            borderRadius: '8px', maxWidth: '400px',
+            borderRadius: 'var(--radius-button)', maxWidth: '400px',
           }}>
             <span style={{
               fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-text-muted)',

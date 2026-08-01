@@ -82,7 +82,7 @@ export function EmptyState(props: EmptyStateProps) {
         background: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
         borderTop: `3px solid ${accent}`,
-        borderRadius: '12px',
+        borderRadius: 'var(--radius-card)',
       }}
     >
       <p
@@ -135,7 +135,7 @@ export function EmptyState(props: EmptyStateProps) {
                 background: 'var(--color-accent)',
                 color: 'var(--color-bg)',
                 border: 'none',
-                borderRadius: '6px',
+                borderRadius: 'var(--radius-button)',
                 fontSize: '15px',
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -154,7 +154,7 @@ export function EmptyState(props: EmptyStateProps) {
                 background: 'none',
                 color: 'var(--color-text-muted)',
                 border: '1px solid var(--color-border)',
-                borderRadius: '6px',
+                borderRadius: 'var(--radius-button)',
                 fontSize: '14px',
                 fontWeight: 500,
                 cursor: 'pointer',

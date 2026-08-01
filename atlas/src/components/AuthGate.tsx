@@ -38,10 +38,10 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
       <div style={{
         width: '100%', maxWidth: '380px',
         background: 'var(--color-surface)', border: '1px solid var(--color-border)',
-        borderRadius: '12px', padding: '40px 32px',
+        borderRadius: 'var(--radius-card)', padding: '40px 32px',
       }}>
         <h1 style={{
-          fontFamily: 'var(--font-serif)', fontSize: '28px', fontWeight: 500,
+          fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h1)', fontWeight: 500,
           color: 'var(--color-text)', marginBottom: '8px', letterSpacing: '-0.02em',
         }}>
           Personality Atlas
@@ -64,7 +64,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
               style={{
                 width: '100%', padding: '12px 14px',
                 background: 'var(--color-surface-elevated)',
-                border: '1px solid var(--color-border)', borderRadius: '8px',
+                border: '1px solid var(--color-border)', borderRadius: 'var(--radius-input)',
                 color: 'var(--color-text)', fontSize: '15px',
                 fontFamily: 'var(--font-sans)', outline: 'none',
               }}
@@ -80,7 +80,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
               style={{
                 width: '100%', padding: '12px 14px',
                 background: 'var(--color-surface-elevated)',
-                border: '1px solid var(--color-border)', borderRadius: '8px',
+                border: '1px solid var(--color-border)', borderRadius: 'var(--radius-input)',
                 color: 'var(--color-text)', fontSize: '15px',
                 fontFamily: 'var(--font-sans)', outline: 'none',
               }}
@@ -94,7 +94,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
             style={{
               width: '100%', padding: '13px',
               background: 'var(--color-accent)', color: 'var(--color-bg)',
-              border: 'none', borderRadius: '8px',
+              border: 'none', borderRadius: 'var(--radius-button)',
               fontSize: '15px', fontWeight: 600, cursor: 'pointer',
               fontFamily: 'var(--font-sans)',
             }}

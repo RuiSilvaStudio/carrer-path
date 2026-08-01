@@ -407,7 +407,7 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
         <div className="atlas-chart-toggles" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{
             display: 'flex', gap: 0,
-            border: '1px solid var(--color-border)', borderRadius: '3px', overflow: 'hidden',
+            border: '1px solid var(--color-border)', borderRadius: 'var(--radius-element)', overflow: 'hidden',
           }}>
             {(['traits', 'emotions'] as const).map(mode => (
               <button
@@ -430,7 +430,7 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
           {(originalDataLength ?? data.length) > 10 && (
             <div style={{
               display: 'flex', gap: 0,
-              border: '1px solid var(--color-border)', borderRadius: '3px', overflow: 'hidden',
+              border: '1px solid var(--color-border)', borderRadius: 'var(--radius-element)', overflow: 'hidden',
             }}>
               {(['raw', 'daily', 'weekly'] as const).map(sm => (
                 <button
@@ -765,7 +765,7 @@ export default function TrajectoryChart({ data, originalDataLength, onScrub: _on
       {/* ── Phase bar (below chart, above scrubber) ──────────── */}
       <div style={{
         display: 'flex', gap: 0, marginTop: '8px', height: '24px',
-        borderRadius: '3px', overflow: 'hidden', border: '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-element)', overflow: 'hidden', border: '1px solid var(--color-border)',
       }}>
         {phases.map((phase, i) => {
           const hasDays = data.every(d => d.day !== undefined);

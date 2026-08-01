@@ -25,15 +25,15 @@ import { type StructuredProfile } from '../lib/profile-data';
 const ui = {
   page: { maxWidth: '1120px', margin: '0 auto', padding: '52px var(--space-page) 100px' },
   kicker: { color: 'var(--color-accent)', font: '11px var(--font-mono)', letterSpacing: '.12em', textTransform: 'uppercase' as const },
-  h1: { font: '400 47px/1.04 var(--font-serif)', letterSpacing: '-.035em', margin: '12px 0 12px' },
+  h1: { font: '400 var(--fs-display)/1.04 var(--font-serif)', letterSpacing: '-.035em', margin: '12px 0 12px' },
   quiet: { color: 'var(--color-text-muted)', fontSize: '15px', lineHeight: 1.65 },
   rule: { border: 0, borderTop: '1px solid var(--color-border)', margin: '40px 0 20px' },
-  panel: { background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '0', padding: '20px' },
+  panel: { background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-card)', padding: '20px' },
   label: { display: 'block', color: 'var(--color-text-dim)', font: '10px var(--font-mono)', letterSpacing: '.11em', textTransform: 'uppercase' as const, marginBottom: '8px' },
-  input: { width: '100%', color: 'var(--color-text)', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 0, padding: '12px 12px', font: '14px/1.55 var(--font-sans)' },
-  primary: { border: '1px solid var(--color-accent)', background: 'var(--color-accent)', color: 'var(--color-bg)', padding: '12px 16px', font: '600 11px var(--font-mono)', letterSpacing: '.08em', textTransform: 'uppercase' as const, cursor: 'pointer' },
-  secondary: { border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text-muted)', padding: '12px 16px', font: '11px var(--font-mono)', letterSpacing: '.08em', textTransform: 'uppercase' as const, cursor: 'pointer' },
-  tag: { display: 'inline-flex', alignItems: 'center', padding: '4px 8px', background: 'var(--color-surface-elevated)', border: '1px solid var(--color-border)', font: '11px var(--font-sans)', color: 'var(--color-text)' },
+  input: { width: '100%', color: 'var(--color-text)', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-input)', padding: '12px 12px', font: '14px/1.55 var(--font-sans)' },
+  primary: { border: '1px solid var(--color-accent)', background: 'var(--color-accent)', color: 'var(--color-bg)', borderRadius: 'var(--radius-button)', padding: '12px 16px', font: '600 11px var(--font-mono)', letterSpacing: '.08em', textTransform: 'uppercase' as const, cursor: 'pointer' },
+  secondary: { border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text-muted)', borderRadius: 'var(--radius-button)', padding: '12px 16px', font: '11px var(--font-mono)', letterSpacing: '.08em', textTransform: 'uppercase' as const, cursor: 'pointer' },
+  tag: { display: 'inline-flex', alignItems: 'center', padding: '4px 8px', background: 'var(--color-surface-elevated)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-element)', font: '11px var(--font-sans)', color: 'var(--color-text)' },
 };
 
 // ── Nav status dot ─────────────────────────────────────────────────────
@@ -144,7 +144,7 @@ type PageProps = {
 type StepProps = Omit<PageProps, 'move'>;
 
 function Title({ kicker, title, children }: { kicker: string; title: string; children: React.ReactNode }) {
-  return <><p style={ui.kicker}>{kicker}</p><h2 style={{ font: '400 31px/1.12 var(--font-serif)', letterSpacing: '-.025em', margin: '8px 0' }}>{title}</h2><p style={{ ...ui.quiet, maxWidth: '680px', fontSize: '14px' }}>{children}</p></>;
+  return <><p style={ui.kicker}>{kicker}</p><h2 style={{ font: `400 var(--fs-display)/1.1 var(--font-serif)`, letterSpacing: '-.03em', margin: '8px 0' }}>{title}</h2><p style={{ ...ui.quiet, maxWidth: '680px', fontSize: '14px' }}>{children}</p></>;
 }
 
 function Actions({ back, onBack, next, onNext, disabled, saving }: { back?: string; onBack?: () => void; next: string; onNext: () => void; disabled?: boolean; saving: boolean }) {
@@ -491,7 +491,7 @@ function SuggestionCard({ suggestion, onAdd, onDismiss }: { suggestion: Suggesti
     <div style={{ ...ui.panel, borderLeft: '3px solid var(--color-accent)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div style={{ flex: 1 }}>
-          <h3 style={{ font: '400 22px/1.2 var(--font-serif)', color: 'var(--color-text)', margin: '0 0 8px' }}>{suggestion.title}</h3>
+          <h3 style={{ font: '400 var(--fs-h3)/1.2 var(--font-serif)', color: 'var(--color-text)', margin: '0 0 8px' }}>{suggestion.title}</h3>
           <p style={{ ...ui.quiet, fontSize: '13px', margin: 0 }}>{suggestion.rationale}</p>
         </div>
         <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
@@ -534,7 +534,7 @@ function DirectionChoice({ direction, enriching, onToggle }: { direction: Career
       <input type="checkbox" checked={direction.selected} onChange={onToggle} />
       <div>
         <p style={ui.kicker}>{direction.selected ? 'Included in comparison' : 'Not selected'}</p>
-        <h3 style={{ font: '400 25px/1.12 var(--font-serif)', margin: '8px 0 8px' }}>{direction.title}</h3>
+        <h3 style={{ font: '400 var(--fs-h2)/1.12 var(--font-serif)', margin: '8px 0 8px' }}>{direction.title}</h3>
         <p style={{ ...ui.quiet, fontSize: '13px' }}>{reference?.description ?? direction.summary}</p>
         {enriching && <p style={{ ...ui.quiet, fontSize: '11px', color: 'var(--color-accent)', marginTop: '8px' }}>Analysing…</p>}
         {!enriching && hasEnrichment && (
@@ -608,7 +608,7 @@ function ComparisonCard({ direction, onTakeForward, saving }: {
   return (
     <div style={{ ...ui.panel, flex: '1 1 300px', minWidth: '280px', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '16px', borderBottom: hasEnrichment ? `1px solid var(--color-border)` : 'none' }}>
-        <h3 style={{ font: '400 19px/1.2 var(--font-serif)', color: 'var(--color-text)', margin: 0 }}>{direction.title}</h3>
+        <h3 style={{ font: '400 var(--fs-h3-sm)/1.2 var(--font-serif)', color: 'var(--color-text)', margin: 0 }}>{direction.title}</h3>
       </div>
 
       {!hasEnrichment && (
@@ -1148,7 +1148,7 @@ function MarketActionStep({ data, setData, saving, save }: StepProps & { save: (
                 <button
                   onClick={() => toggleAction(action.id)}
                   style={{
-                    width: '22px', height: '22px', borderRadius: '4px',
+                    width: '22px', height: '22px', borderRadius: 'var(--radius-element)',
                     border: `2px solid ${action.done ? 'var(--color-success)' : 'var(--color-border)'}`,
                     background: action.done ? 'var(--color-success)' : 'transparent',
                     cursor: 'pointer', flexShrink: 0, marginTop: '2px',

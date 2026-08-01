@@ -28,7 +28,7 @@ function SkipToMain() {
         el.style.padding = '10px 18px';
         el.style.background = 'var(--color-accent)';
         el.style.color = 'var(--color-bg)';
-        el.style.borderRadius = '6px';
+        el.style.borderRadius = 'var(--radius-button)';
         el.style.fontFamily = 'var(--font-mono)';
         el.style.fontSize = '11px';
         el.style.textTransform = 'uppercase';

@@ -13,7 +13,7 @@ export function InsightStrip({ label = 'Insight', children, style }: InsightStri
       style={{
         background: 'var(--color-surface-elevated)',
         borderLeft: '3px solid var(--color-accent)',
-        borderRadius: '0 8px 8px 0',
+        borderRadius: `0 var(--radius-button) var(--radius-button) 0`,
         padding: '14px 20px',
         ...style,
       }}

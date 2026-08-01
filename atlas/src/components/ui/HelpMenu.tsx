@@ -122,7 +122,7 @@ export function HelpMenu() {
           justifyContent: 'center',
           width: '24px',
           height: '22px',
-          borderRadius: '999px',
+          borderRadius: 'var(--radius-pill)',
           border: '1px solid var(--color-border)',
           background: open ? 'var(--color-surface-elevated)' : 'var(--color-surface)',
           color: 'var(--color-text-muted)',
@@ -158,7 +158,7 @@ export function HelpMenu() {
             overflowY: 'auto',
             background: 'var(--color-surface)',
             border: '1px solid var(--color-border)',
-            borderRadius: '12px',
+            borderRadius: 'var(--radius-card)',
             boxShadow: '0 12px 40px -12px rgba(0,0,0,0.3)',
             padding: glossaryOpen ? '20px' : '12px',
             zIndex: 200,
@@ -193,7 +193,7 @@ export function HelpMenu() {
                     padding: '10px 12px',
                     background: 'none',
                     border: 'none',
-                    borderRadius: '6px',
+                    borderRadius: 'var(--radius-button)',
                     color: 'var(--color-text)',
                     fontFamily: 'var(--font-sans)',
                     fontSize: '13px',
@@ -222,7 +222,7 @@ export function HelpMenu() {
                         color: 'var(--color-text-dim)',
                         padding: '2px 6px',
                         border: '1px solid var(--color-border)',
-                        borderRadius: '3px',
+                        borderRadius: 'var(--radius-element)',
                         alignSelf: 'center',
                         flexShrink: 0,
                       }}
@@ -298,7 +298,7 @@ export function HelpMenu() {
                   padding: '8px 12px',
                   background: 'var(--color-bg)',
                   border: '1px solid var(--color-border)',
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-button)',
                   color: 'var(--color-text)',
                   fontFamily: 'var(--font-sans)',
                   fontSize: '13px',
@@ -326,7 +326,7 @@ export function HelpMenu() {
                       key={entry.id}
                       style={{
                         padding: '8px 10px',
-                        borderRadius: '4px',
+                        borderRadius: 'var(--radius-element)',
                         background: 'transparent',
                         transition: 'background 0.15s',
                       }}

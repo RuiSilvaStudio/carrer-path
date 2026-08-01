@@ -57,7 +57,7 @@ export function SD3Bars({ sd3 }: SD3BarsProps) {
             style={{
               height: '6px',
               background: 'var(--color-surface-elevated)',
-              borderRadius: '3px',
+              borderRadius: 'var(--radius-element)',
               overflow: 'hidden',
             }}
           >
@@ -67,7 +67,7 @@ export function SD3Bars({ sd3 }: SD3BarsProps) {
                 height: '100%',
                 width: '0%',
                 background: 'var(--color-danger)',
-                borderRadius: '3px',
+                borderRadius: 'var(--radius-element)',
               }}
             />
           </div>

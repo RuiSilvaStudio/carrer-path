@@ -20,7 +20,7 @@ export function Card({ label, title, subtitle, infoText, infoTerm, children, sty
       style={{
         background: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
-        borderRadius: '12px',
+        borderRadius: 'var(--radius-card)',
         padding: '24px',
         ...style,
       }}
@@ -45,7 +45,7 @@ export function Card({ label, title, subtitle, infoText, infoTerm, children, sty
             <p
               style={{
                 fontFamily: 'var(--font-serif)',
-                fontSize: '18px',
+                fontSize: 'var(--fs-h3-sm)',
                 fontWeight: 500,
                 color: 'var(--color-text)',
                 letterSpacing: '-0.01em',

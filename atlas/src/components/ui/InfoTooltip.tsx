@@ -115,7 +115,7 @@ export function InfoTooltip({ text, term, ariaLabel = 'More info' }: InfoTooltip
             transform: 'translateX(-50%)',
             background: 'var(--color-tooltip-bg)',
             border: '1px solid var(--color-border)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-button)',
             padding: '10px 14px',
             maxWidth: '280px',
             minWidth: '180px',

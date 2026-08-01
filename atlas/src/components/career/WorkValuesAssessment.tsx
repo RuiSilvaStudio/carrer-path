@@ -32,8 +32,8 @@ const ui = {
     marginBottom: '16px',
   },
   h1: {
-    font: '400 42px/1.06 var(--font-serif)' as const,
-    letterSpacing: '-.03em' as const,
+    font: '400 var(--fs-h3)/1.06 var(--font-serif)' as const,
+    letterSpacing: '-.025em' as const,
     margin: '0 0 16px',
   },
   quiet: {
@@ -65,6 +65,7 @@ const ui = {
     border: '1px solid var(--color-accent)' as const,
     background: 'var(--color-accent)' as const,
     color: 'var(--color-bg)' as const,
+    borderRadius: 'var(--radius-button)' as const,
     padding: '12px 24px' as const,
     font: '600 11px var(--font-mono)' as const,
     letterSpacing: '.08em' as const,
@@ -75,6 +76,7 @@ const ui = {
     border: '1px solid var(--color-border)' as const,
     background: 'transparent' as const,
     color: 'var(--color-text-muted)' as const,
+    borderRadius: 'var(--radius-button)' as const,
     padding: '12px 20px' as const,
     font: '11px var(--font-mono)' as const,
     letterSpacing: '.08em' as const,

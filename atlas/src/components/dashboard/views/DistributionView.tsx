@@ -118,7 +118,7 @@ function DensityChart({ values, label, color }: { values: number[]; label: strin
     <div>
       {/* Label + color swatch */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-        <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '3px', background: color }} />
+        <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: 'var(--radius-element)', background: color }} />
         <span style={{
           fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase',
           letterSpacing: '0.08em', color: 'var(--color-text-muted)',
@@ -282,7 +282,7 @@ export function DistributionView({ demoData, baseline, pulses, dataSource }: Dis
                 return (
                   <div key={trait.key} style={{
                     padding: '14px 16px', background: 'var(--color-surface-elevated)',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-button)',
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                       <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: trait.color }} />
@@ -354,7 +354,7 @@ export function DistributionView({ demoData, baseline, pulses, dataSource }: Dis
             <div style={{
               display: 'flex', alignItems: 'center', gap: '8px',
               padding: '12px 16px', background: 'var(--color-surface-elevated)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-button)',
             }}>
               <span style={{
                 fontFamily: 'var(--font-mono)', fontSize: '24px', fontWeight: 500,

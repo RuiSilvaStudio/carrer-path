@@ -290,7 +290,7 @@ export function Coachmark({
           maxWidth: `calc(100vw - ${VIEWPORT_PAD * 2}px)`,
           background: 'var(--color-surface)',
           border: '1px solid var(--color-border)',
-          borderRadius: '12px',
+          borderRadius: 'var(--radius-card)',
           boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
           zIndex: 1101,
           fontFamily: 'var(--font-sans)',
@@ -335,7 +335,7 @@ export function Coachmark({
               color: 'var(--color-text-dim)',
               fontSize: '18px',
               lineHeight: 1,
-              borderRadius: '4px',
+              borderRadius: 'var(--radius-element)',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.color = 'var(--color-text)';
@@ -399,7 +399,7 @@ export function Coachmark({
               fontFamily: 'var(--font-sans)',
               fontSize: '12px',
               color: 'var(--color-text-dim)',
-              borderRadius: '4px',
+              borderRadius: 'var(--radius-element)',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.color = 'var(--color-text)';
@@ -419,7 +419,7 @@ export function Coachmark({
               color: 'var(--color-bg)',
               border: 'none',
               padding: '6px 14px',
-              borderRadius: '4px',
+              borderRadius: 'var(--radius-element)',
               cursor: 'pointer',
               fontFamily: 'var(--font-sans)',
               fontSize: '12px',

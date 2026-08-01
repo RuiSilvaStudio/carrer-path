@@ -4,35 +4,38 @@
 
 /* ============================================================
    DESIGN TOKENS — Dark Mode (default)
+   Deep Teal / Copper — cool petrol bg with warm terracotta accent.
+   The warm-on-cool tension replaces the sepia/gold "AI dashboard"
+   cliché. Bg is cool (#0c1a1a), accent is warm (#c87a5a).
    ============================================================ */
 :root,
 [data-theme="dark"] {
-  --color-bg: #18120e;
-  --color-surface: #1f1813;
-  --color-surface-elevated: #2a2218;
-  --color-border: #3a2f25;
+  --color-bg: #0c1a1a;
+  --color-surface: #142424;
+  --color-surface-elevated: #1a2e2e;
+  --color-border: #243838;
 
-  --color-text: #e8dfd3;
-  --color-text-muted: #a89a87;
-  --color-text-dim: #9b8a76; /* ≥4.5:1 on bg+surface (was #756657 @3.2:1) */
+  --color-text: #e8e4df;
+  --color-text-muted: #9ba8a8;
+  --color-text-dim: #8a9a9a; /* ≥4.5:1 on bg+surface+surface-elevated */
 
-  --color-accent: #d4a574;
-  --color-accent-bright: #e8b884;
+  --color-accent: #c87a5a;
+  --color-accent-bright: #d88a6a;
 
-  --color-success: #7ba89b;
-  --color-warning: #c9a55c;
-  --color-danger: #c97757;
+  --color-success: #6ba890;
+  --color-warning: #d4a44c;
+  --color-danger: #d4704c;
 
-  /* Big Five — Tol bright, adjusted for dark */
-  --color-openness: #5b8db8;
-  --color-conscientiousness: #4a9d5a;
+  /* Big Five — Tol bright, shifted cooler to harmonize with teal bg */
+  --color-openness: #5b9bc8;
+  --color-conscientiousness: #5aad6a;
   --color-extraversion: #e87a7a;
   --color-agreeableness: #d4b85e;
   --color-stability: #7dc5e0;
 
-  --color-grid: #3a2f25;
-  --color-axis: #a89a87; /* 6.75:1 (was #756657 @3.35) — crisper chart labels on dark */
-  --color-tooltip-bg: #2a2218;
+  --color-grid: #243838;
+  --color-axis: #9ba8a8;
+  --color-tooltip-bg: #1a2e2e;
 
   --font-serif: "Fraunces", Georgia, serif;
   --font-sans: "IBM Plex Sans", system-ui, sans-serif;
@@ -41,33 +44,34 @@
 
 /* ============================================================
    DESIGN TOKENS — Light Mode
+   Cool off-white bg (not cream) with darker copper accent for AA.
    ============================================================ */
 [data-theme="light"] {
-  --color-bg: #faf8f5;
+  --color-bg: #f5f8f7;
   --color-surface: #ffffff;
-  --color-surface-elevated: #f5f2ed;
-  --color-border: #e0d8cc;
+  --color-surface-elevated: #eef2f1;
+  --color-border: #d0d8d6;
 
-  --color-text: #2a2218;
-  --color-text-muted: #6b5d4f;
-  --color-text-dim: #7a6a58; /* ≥4.5:1 on bg+surface (was #9a8a7a @3.15:1) */
+  --color-text: #1a2828;
+  --color-text-muted: #4a6060;
+  --color-text-dim: #5a7070; /* ≥4.5:1 on bg+surface */
 
-  --color-accent: #8a6100; /* ≥4.5:1 on bg+surface (was #b8860b @3.07:1 — failed AA) */
-  --color-accent-bright: #8a6100; /* unified to AA-compliant accent (was #a07008 @4.11:1) */
+  --color-accent: #a8552e; /* ≥4.5:1 on bg+surface — darker copper for AA */
+  --color-accent-bright: #a8552e; /* unified to AA-compliant accent */
 
-  --color-success: #4a8d7a;
-  --color-warning: #8a6100; /* text use — ≥4.5:1 (was #b8860b @3.07:1) */
-  --color-danger: #b5533a;
+  --color-success: #2a8d6a;
+  --color-warning: #8a5a00; /* text use — ≥4.5:1 */
+  --color-danger: #a8442e;
 
-  /* Big Five — Tol bright, darkened for ≥3:1 on light bg (data-viz legibility) */
-  --color-openness: #3d6b99;        /* 5.27:1 (was #4477AA @4.44) */
-  --color-conscientiousness: #1e7a2e; /* 5.11:1 (was #228833 @4.27) */
-  --color-extraversion: #d45a6a;    /* 3.62:1 (was #EE6677 @2.91) */
-  --color-agreeableness: #8f8226;   /* 3.68:1 (was #CCBB44 @1.84) */
-  --color-stability: #3a8ba8;       /* 3.64:1 (was #66CCEE @1.73) */
+  /* Big Five — darkened for ≥3:1 on light bg (data-viz legibility) */
+  --color-openness: #2d6b9a;
+  --color-conscientiousness: #1e7a2e;
+  --color-extraversion: #d45a6a;
+  --color-agreeableness: #8f8226;
+  --color-stability: #2a8ba8;
 
-  --color-grid: #e0d8cc;
-  --color-axis: #6b5d4f;            /* 6.0:1 (was #9a8a7a @3.15) */
+  --color-grid: #d0d8d6;
+  --color-axis: #4a6060;
   --color-tooltip-bg: #ffffff;
 }
 
@@ -114,6 +118,27 @@ body {
   --nav-gap-sm: 12px;
   --nav-pad: 40px;
   --nav-pad-sm: 16px; /* match --space-page-sm so nav aligns with page content */
+
+  /* ── Radius scale (theme-agnostic) ──────────────────────────
+     One scale, applied consistently across all pages. Previously
+     each page picked its own radius (Career = 0px, Docs = 12px,
+     Profile = 8px, Pulse = 4px). Now every component uses these. */
+  --radius-card: 12px;     /* large containers: doc cards, dashboard cards, auth box */
+  --radius-button: 8px;    /* buttons, callout edges */
+  --radius-input: 6px;     /* text inputs, select, textarea */
+  --radius-element: 4px;   /* small UI: code chips, chart bars, progress tracks, tags */
+  --radius-pill: 999px;    /* pill toggles, status dots */
+
+  /* ── Type scale (serif headings) ────────────────────────────
+     Previously 12 distinct sizes (42, 38, 36, 34, 32, 31, 28,
+     25, 24, 22, 20, 19px). Now 5 levels — every page title,
+     section, sub-section, and card title uses one of these.
+     --fs-h1 (36px) is already defined above in the responsive
+     tokens block — reused here, not redeclared. */
+  --fs-display: 42px;   /* hero / page h1: "Who You Are Becoming", "Build your career foundation" */
+  --fs-h2: 24px;        /* section title within a page: card titles, doc section heads, sub-sections */
+  --fs-h3: 20px;        /* sub-section / large card title: "Your sigil", "Build your career profile" */
+  --fs-h3-sm: 18px;     /* smaller card title: comparison cards, suggestion cards */
 }
 
 /* overflow-x on html only. Setting it on body too would make body a
