@@ -21,6 +21,7 @@ import { track } from '../lib/analytics';
 import { supabase } from '../lib/supabase';
 import { WorkValuesAssessment } from '../components/career/WorkValuesAssessment';
 import { ProfileBuilder } from '../components/career/ProfileBuilder';
+import { FeedbackPrompt } from '../components/ui/FeedbackPrompt';
 import { VALUE_LABELS, type WorkValuesResult } from '../lib/work-values-data';
 import { type StructuredProfile } from '../lib/profile-data';
 
@@ -912,6 +913,11 @@ function BriefStep({ data, setData, saving, move }: PageProps) {
           ) : (
             <button onClick={() => setShowNote(true)} style={{ ...ui.secondary, fontSize: '10px', padding: '6px 12px' }}>+ Add note</button>
           )}
+
+          {/* Feedback: did this brief clarify the direction? */}
+          <div style={{ marginTop: '24px' }}>
+            <FeedbackPrompt surface="direction" itemId={`brief-${direction.id}`} />
+          </div>
         </div>
       ) : (
         <div style={{ marginTop: '32px', maxWidth: '760px' }}>
