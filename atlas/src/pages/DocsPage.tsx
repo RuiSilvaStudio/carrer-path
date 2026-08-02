@@ -23,10 +23,11 @@ const SECTIONS: Section[] = [
   { id: 'scoring', num: '04', title: 'Scoring Methodology' },
   { id: 'pulse-design', num: '05', title: 'Pulse Design' },
   { id: 'visualization', num: '06', title: 'Data Visualization' },
-  { id: 'data-sources', num: '07', title: 'Data Sources' },
-  { id: 'privacy', num: '08', title: 'Privacy & Ethics' },
-  { id: 'future', num: '09', title: 'Future: Smoothing & Aggregation' },
-  { id: 'accessibility', num: '10', title: 'Accessibility' },
+  { id: 'sigil', num: '07', title: 'The Sigil' },
+  { id: 'data-sources', num: '08', title: 'Data Sources' },
+  { id: 'privacy', num: '09', title: 'Privacy & Ethics' },
+  { id: 'future', num: '10', title: 'Future: Smoothing & Aggregation' },
+  { id: 'accessibility', num: '11', title: 'Accessibility' },
 ];
 
 // ── Hover-share anchor link ─────────────────────────────────────
@@ -961,7 +962,7 @@ export function DocsPage() {
         </DocCard>
 
         {/* 06 — Data Visualization */}
-        <DocCard id="visualization" num="06" title="Data Visualization" nextSection={{ id: 'data-sources', num: '07', title: 'Data Sources' }}>
+        <DocCard id="visualization" num="06" title="Data Visualization" nextSection={{ id: 'sigil', num: '07', title: 'The Sigil' }}>
           <h3
             style={{
               fontFamily: 'var(--font-serif)',
@@ -1085,8 +1086,145 @@ export function DocsPage() {
           </p>
         </DocCard>
 
-        {/* 07 — Data Sources */}
-        <DocCard id="data-sources" num="07" title="Data Sources" nextSection={{ id: 'privacy', num: '08', title: 'Privacy & Ethics' }}>
+        {/* 07 — The Sigil */}
+        <DocCard id="sigil" num="07" title="The Sigil" nextSection={{ id: 'data-sources', num: '08', title: 'Data Sources' }}>
+          <p style={{ marginBottom: '16px' }}>
+            The Sigil is a <strong style={{ color: 'var(--color-text)' }}>deterministic identity mark</strong> —
+            a unique visual signature derived entirely from your assessment data. It is not random.
+            The same scores always produce the same mark, on any machine, because every choice
+            (outline shape, weave pattern, colors, dot positions) is seeded by your trait and facet
+            values through a hash function. Your mark is yours alone.
+          </p>
+
+          <h3
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '18px',
+              fontWeight: 500,
+              color: 'var(--color-text)',
+              marginBottom: '12px',
+              marginTop: '24px',
+            }}
+          >
+            How it's built
+          </h3>
+          <p style={{ marginBottom: '16px' }}>
+            The outer <strong style={{ color: 'var(--color-text)' }}>bloom outline</strong> is a
+            closed curve whose harmonics are weighted by your five trait scores — each trait
+            contributes a sine wave at a different frequency, so the shape literally encodes your
+            personality profile. Facet values add fine texture to the outline, and your
+            Motivational Drivers (SD3) scores set the phase offset that shifts the whole pattern.
+          </p>
+          <p style={{ marginBottom: '16px' }}>
+            Inside the bloom, an <strong style={{ color: 'var(--color-text)' }}>inner weave</strong>{' '}
+            of strands appears once you start pulsing. Strand count, reach, and wildness are seeded
+            by your facet values and cognitive (ICAR) score. The weave is what makes the mark feel
+            alive — it grows with your data.
+          </p>
+
+          <h3
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '18px',
+              fontWeight: 500,
+              color: 'var(--color-text)',
+              marginBottom: '12px',
+              marginTop: '24px',
+            }}
+          >
+            Maturity stages
+          </h3>
+          <p style={{ marginBottom: '16px' }}>
+            The sigil evolves through <strong style={{ color: 'var(--color-text)' }}>six maturity
+            stages</strong> as you contribute more data. Each stage adds a new visual layer:
+          </p>
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'auto 1fr',
+              gap: '8px 16px',
+              padding: '16px 20px',
+              background: 'var(--color-surface-elevated)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-button)',
+              fontFamily: 'var(--font-sans)',
+              fontSize: '14px',
+              lineHeight: 1.6,
+              color: 'var(--color-text-muted)',
+            }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-accent)', fontWeight: 600 }}>0</span>
+              <span><strong style={{ color: 'var(--color-text)' }}>No baseline</strong> — dashed frame with a center dot</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-accent)', fontWeight: 600 }}>1</span>
+              <span><strong style={{ color: 'var(--color-text)' }}>Baseline complete</strong> — bloom outline appears</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-accent)', fontWeight: 600 }}>2</span>
+              <span><strong style={{ color: 'var(--color-text)' }}>Pulse ≥ 1</strong> — inner weave, single muted color</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-accent)', fontWeight: 600 }}>3</span>
+              <span><strong style={{ color: 'var(--color-text)' }}>Pulse ≥ 5</strong> — weave gains trait colors</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-accent)', fontWeight: 600 }}>4</span>
+              <span><strong style={{ color: 'var(--color-text)' }}>Pulse ≥ 12</strong> — more weave strands</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-accent)', fontWeight: 600 }}>5</span>
+              <span><strong style={{ color: 'var(--color-text)' }}>Pulse ≥ 25</strong> — solid ring in dominant-trait color + emotion dots</span>
+            </div>
+          </div>
+          <p style={{ marginBottom: '16px' }}>
+            Stages 0–1 are about establishing that you exist. Stages 2–4 are about depth — the mark
+            fills in as more pulses accumulate. Stage 5 is the full signature: a solid ring in your
+            dominant trait's color, with emotion dots whose positions are seeded by your facet
+            values and whose opacity reflects how frequently you've reported each emotion across
+            all pulses.
+          </p>
+
+          <h3
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '18px',
+              fontWeight: 500,
+              color: 'var(--color-text)',
+              marginBottom: '12px',
+              marginTop: '24px',
+            }}
+          >
+            Milestone pips
+          </h3>
+          <p style={{ marginBottom: '16px' }}>
+            Four <strong style={{ color: 'var(--color-text)' }}>milestone pips</strong> sit on the
+            frame ring at 1, 5, 12, and 25 pulses. Unlike the rest of the mark, the pips are{' '}
+            <em>identical for every user</em> — they are the shared status channel, not part of your
+            fingerprint. They tell you (and anyone looking) how much longitudinal data backs the
+            mark, without revealing anything about your personality. A pip lights up when you cross
+            its threshold.
+          </p>
+
+          <Callout>
+            The sigil is a <strong style={{ color: 'var(--color-text)' }}>fingerprint, not a
+            portrait</strong>. It does not attempt to look like you or represent your mood. It is a
+            deterministic hash of your data rendered as geometry — proof that the mark you see was
+            produced by exactly your scores and no one else's.
+          </Callout>
+
+          <h3
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '18px',
+              fontWeight: 500,
+              color: 'var(--color-text)',
+              marginBottom: '12px',
+              marginTop: '24px',
+            }}
+          >
+            Sigil Lab
+          </h3>
+          <p style={{ marginBottom: '0' }}>
+            The <strong style={{ color: 'var(--color-text)' }}>Sigil Lab</strong> page
+            (<Code>/sigil-lab</Code>) lets you explore the mark interactively — adjust scores and
+            pulse count to see how each input changes the output. It's the fastest way to
+            understand the encoding: drag a trait slider and watch the bloom reshape, increase the
+            pulse count and watch new layers appear.
+          </p>
+        </DocCard>
+
+        {/* 08 — Data Sources */}
+        <DocCard id="data-sources" num="08" title="Data Sources" nextSection={{ id: 'privacy', num: '09', title: 'Privacy & Ethics' }}>
           <h3
             style={{
               fontFamily: 'var(--font-serif)',
@@ -1132,8 +1270,8 @@ export function DocsPage() {
           </p>
         </DocCard>
 
-        {/* 08 — Privacy & Ethics */}
-        <DocCard id="privacy" num="08" title="Privacy & Ethics" nextSection={{ id: 'future', num: '09', title: 'Future: Smoothing & Aggregation' }}>
+        {/* 09 — Privacy & Ethics */}
+        <DocCard id="privacy" num="09" title="Privacy & Ethics" nextSection={{ id: 'future', num: '10', title: 'Future: Smoothing & Aggregation' }}>
           <Callout type="warning">
             <strong style={{ color: 'var(--color-text)' }}>This is not a clinical assessment or
             diagnostic tool.</strong> The Personality Atlas does not diagnose, treat, or recommend
@@ -1191,8 +1329,8 @@ export function DocsPage() {
           </ul>
         </DocCard>
 
-        {/* 09 — Future */}
-        <DocCard id="future" num="09" title="Future: Smoothing & Aggregation">
+        {/* 10 — Future */}
+        <DocCard id="future" num="10" title="Future: Smoothing & Aggregation">
           <p style={{ marginBottom: '16px' }}>
             ESM time-series data is inherently noisy — a single bad day can create a spike that
             distorts the trajectory. Research shows that <strong style={{ color: 'var(--color-text)'
@@ -1251,8 +1389,8 @@ export function DocsPage() {
           </div>
         </DocCard>
 
-        {/* 10 — Accessibility Statement */}
-        <DocCard id="accessibility" num="10" title="Accessibility Statement">
+        {/* 11 — Accessibility Statement */}
+        <DocCard id="accessibility" num="11" title="Accessibility Statement">
           <p style={{ marginBottom: '16px' }}>
             The Personality Atlas aims to conform to{' '}
             <strong style={{ color: 'var(--color-text)' }}>WCAG 2.2 Level AA</strong>.

@@ -330,6 +330,84 @@ export const reverse_scoring: GlossaryEntry = {
 };
 
 // ---------------------------------------------------------------------------
+// The Sigil — deterministic identity mark
+// ---------------------------------------------------------------------------
+
+export const sigil: GlossaryEntry = {
+  id: 'sigil',
+  term: 'Sigil',
+  short:
+    'A deterministic visual mark derived only from your assessment data. Same scores in → same mark out, on any machine.',
+  long:
+    'The Sigil is a generative identity mark. Its outer bloom shape is seeded by your five trait scores (each contributes a sine wave at a different frequency), with facet values adding texture. An inner weave of strands appears as you accumulate pulses, growing in complexity through six maturity stages. The mark is not random — it is a hash of your data rendered as geometry.',
+  docsAnchor: '/docs#sigil',
+  scope: 'concept',
+};
+
+export const sigil_stage: GlossaryEntry = {
+  id: 'sigil-stage',
+  term: 'Sigil Maturity Stage',
+  short:
+    'Six stages (0–5) the sigil passes through as you add data: empty frame → bloom → weave → colored weave → more strands → full ring with emotion dots.',
+  long:
+    'Stage 0 (no baseline): dashed frame + center dot. Stage 1 (baseline): bloom outline. Stage 2 (≥1 pulse): inner weave in muted color. Stage 3 (≥5 pulses): weave gains trait colors. Stage 4 (≥12 pulses): more weave strands. Stage 5 (≥25 pulses): solid ring in dominant-trait color + emotion dots whose opacity reflects emotion frequency.',
+  docsAnchor: '/docs#sigil',
+  scope: 'concept',
+  related: ['sigil', 'sigil-milestone'],
+};
+
+export const sigil_milestone: GlossaryEntry = {
+  id: 'sigil-milestone',
+  term: 'Sigil Milestone Pip',
+  short:
+    'Four pips on the sigil frame at 1, 5, 12, and 25 pulses. Identical for every user — a shared status channel, not part of your fingerprint.',
+  long:
+    'Milestone pips light up when you cross their pulse threshold. Unlike the rest of the sigil, they do not encode anything about your personality — they only communicate how much longitudinal data backs the mark.',
+  docsAnchor: '/docs#sigil',
+  scope: 'concept',
+  related: ['sigil', 'sigil-stage'],
+};
+
+// ---------------------------------------------------------------------------
+// Pulse features
+// ---------------------------------------------------------------------------
+
+export const facet_breakdown: GlossaryEntry = {
+  id: 'facet-breakdown',
+  term: 'Facet Breakdown',
+  short:
+    'Chart showing all 30 IPIP-NEO facets as horizontal bars, grouped by trait. Reveals sub-trait detail the radar chart cannot display.',
+  long:
+    'The Facet Breakdown shows the six facets within each Big Five trait as individual bars, colored by their parent trait. It appears on the Baseline page as the deep-dive counterpart to the dashboard\'s summary radar — for example, showing that an Extraversion score of 72 is high Friendliness but low Assertiveness.',
+  scope: 'chart',
+  related: ['trait-score'],
+};
+
+export const pulse_history: GlossaryEntry = {
+  id: 'pulse-history',
+  term: 'Pulse History',
+  short:
+    'A list of completed pulses on the Pulse page, each exportable as CSV or permanently deletable (GDPR erasure).',
+  long:
+    'The Pulse History table shows every completed pulse with its date, time, phase, context, and emotions. Each row has Export (downloads a CSV with date, time, week, phase, context, emotions, note, and all five scores) and Delete (permanently removes the pulse from the database via a confirmation modal).',
+  docsAnchor: '/docs#pulse-design',
+  scope: 'concept',
+  related: ['experience-sampling'],
+};
+
+export const pulse_timing: GlossaryEntry = {
+  id: 'pulse-timing',
+  term: 'Pulse Timing Card',
+  short:
+    'A 24-hour visual strip on the Pulse page showing when your pulses were taken, so you can spot time-of-day patterns or plan future pulse timing.',
+  long:
+    'The timing card buckets every past pulse by the hour of day it was taken and renders a bar for each hour (0–23). Bar height encodes how many pulses fell at that hour. Below the strip, a per-pulse table lists the exact time each pulse was recorded. The goal is pattern recognition: do you always pulse late at night? Never in the morning?',
+  docsAnchor: '/docs#pulse-design',
+  scope: 'concept',
+  related: ['experience-sampling'],
+};
+
+// ---------------------------------------------------------------------------
 // IPIP-NEO-120 facets (30 entries)
 // IDs follow the pattern facet-{trait}-{kebab-facet}.
 // ---------------------------------------------------------------------------
@@ -586,6 +664,13 @@ export const GLOSSARY: Record<string, GlossaryEntry> = Object.freeze({
   'concept-whole-trait-theory': whole_trait_theory,
   'concept-experience-sampling': experience_sampling,
   'concept-reverse-scoring': reverse_scoring,
+  'concept-sigil': sigil,
+  'concept-sigil-stage': sigil_stage,
+  'concept-sigil-milestone': sigil_milestone,
+  'concept-pulse-history': pulse_history,
+  'concept-pulse-timing': pulse_timing,
+  // charts (additional)
+  'chart-facet-breakdown': facet_breakdown,
   // emotions + facets
   ...Object.fromEntries(
     [...positiveEmotions, ...neutralEmotions, ...negativeEmotions].map(e => [`emotion-${e.id}`, e]),
