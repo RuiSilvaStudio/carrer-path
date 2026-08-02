@@ -177,8 +177,8 @@ export function LandingPage({ authOpen, onOpenAuth, onCloseAuth }: Props) {
         const { OutputPass } = await import('three/examples/jsm/postprocessing/OutputPass.js');
         if (dead) return; // unmounted while chunks loaded
 
-        const TRAIT = [0x5b9bc8, 0x5aad6a, 0xe87a7a, 0xd4b85e, 0x5fb3a6];
-        const COPPER = 0xd08a63;
+        const BONE = 0xe9e5df;   // off-white — rings + most particles
+        const COPPER = 0xd08a63; // brand accent — core + particle minority
         const canvas = canvasRef.current!;
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
         renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -206,7 +206,7 @@ export function LandingPage({ authOpen, onOpenAuth, onCloseAuth }: Props) {
           const r = 1.55 + i * 0.34;
           const torus = new THREE.Mesh(
             new THREE.TorusGeometry(r, 0.008 + i * 0.002, 8, 220),
-            new THREE.MeshBasicMaterial({ color: TRAIT[i], transparent: true, opacity: 0.65 - i * 0.07 })
+            new THREE.MeshBasicMaterial({ color: BONE, transparent: true, opacity: 0.45 - i * 0.065 })
           );
           torus.rotation.x = Math.PI / 2 + (i - 2) * 0.22;
           torus.rotation.y = i * 0.5;
@@ -223,11 +223,13 @@ export function LandingPage({ authOpen, onOpenAuth, onCloseAuth }: Props) {
         const COUNT = 1500;
         const pos = new Float32Array(COUNT * 3), col = new Float32Array(COUNT * 3);
         const cTmp = new THREE.Color();
+        const cBone = new THREE.Color(BONE), cCopper = new THREE.Color(COPPER);
         for (let i = 0; i < COUNT; i++) {
           const r = 2.6 + Math.pow(Math.random(), 0.6) * 3.4;
           const th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1);
           pos[i * 3] = r * Math.sin(ph) * Math.cos(th); pos[i * 3 + 1] = r * Math.cos(ph) * 0.7; pos[i * 3 + 2] = r * Math.sin(ph) * Math.sin(th);
-          cTmp.set(TRAIT[Math.floor(Math.random() * 5)]).lerp(new THREE.Color(0xe9e5df), Math.random() * 0.35);
+          // ~85% off-white, ~15% copper — atmosphere, not decoration
+          cTmp.copy(Math.random() < 0.85 ? cBone : cCopper).multiplyScalar(0.55 + Math.random() * 0.45);
           col[i * 3] = cTmp.r; col[i * 3 + 1] = cTmp.g; col[i * 3 + 2] = cTmp.b;
         }
         const pGeo = new THREE.BufferGeometry();
@@ -312,7 +314,7 @@ export function LandingPage({ authOpen, onOpenAuth, onCloseAuth }: Props) {
           rings.forEach((r, i) => {
             r.rotation.z = t * r.userData.speed * (1 + exploded * 1.5);
             r.scale.setScalar(smooth.spread * (1 + exploded * 0.5));
-            r.material.opacity = (0.65 - i * 0.07) * (0.7 + smooth.pOp * 0.3) + exploded * 0.3;
+            r.material.opacity = (0.45 - i * 0.065) * (0.7 + smooth.pOp * 0.3) + exploded * 0.3;
           });
 
           const sh = 1 + Math.sin(t * 0.8) * 0.05 + exploded * 0.3;
@@ -384,7 +386,6 @@ export function LandingPage({ authOpen, onOpenAuth, onCloseAuth }: Props) {
 
       <nav className="l-nav" aria-label="Main">
         <button className="brand" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="The Atlas Path — back to top">
-          <svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><circle cx="20" cy="20" r="18.5" stroke="#d08a63" strokeWidth="1.3"/><path d="M20 5 C25.5 12.5,25.5 27.5,20 35 C14.5 27.5,14.5 12.5,20 5Z" stroke="#d08a63" strokeWidth="1.1"/><circle cx="20" cy="20" r="4" stroke="#e9e5df" strokeWidth="1.1"/><circle cx="20" cy="20" r="1.2" fill="#d08a63"/></svg>
           <span>The Atlas <em>Path</em></span>
         </button>
         <div className="nav-cta">

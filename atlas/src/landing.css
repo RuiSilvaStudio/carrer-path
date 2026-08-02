@@ -42,10 +42,9 @@
 .landing .l-nav::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(8,17,15,.75),transparent);pointer-events:none;opacity:0;transition:opacity .4s}
 .landing .l-nav.scrolled::before{opacity:1}
 .landing .l-nav>*{position:relative}
-.landing .brand{display:flex;align-items:center;gap:12px;text-decoration:none;background:none;border:none;cursor:pointer;padding:0}
-.landing .brand svg{width:26px;height:26px;transition:transform .6s var(--sp-snap)}
-.landing .brand:hover svg{transform:rotate(120deg)}
-.landing .brand span{font-family:var(--serif);font-size:17px;font-weight:400;color:var(--ink);letter-spacing:-.01em;white-space:nowrap}
+.landing .brand{display:flex;align-items:center;text-decoration:none;background:none;border:none;cursor:pointer;padding:0}
+.landing .brand span{font-family:var(--serif);font-size:17px;font-weight:400;color:var(--ink);letter-spacing:-.01em;white-space:nowrap;transition:color .25s}
+.landing .brand:hover span{color:var(--copper-hi)}
 .landing .brand span em{font-style:normal;color:var(--muted)}
 .landing .nav-cta{display:flex;gap:10px}
 
