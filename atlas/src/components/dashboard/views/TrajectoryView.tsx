@@ -355,9 +355,15 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
               borderRadius: 'var(--radius-button)',
             }}>
               <span style={{
+                fontFamily: 'var(--font-mono)', fontSize: '24px', fontWeight: 500,
+                color: 'var(--color-accent)',
+              }}>
+                1
+              </span>
+              <span style={{
                 fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-text-muted)',
               }}>
-                A pulse is a short weekly check-in that re-measures your Big Five traits. Over time, pulses build a trajectory showing how your personality moves.
+                more pulse needed to start your trajectory
               </span>
             </div>
           </Card>

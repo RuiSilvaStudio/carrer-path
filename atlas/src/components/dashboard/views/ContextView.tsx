@@ -392,7 +392,7 @@ function ContextTags({ demoData }: { demoData: DemoPulse[] }) {
   );
 }
 
-export function ContextView({ demoData, baseline, dataSource }: ContextViewProps) {
+export function ContextView({ demoData, baseline, pulses, dataSource }: ContextViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
@@ -540,6 +540,23 @@ export function ContextView({ demoData, baseline, dataSource }: ContextViewProps
           }}>
             As you complete weekly pulses, context heatmaps, variance, stress levels, and DIAMONDS dimensions will emerge to reveal how different situations shape your personality expression.
           </p>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            padding: '12px 16px', background: 'var(--color-surface-elevated)',
+            borderRadius: 'var(--radius-button)', marginTop: '16px', maxWidth: '400px',
+          }}>
+            <span style={{
+              fontFamily: 'var(--font-mono)', fontSize: '24px', fontWeight: 500,
+              color: 'var(--color-accent)',
+            }}>
+              {Math.max(0, 5 - pulses.length)}
+            </span>
+            <span style={{
+              fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-text-muted)',
+            }}>
+              more {5 - pulses.length === 1 ? 'pulse' : 'pulses'} needed for context patterns
+            </span>
+          </div>
           <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <InfoTooltip text="DIAMONDS is a framework for characterizing situations along 8 dimensions: Diversity, Novelty, Depth, Adversity, Deception, Sociality, Stress, and Performance." />
             <span style={{

@@ -243,7 +243,7 @@ function EmotionHeatmap({ demoData }: { demoData: DemoPulse[] }) {
   );
 }
 
-export function RhythmView({ demoData, dataSource }: RhythmViewProps) {
+export function RhythmView({ demoData, pulses, dataSource }: RhythmViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Filter out missing pulses (all 0/0/0/0/100 pattern — no response data)
@@ -264,6 +264,7 @@ export function RhythmView({ demoData, dataSource }: RhythmViewProps) {
   // USER MODE (baseline + pulses)
   // ═══════════════════════════════════════════════════════════════
   if (dataSource === 'user') {
+    const remaining = Math.max(0, 5 - (pulses?.length ?? 0));
     return (
       <div ref={containerRef}>
         <Card
@@ -284,9 +285,15 @@ export function RhythmView({ demoData, dataSource }: RhythmViewProps) {
             borderRadius: 'var(--radius-button)', maxWidth: '400px',
           }}>
             <span style={{
+              fontFamily: 'var(--font-mono)', fontSize: '24px', fontWeight: 500,
+              color: 'var(--color-accent)',
+            }}>
+              {remaining}
+            </span>
+            <span style={{
               fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-text-muted)',
             }}>
-              Complete pulses at varying hours to populate rhythm data
+              more {remaining === 1 ? 'pulse' : 'pulses'} needed for rhythm patterns
             </span>
           </div>
         </Card>
