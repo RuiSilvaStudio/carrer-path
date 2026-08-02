@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useAssessments } from '../hooks/useAssessments';
 import { Sigil } from '../components/sigil/Sigil';
+import { FeedbackPrompt } from '../components/ui/FeedbackPrompt';
 import { sigilInputFromData, dominantTraitIndex, TRAIT_CSS_VARS, EMPTY_SIGIL_INPUT } from '../lib/sigil';
 import type { AssessmentScores, BigFiveScores } from '../types';
 
@@ -180,6 +181,15 @@ export function ProfilePage() {
           Update Password
         </button>
         {pwMsg && <div style={msgStyle(pwMsg.kind)}>{pwMsg.text}</div>}
+      </section>
+
+      {/* Feedback: the one account-level NPS ask. Once ever, user-initiated context. */}
+      <section style={cardStyle}>
+        <h2 style={sectionTitleStyle}>Help shape Atlas Path</h2>
+        <p style={sectionDescStyle}>
+          One question, asked once. Your answer sets our direction.
+        </p>
+        <FeedbackPrompt surface="nps" itemId={`nps-${user.id}`} />
       </section>
     </div>
   );

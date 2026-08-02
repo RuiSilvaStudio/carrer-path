@@ -8,6 +8,7 @@ import { ContextView } from '../components/dashboard/views/ContextView';
 import { RhythmView } from '../components/dashboard/views/RhythmView';
 import { ChapterRail } from '../components/ui/ChapterRail';
 import { CopyButton } from '../components/ui/CopyButton';
+import { FeedbackPrompt } from '../components/ui/FeedbackPrompt';
 import { ScrollToTopButton } from '../components/ui/ScrollToTopButton';
 
 // ── Section metadata for table of contents ──────────────────────
@@ -1813,6 +1814,11 @@ Based on these scores:
             We treat accessibility bugs as P1.
           </p>
         </DocCard>
+
+        {/* Feedback: one quiet page-level question at the very end. */}
+        <div style={{ maxWidth: '560px', margin: '48px auto 0' }}>
+          <FeedbackPrompt surface="docs" itemId="docs-page" variant="card" label="Was this documentation useful?" />
+        </div>
       </main>
     </div>
   );

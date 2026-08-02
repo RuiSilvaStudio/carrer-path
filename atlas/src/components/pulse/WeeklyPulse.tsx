@@ -8,6 +8,7 @@ import { scorePulseResponses } from '../../lib/scoring';
 import { IPIP_TEXTS } from '../../lib/assessment-data';
 import type { Assessment, BigFiveScores } from '../../types';
 import RadarChart from '../dashboard/charts/RadarChart';
+import { FeedbackPrompt } from '../ui/FeedbackPrompt';
 import { PulseTimingCard } from './PulseTimingCard';
 import { PulseHistoryList } from './PulseHistoryList';
 
@@ -508,6 +509,11 @@ export function WeeklyPulse() {
             })}
           </div>
         )}
+
+        {/* Feedback: one quiet question per pulse, after the result is seen. */}
+        <div style={{ maxWidth: '520px', margin: '0 auto 32px', textAlign: 'left' }}>
+          <FeedbackPrompt surface="pulse" itemId={`pulse-${pulseNumber}`} variant="card" />
+        </div>
 
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
           <button

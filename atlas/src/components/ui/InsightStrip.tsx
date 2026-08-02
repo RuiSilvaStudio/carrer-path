@@ -1,12 +1,19 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { FeedbackPrompt } from './FeedbackPrompt';
 
 interface InsightStripProps {
   label?: string;
   children: ReactNode;
   style?: CSSProperties;
+  /**
+   * Optional stable id for this insight. When provided, a quiet
+   * "Was this useful?" control appears under the content. Omit to
+   * render the strip with no feedback prompt.
+   */
+  feedbackId?: string;
 }
 
-export function InsightStrip({ label = 'Insight', children, style }: InsightStripProps) {
+export function InsightStrip({ label = 'Insight', children, style, feedbackId }: InsightStripProps) {
   return (
     <div
       className="atlas-insight-strip"
@@ -42,6 +49,11 @@ export function InsightStrip({ label = 'Insight', children, style }: InsightStri
       >
         {children}
       </p>
+      {feedbackId && (
+        <div style={{ marginTop: '10px' }}>
+          <FeedbackPrompt surface="insight" itemId={feedbackId} />
+        </div>
+      )}
     </div>
   );
 }

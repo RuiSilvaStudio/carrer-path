@@ -280,7 +280,7 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
 
           {/* Right: Insight + Trait Summary stacked */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <InsightStrip label="Pattern Insight">
+            <InsightStrip label="Pattern Insight" feedbackId={`trajectory-insight-${safeScrub}`}>
               {insight}
             </InsightStrip>
 
@@ -453,7 +453,7 @@ export function TrajectoryView({ demoData, baseline, pulses, dataSource }: Traje
 
         {/* Right: Insight + Trait Summary stacked */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <InsightStrip label="Pattern Insight">
+          <InsightStrip label="Pattern Insight" feedbackId={`baseline-insight-${safeScrub}`}>
             {insight}
           </InsightStrip>
 

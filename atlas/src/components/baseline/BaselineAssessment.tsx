@@ -20,6 +20,7 @@ import {
 import type { Assessment, BigFiveScores } from '../../types';
 import { exportAssessmentCSV } from '../../lib/exportAssessment';
 import { ConfirmModal } from '../ui/ConfirmModal';
+import { FeedbackPrompt } from '../ui/FeedbackPrompt';
 import RadarChart from '../dashboard/charts/RadarChart';
 import { FacetBreakdown } from '../dashboard/charts/FacetBreakdown';
 import { InfoTooltip } from '../ui/InfoTooltip';
@@ -687,6 +688,11 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
               {scores.icar.correct}/{scores.icar.total} ({scores.icar.percent}%)
             </div>
           </div>
+        </div>
+
+        {/* Feedback: validity signal, asked only after results are seen. */}
+        <div style={{ maxWidth: '520px', margin: '0 auto 40px', textAlign: 'left' }}>
+          <FeedbackPrompt surface="baseline" itemId={user?.id ?? null} variant="card" />
         </div>
 
         <button
