@@ -17,8 +17,11 @@ import {
   type IPIPItem,
   type SD3Item,
 } from '../../lib/assessment-data';
-import type { BigFiveScores } from '../../types';
+import type { Assessment, BigFiveScores } from '../../types';
+import { exportAssessmentCSV } from '../../lib/exportAssessment';
+import { ConfirmModal } from '../ui/ConfirmModal';
 import RadarChart from '../dashboard/charts/RadarChart';
+import { FacetBreakdown } from '../dashboard/charts/FacetBreakdown';
 import { InfoTooltip } from '../ui/InfoTooltip';
 
 interface BaselineAssessmentProps {
@@ -70,7 +73,59 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
 
+  // Existing baseline (for export/delete)
+  const [existingBaseline, setExistingBaseline] = useState<Assessment | null>(null);
+  const [pendingDelete, setPendingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
   const sectionRef = useRef<HTMLDivElement>(null);
+
+  // Check if user already has a baseline saved
+  useEffect(() => {
+    async function checkExisting() {
+      if (!user?.id) return;
+      try {
+        const { data, error } = await supabase
+          .from('assessments')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('type', 'baseline')
+          .order('timestamp', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (error) throw error;
+        if (data) {
+          setExistingBaseline(data as Assessment);
+        }
+      } catch (err) {
+        console.error('Failed to check existing baseline:', err);
+      }
+    }
+    checkExisting();
+  }, [user?.id]);
+
+  const handleDeleteBaseline = async () => {
+    if (!existingBaseline?.id) return;
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      const { error } = await supabase
+        .from('assessments')
+        .delete()
+        .eq('id', existingBaseline.id);
+      if (error) throw error;
+      setExistingBaseline(null);
+      setPendingDelete(false);
+      // Clear scores so the welcome screen re-appears (no baseline anymore)
+      setScores(null);
+      setPhase('welcome');
+    } catch (err: any) {
+      setDeleteError(err?.message || 'Failed to delete baseline.');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // Load saved progress
   useEffect(() => {
@@ -299,6 +354,143 @@ export function BaselineAssessment({}: BaselineAssessmentProps) {
 
   // ── Render ──────────────────────────────────────────────────────
   if (phase === 'welcome') {
+    // If a baseline already exists, show it with export/delete actions
+    if (existingBaseline) {
+      const bScores = existingBaseline.scores;
+      const bDate = new Date(existingBaseline.timestamp);
+      return (
+        <div ref={sectionRef} className="atlas-page atlas-page-sm" style={{ padding: '60px 40px', maxWidth: '720px', margin: '0 auto' }}>
+          <div style={{
+            fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 500,
+            letterSpacing: '0.15em', textTransform: 'uppercase',
+            color: 'var(--color-accent)', opacity: 0.8, marginBottom: '16px',
+          }}>
+            Baseline Assessment
+          </div>
+          <h1 style={{
+            fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h1)', fontWeight: 400,
+            color: 'var(--color-text)', letterSpacing: '-0.02em',
+            lineHeight: 1.1, marginBottom: '12px',
+          }}>
+            Your baseline is recorded.
+          </h1>
+          <p style={{
+            fontSize: '15px', color: 'var(--color-text-muted)',
+            lineHeight: 1.6, marginBottom: '32px',
+          }}>
+            Taken on {bDate.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+            {' at '}
+            {bDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}.
+            This is the reference point all pulses compare against.
+          </p>
+
+          {/* Facet breakdown — 30 facets, grouped by trait */}
+          {bScores?.facets && (
+            <div style={{ marginBottom: '32px' }}>
+              <div style={{
+                fontFamily: 'var(--font-mono)', fontSize: '10px',
+                letterSpacing: '0.12em', textTransform: 'uppercase',
+                color: 'var(--color-text-dim)', marginBottom: '16px',
+              }}>
+                Facet breakdown · 30 dimensions
+              </div>
+              <FacetBreakdown facets={bScores.facets} bigFive={bScores.bigFive} />
+            </div>
+          )}
+
+          {/* Fallback: trait summary grid if facets are missing */}
+          {!bScores?.facets && bScores?.bigFive && (
+            <div className="atlas-score-grid" style={{
+              display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)',
+              gap: '8px', marginBottom: '32px',
+            }}>
+              {Object.entries(bScores.bigFive).map(([key, val]) => (
+                <div key={key} style={{
+                  padding: '12px 8px',
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-button)',
+                }}>
+                  <div style={{
+                    fontFamily: 'var(--font-mono)', fontSize: '9px',
+                    textTransform: 'uppercase', letterSpacing: '0.1em',
+                    color: 'var(--color-text-dim)', marginBottom: '4px',
+                  }}>
+                    {key.replace('_', ' ').slice(0, 8)}
+                  </div>
+                  <div style={{
+                    fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h3)',
+                    color: 'var(--color-text)', fontWeight: 500,
+                  }}>
+                    {val}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Export / Delete actions */}
+          <div style={{
+            display: 'flex', gap: '12px', flexWrap: 'wrap',
+            paddingTop: '24px', borderTop: '1px solid var(--color-border)',
+          }}>
+            <button
+              onClick={() => exportAssessmentCSV(existingBaseline)}
+              style={{
+                padding: '12px 24px',
+                background: 'none',
+                color: 'var(--color-text-muted)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-button)',
+                fontSize: '14px', fontWeight: 500,
+                cursor: 'pointer', fontFamily: 'var(--font-sans)',
+              }}
+            >
+              Export as CSV
+            </button>
+            <button
+              onClick={() => setPendingDelete(true)}
+              style={{
+                padding: '12px 24px',
+                background: 'none',
+                color: 'var(--color-danger)',
+                border: '1px solid var(--color-danger)',
+                borderRadius: 'var(--radius-button)',
+                fontSize: '14px', fontWeight: 500,
+                cursor: 'pointer', fontFamily: 'var(--font-sans)',
+              }}
+            >
+              Delete Baseline
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              style={{
+                padding: '12px 24px',
+                background: 'var(--color-accent)',
+                color: 'var(--color-bg)',
+                border: 'none', borderRadius: 'var(--radius-button)',
+                fontSize: '14px', fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                marginLeft: 'auto',
+              }}
+            >
+              View Dashboard →
+            </button>
+          </div>
+
+          <ConfirmModal
+            open={pendingDelete}
+            title="Delete your baseline?"
+            message="This permanently removes your baseline assessment and all its data, including Big Five scores, motivational drivers, and cognitive results. All future pulses will lose their comparison reference until you retake the baseline. This action cannot be undone and is done to comply with GDPR data-erasure rights."
+            loading={deleting}
+            error={deleteError}
+            onConfirm={handleDeleteBaseline}
+            onCancel={() => setPendingDelete(false)}
+          />
+        </div>
+      );
+    }
+
     return (
       <div ref={sectionRef} className="atlas-page atlas-page-sm" style={{ padding: '60px 40px', maxWidth: '720px', margin: '0 auto' }}>
         <div style={{

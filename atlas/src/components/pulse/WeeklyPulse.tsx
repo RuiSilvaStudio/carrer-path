@@ -6,8 +6,10 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { scorePulseResponses } from '../../lib/scoring';
 import { IPIP_TEXTS } from '../../lib/assessment-data';
-import type { BigFiveScores } from '../../types';
+import type { Assessment, BigFiveScores } from '../../types';
 import RadarChart from '../dashboard/charts/RadarChart';
+import { PulseTimingCard } from './PulseTimingCard';
+import { PulseHistoryList } from './PulseHistoryList';
 
 type Phase = 'intro' | 'items' | 'complete';
 
@@ -118,6 +120,7 @@ export function WeeklyPulse() {
   const [saveError, setSaveError] = useState('');
   const [statusError, setStatusError] = useState('');
   const [statusRetry, setStatusRetry] = useState(0);
+  const [pulseHistory, setPulseHistory] = useState<Assessment[]>([]);
 
   const itemsRef = useRef<HTMLDivElement>(null);
 
@@ -128,13 +131,15 @@ export function WeeklyPulse() {
       try {
         const { data, error } = await supabase
           .from('assessments')
-          .select('id, type, timestamp, week, phase')
+          .select('*')
           .eq('user_id', user.id)
           .order('timestamp', { ascending: true });
 
         if (error) throw error;
 
-        const pulses = (data || []).filter((a: any) => a.type === 'pulse');
+        const allAssessments = (data || []) as Assessment[];
+        const pulses = allAssessments.filter((a) => a.type === 'pulse');
+        setPulseHistory(pulses);
         const nextPulse = pulses.length + 1;
         setPulseNumber(nextPulse);
         const wk = nextPulse;
@@ -175,6 +180,13 @@ export function WeeklyPulse() {
     }
     checkStatus();
   }, [user?.id, statusRetry]);
+
+  // Hard-delete a pulse (GDPR erasure) and refresh local history
+  const handleDeletePulse = useCallback(async (id: number) => {
+    const { error } = await supabase.from('assessments').delete().eq('id', id);
+    if (error) throw error;
+    setPulseHistory((prev) => prev.filter((p) => p.id !== id));
+  }, []);
 
   const pulseItems = generatePulseItems(pulseNumber);
   const allItemsAnswered = pulseItems.every((item) => responses[`ipip_${item.ipipId}`] !== undefined);
@@ -239,6 +251,16 @@ export function WeeklyPulse() {
           note: note.trim() || null,
         });
         if (error) throw error;
+
+        // Refresh local history so the new pulse appears in timing card + history list
+        const { data: refreshed } = await supabase
+          .from('assessments')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('timestamp', { ascending: true });
+        if (refreshed) {
+          setPulseHistory((refreshed as Assessment[]).filter((a) => a.type === 'pulse'));
+        }
       }
 
       setPhase('complete');
@@ -252,125 +274,139 @@ export function WeeklyPulse() {
   // ── Intro screen ─────────────────────────────────────────────────
   if (phase === 'intro') {
     return (
-      <div ref={itemsRef} className="atlas-page" style={{ padding: '60px 40px', maxWidth: '640px', margin: '0 auto' }}>
-        <div style={{
-          fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 500,
-          letterSpacing: '0.15em', textTransform: 'uppercase',
-          color: 'var(--color-accent)', opacity: 0.8, marginBottom: '16px',
-        }}>
-          Weekly Pulse
-        </div>
-        <h1 style={{
-          fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h1)', fontWeight: 400,
-          color: 'var(--color-text)', letterSpacing: '-0.02em',
-          lineHeight: 1.1, marginBottom: '16px',
-        }}>
-          How are you, right now?
-        </h1>
-        <p style={{
-          fontSize: '15px', color: 'var(--color-text-muted)',
-          lineHeight: 1.7, marginBottom: '32px', maxWidth: '520px',
-        }}>
-          A quick check-in that captures your current state — not who you are in general,
-          but how you feel right now. This adds a new point to your trajectory.
-        </p>
+      <div ref={itemsRef} className="atlas-page" style={{ padding: '60px 40px', maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Two-column: pulse flow (left) + timing card (right) */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '40px', marginBottom: '40px' }}>
+          {/* Left: pulse flow */}
+          <div style={{ maxWidth: '560px' }}>
+            <div style={{
+              fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 500,
+              letterSpacing: '0.15em', textTransform: 'uppercase',
+              color: 'var(--color-accent)', opacity: 0.8, marginBottom: '16px',
+            }}>
+              Weekly Pulse
+            </div>
+            <h1 style={{
+              fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h1)', fontWeight: 400,
+              color: 'var(--color-text)', letterSpacing: '-0.02em',
+              lineHeight: 1.1, marginBottom: '16px',
+            }}>
+              How are you, right now?
+            </h1>
+            <p style={{
+              fontSize: '15px', color: 'var(--color-text-muted)',
+              lineHeight: 1.7, marginBottom: '32px', maxWidth: '480px',
+            }}>
+              A quick check-in that captures your current state — not who you are in general,
+              but how you feel right now. This adds a new point to your trajectory.
+            </p>
 
-        {/* Pulse meta */}
-        <div style={{
-          padding: '18px 22px', background: 'var(--color-surface)',
-          border: '1px solid var(--color-border)', borderLeft: '2px solid var(--color-accent)',
-          borderRadius: 'var(--radius-element)', marginBottom: '32px',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <span style={{
-              fontFamily: 'var(--font-mono)', fontSize: '10px',
-              letterSpacing: '0.12em', textTransform: 'uppercase',
-              color: 'var(--color-text-dim)',
-            }}>Pulse number</span>
-            <span style={{
-              fontFamily: 'var(--font-serif)', fontSize: '15px', color: 'var(--color-text)',
-            }}>{pulseNumber}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <span style={{
-              fontFamily: 'var(--font-mono)', fontSize: '10px',
-              letterSpacing: '0.12em', textTransform: 'uppercase',
-              color: 'var(--color-text-dim)',
-            }}>Week</span>
-            <span style={{
-              fontFamily: 'var(--font-serif)', fontSize: '15px', color: 'var(--color-text)',
-            }}>{weekNumber}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{
-              fontFamily: 'var(--font-mono)', fontSize: '10px',
-              letterSpacing: '0.12em', textTransform: 'uppercase',
-              color: 'var(--color-text-dim)',
-            }}>Phase</span>
-            <span style={{
-              fontFamily: 'var(--font-serif)', fontSize: '15px', color: 'var(--color-text)',
-            }}>{phaseLabel}</span>
-          </div>
-        </div>
+            {/* Pulse meta */}
+            <div style={{
+              padding: '18px 22px', background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)', borderLeft: '2px solid var(--color-accent)',
+              borderRadius: 'var(--radius-element)', marginBottom: '32px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <span style={{
+                  fontFamily: 'var(--font-mono)', fontSize: '10px',
+                  letterSpacing: '0.12em', textTransform: 'uppercase',
+                  color: 'var(--color-text-dim)',
+                }}>Pulse number</span>
+                <span style={{
+                  fontFamily: 'var(--font-serif)', fontSize: '15px', color: 'var(--color-text)',
+                }}>{pulseNumber}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <span style={{
+                  fontFamily: 'var(--font-mono)', fontSize: '10px',
+                  letterSpacing: '0.12em', textTransform: 'uppercase',
+                  color: 'var(--color-text-dim)',
+                }}>Week</span>
+                <span style={{
+                  fontFamily: 'var(--font-serif)', fontSize: '15px', color: 'var(--color-text)',
+                }}>{weekNumber}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{
+                  fontFamily: 'var(--font-mono)', fontSize: '10px',
+                  letterSpacing: '0.12em', textTransform: 'uppercase',
+                  color: 'var(--color-text-dim)',
+                }}>Phase</span>
+                <span style={{
+                  fontFamily: 'var(--font-serif)', fontSize: '15px', color: 'var(--color-text)',
+                }}>{phaseLabel}</span>
+              </div>
+            </div>
 
-        {alreadyCompleted && (
-          <div style={{
-            padding: '14px 18px', background: 'var(--color-surface)',
-            border: '1px solid var(--color-warning)', borderRadius: 'var(--radius-element)',
-            marginBottom: '24px', fontSize: '13px', color: 'var(--color-warning)',
-          }}>
-            You've already completed a pulse this period. You can submit another, but{' '}
-            {phaseLabel === 'Loading' ? 'weekly' : 'bi-weekly'} spacing is recommended for best results.
-          </div>
-        )}
+            {alreadyCompleted && (
+              <div style={{
+                padding: '14px 18px', background: 'var(--color-surface)',
+                border: '1px solid var(--color-warning)', borderRadius: 'var(--radius-element)',
+                marginBottom: '24px', fontSize: '13px', color: 'var(--color-warning)',
+              }}>
+                You've already completed a pulse this period. You can submit another, but{' '}
+                {phaseLabel === 'Loading' ? 'weekly' : 'bi-weekly'} spacing is recommended for best results.
+              </div>
+            )}
 
-        <div style={{ marginBottom: '32px' }}>
-          <div style={{
-            fontFamily: 'var(--font-mono)', fontSize: '10px',
-            letterSpacing: '0.12em', textTransform: 'uppercase',
-            color: 'var(--color-text-dim)', marginBottom: '8px',
-          }}>
-            This pulse contains
-          </div>
-          <div style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-            {phaseLabel === 'Loading' ? '10' : '5'} personality items · 1 context question · 1 emotion check · optional note
-          </div>
-        </div>
+            <div style={{ marginBottom: '32px' }}>
+              <div style={{
+                fontFamily: 'var(--font-mono)', fontSize: '10px',
+                letterSpacing: '0.12em', textTransform: 'uppercase',
+                color: 'var(--color-text-dim)', marginBottom: '8px',
+              }}>
+                This pulse contains
+              </div>
+              <div style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+                {phaseLabel === 'Loading' ? '10' : '5'} personality items · 1 context question · 1 emotion check · optional note
+              </div>
+            </div>
 
-        {statusError && (
-          <div style={{
-            padding: '14px 18px', background: 'var(--color-surface)',
-            border: '1px solid var(--color-danger)', borderRadius: 'var(--radius-element)',
-            marginBottom: '24px', fontSize: '13px', color: 'var(--color-danger)',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px',
-          }}>
-            <span>{statusError}</span>
+            {statusError && (
+              <div style={{
+                padding: '14px 18px', background: 'var(--color-surface)',
+                border: '1px solid var(--color-danger)', borderRadius: 'var(--radius-element)',
+                marginBottom: '24px', fontSize: '13px', color: 'var(--color-danger)',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px',
+              }}>
+                <span>{statusError}</span>
+                <button
+                  onClick={() => { setStatusError(''); setStatusRetry(r => r + 1); }}
+                  style={{
+                    padding: '6px 14px', background: 'none', border: '1px solid var(--color-danger)',
+                    borderRadius: 'var(--radius-element)', color: 'var(--color-danger)', fontSize: '12px',
+                    cursor: 'pointer', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap',
+                  }}
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
             <button
-              onClick={() => { setStatusError(''); setStatusRetry(r => r + 1); }}
+              onClick={() => setPhase('items')}
               style={{
-                padding: '6px 14px', background: 'none', border: '1px solid var(--color-danger)',
-                borderRadius: 'var(--radius-element)', color: 'var(--color-danger)', fontSize: '12px',
-                cursor: 'pointer', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap',
+                padding: '14px 32px',
+                background: 'var(--color-accent)',
+                color: 'var(--color-bg)',
+                border: 'none', borderRadius: 'var(--radius-button)',
+                fontSize: '15px', fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'var(--font-sans)',
               }}
             >
-              Retry
+              Begin Pulse →
             </button>
           </div>
-        )}
 
-        <button
-          onClick={() => setPhase('items')}
-          style={{
-            padding: '14px 32px',
-            background: 'var(--color-accent)',
-            color: 'var(--color-bg)',
-            border: 'none', borderRadius: 'var(--radius-button)',
-            fontSize: '15px', fontWeight: 600,
-            cursor: 'pointer', fontFamily: 'var(--font-sans)',
-          }}
-        >
-          Begin Pulse →
-        </button>
+          {/* Right: timing card */}
+          <div>
+            <PulseTimingCard pulses={pulseHistory} />
+          </div>
+        </div>
+
+        {/* History list — full width below */}
+        <PulseHistoryList pulses={pulseHistory} onDelete={handleDeletePulse} />
       </div>
     );
   }
