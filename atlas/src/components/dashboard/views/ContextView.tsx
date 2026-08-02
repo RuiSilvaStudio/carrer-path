@@ -370,7 +370,10 @@ function ContextTags({ demoData }: { demoData: DemoPulse[] }) {
     const counts: Record<string, number> = {};
     demoData.forEach(d => {
       const ctxs = d.contexts ?? d.raw_contexts ?? [];
-      ctxs.forEach(c => { counts[c] = (counts[c] || 0) + 1; });
+      ctxs.forEach(c => {
+        const key = c.charAt(0).toUpperCase() + c.slice(1).toLowerCase();
+        counts[key] = (counts[key] || 0) + 1;
+      });
     });
     return Object.entries(counts).sort((a, b) => b[1] - a[1]);
   }, [demoData]);

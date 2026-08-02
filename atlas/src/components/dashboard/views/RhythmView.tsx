@@ -185,8 +185,9 @@ function EmotionHeatmap({ demoData }: { demoData: DemoPulse[] }) {
 
   const cellSize = 16;
   const labelW = 90;
+  const topPad = 24;
   const svgW = labelW + 24 * cellSize;
-  const svgH = 28 + emotions.length * cellSize;
+  const svgH = topPad + 8 + emotions.length * cellSize;
 
   return (
     <div style={{ overflowX: 'auto' }}>
@@ -196,7 +197,7 @@ function EmotionHeatmap({ demoData }: { demoData: DemoPulse[] }) {
           {Array.from({ length: 24 }, (_, h) => h).map(h => (
             <text key={h}
               x={90 + h * cellSize + cellSize / 2}
-              y={12}
+              y={16}
               textAnchor="middle"
               fontSize={8}
               fill="var(--color-text-dim)"
@@ -211,7 +212,7 @@ function EmotionHeatmap({ demoData }: { demoData: DemoPulse[] }) {
             <g key={emotion}>
               <text
                 x={36}
-                y={20 + ri * cellSize + cellSize / 2 + 3}
+                y={topPad + ri * cellSize + cellSize / 2 + 3}
                 textAnchor="end"
                 fontSize={9}
                 fill="var(--color-text-muted)"
@@ -227,7 +228,7 @@ function EmotionHeatmap({ demoData }: { demoData: DemoPulse[] }) {
                     key={h}
                     data-emo-cell
                     x={40 + h * cellSize}
-                    y={20 + ri * cellSize}
+                    y={topPad + ri * cellSize}
                     width={cellSize - 1}
                     height={cellSize - 1}
                     fill="var(--color-accent)"
