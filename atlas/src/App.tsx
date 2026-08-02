@@ -20,11 +20,11 @@ export default function App() {
     <Routes>
       {/* Existing Atlas Path remains in its original provider and UI shell. */}
       <Route element={<LegacyAppShell />}>
-        <Route path="/docs" element={<LegacyDocsLayout />} />
         <Route element={<LegacyProtectedLayout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/baseline" element={<BaselinePage />} />
           <Route path="/pulse" element={<PulsePage />} />
+          <Route path="/docs" element={<DocsPage />} />
           <Route path="/cockpit" element={<CockpitPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/sigil-lab" element={<SigilLabPage />} />
@@ -50,10 +50,6 @@ function LegacyAppShell() {
       <Outlet />
     </DashboardProvider>
   );
-}
-
-function LegacyDocsLayout() {
-  return <div style={{ minHeight: '100dvh' }}><Nav /><DocsPage /></div>;
 }
 
 function CareerProtectedLayout() {
