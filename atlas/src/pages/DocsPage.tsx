@@ -8,6 +8,7 @@ import { ContextView } from '../components/dashboard/views/ContextView';
 import { RhythmView } from '../components/dashboard/views/RhythmView';
 import { ChapterRail } from '../components/ui/ChapterRail';
 import { CopyButton } from '../components/ui/CopyButton';
+import { ScrollToTopButton } from '../components/ui/ScrollToTopButton';
 
 // ── Section metadata for table of contents ──────────────────────
 interface Section {
@@ -425,6 +426,7 @@ export function DocsPage() {
       }}
     >
       <ChapterRail sections={SECTIONS} />
+      <ScrollToTopButton />
       {/* ── Header ──────────────────────────────────────────── */}
       <div
         className="atlas-page"
@@ -1714,7 +1716,7 @@ Based on these scores:
         </DocCard>
 
         {/* 12 — Future */}
-        <DocCard id="future" num="12" title="Future: Smoothing & Aggregation">
+        <DocCard id="future" num="12" title="Future: Smoothing & Aggregation" nextSection={{ id: 'accessibility', num: '13', title: 'Accessibility Statement' }}>
           <p style={{ marginBottom: '16px' }}>
             ESM time-series data is inherently noisy — a single bad day can create a spike that
             distorts the trajectory. Research shows that <strong style={{ color: 'var(--color-text)'

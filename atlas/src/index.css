@@ -299,3 +299,14 @@ svg, img { max-width: 100%; height: auto; }
     display: flex !important;
   }
 }
+
+/* ── Mobile scroll-to-top button ────────────────────────── */
+/* Hidden on desktop (≥1024px); the ChapterRail Home icon covers that case. */
+.atlas-scroll-top {
+  display: none !important;
+}
+@media (max-width: 1023px) {
+  .atlas-scroll-top {
+    display: flex !important;
+  }
+}

@@ -2,10 +2,10 @@
  * ChapterRail — sticky right-edge vertical navigation rail for /docs.
  * Modelled on the chapter-rail pattern (community-org "About" pages, FT
  * long-reads, Stripe docs). One dot per section; active dot is filled
- * in the accent colour with a floating label; click smooth-scrolls.
+ * in the accent colour; click smooth-scrolls. A Home icon at the top
+ * scrolls back to the top of the page.
  *
- * Hidden on viewports <1024px — the existing inline Contents grid
- * covers the mobile case.
+ * Hidden on viewports <1024px — the mobile ScrollToTopButton covers that case.
  */
 import { useState, useEffect, useRef } from 'react';
 
@@ -58,6 +58,12 @@ export function ChapterRail({ sections }: ChapterRailProps) {
     }
   };
 
+  const handleHome = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    history.replaceState(null, '', '#overview');
+  };
+
   return (
     <nav
       aria-label="Documentation chapter navigation"
@@ -69,7 +75,6 @@ export function ChapterRail({ sections }: ChapterRailProps) {
         top: '50%',
         transform: 'translateY(-50%)',
         zIndex: 50,
-        display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-end',
         gap: '10px',
@@ -87,6 +92,34 @@ export function ChapterRail({ sections }: ChapterRailProps) {
         e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)';
       }}
     >
+      {/* Home — scrolls to top of the page, in its own bubble */}
+      <a
+        href="#overview"
+        onClick={handleHome}
+        aria-label="Back to top"
+        title="Back to top"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '4px',
+          borderRadius: '50%',
+          cursor: 'pointer',
+          textDecoration: 'none',
+          color: 'var(--color-text-dim)',
+          transition: 'color 0.2s ease',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-dim)'; }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 11l9-8 9 8" />
+          <path d="M5 10v10h14V10" />
+        </svg>
+      </a>
+      {/* Divider between Home and section dots */}
+      <div style={{ width: '16px', height: '1px', background: 'var(--color-border)', margin: '2px 0' }} />
       {sections.map((s) => {
         const isActive = active === s.id;
         const isHovered = hoveredId === s.id;
@@ -127,7 +160,7 @@ export function ChapterRail({ sections }: ChapterRailProps) {
                 flexShrink: 0,
               }}
             />
-            {(isHovered || isActive) && (
+            {isHovered && (
               <span
                 role="tooltip"
                 style={{
