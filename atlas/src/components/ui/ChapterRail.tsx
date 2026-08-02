@@ -1,11 +1,19 @@
 /**
- * ChapterRail — sticky right-edge vertical navigation rail for /docs.
- * Modelled on the chapter-rail pattern (community-org "About" pages, FT
- * long-reads, Stripe docs). One dot per section; active dot is filled
- * in the accent colour; click smooth-scrolls. A Home icon at the top
- * scrolls back to the top of the page.
+ * ChapterRail — floating-bar table of contents for /docs.
  *
- * Hidden on viewports <1024px — the mobile ScrollToTopButton covers that case.
+ * Right-edge vertical stack of horizontal bars (one per section). The
+ * active bar is wider and accent-coloured. Hovering (or pressing on
+ * touch) opens a floating panel listing all sections with numbers and
+ * labels — click an item to smooth-scroll. A Home icon at the top
+ * scrolls back to the page top.
+ *
+ * Pattern adapted from the HeroUI Pro "Floating TOC" component:
+ *   - Bars are visual indicators + the hover/press trigger
+ *   - Panel contains the actual navigation items
+ *   - open/close with hover delay (200ms open, 300ms close)
+ *
+ * Hidden on viewports <1024px via CSS (.atlas-chapter-rail).
+ * The mobile ScrollToTopButton covers the mobile case.
  */
 import { useState, useEffect, useRef } from 'react';
 
@@ -13,6 +21,7 @@ export interface RailSection {
   id: string;
   num: string;
   title: string;
+  label: string;
 }
 
 interface ChapterRailProps {
@@ -21,8 +30,10 @@ interface ChapterRailProps {
 
 export function ChapterRail({ sections }: ChapterRailProps) {
   const [active, setActive] = useState<string>(sections[0]?.id ?? '');
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const openTimer = useRef<number | null>(null);
+  const closeTimer = useRef<number | null>(null);
 
   useEffect(() => {
     observerRef.current?.disconnect();
@@ -33,7 +44,6 @@ export function ChapterRail({ sections }: ChapterRailProps) {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        // Pick the entry closest to the top of the viewport that is intersecting
         const visible = entries
           .filter((e) => e.isIntersecting)
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
@@ -48,6 +58,35 @@ export function ChapterRail({ sections }: ChapterRailProps) {
     return () => observer.disconnect();
   }, [sections]);
 
+  // ── Open/close with hover delays ────────────────────────────
+  const scheduleOpen = () => {
+    if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; }
+    if (!open && !openTimer.current) {
+      openTimer.current = window.setTimeout(() => {
+        setOpen(true);
+        openTimer.current = null;
+      }, 200);
+    }
+  };
+
+  const scheduleClose = () => {
+    if (openTimer.current) { clearTimeout(openTimer.current); openTimer.current = null; }
+    if (open && !closeTimer.current) {
+      closeTimer.current = window.setTimeout(() => {
+        setOpen(false);
+        closeTimer.current = null;
+      }, 300);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (openTimer.current) clearTimeout(openTimer.current);
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+    };
+  }, []);
+
+  // ── Navigation ─────────────────────────────────────────────
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
     const el = document.getElementById(id);
@@ -56,6 +95,7 @@ export function ChapterRail({ sections }: ChapterRailProps) {
       history.replaceState(null, '', `#${id}`);
       setActive(id);
     }
+    setOpen(false);
   };
 
   const handleHome = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -65,129 +105,171 @@ export function ChapterRail({ sections }: ChapterRailProps) {
   };
 
   return (
-    <nav
-      aria-label="Documentation chapter navigation"
-      data-chapter-rail
+    <div
       className="atlas-chapter-rail"
+      data-chapter-rail
       style={{
         position: 'fixed',
         right: '24px',
         top: '50%',
         transform: 'translateY(-50%)',
         zIndex: 50,
-        flexDirection: 'column',
-        alignItems: 'flex-end',
-        gap: '10px',
-        padding: '14px 8px',
-        background: 'var(--color-surface)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 'var(--radius-pill)',
-        boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-        transition: 'box-shadow 0.2s',
       }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = '0 6px 24px rgba(0,0,0,0.14)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)';
-      }}
+      onMouseEnter={scheduleOpen}
+      onMouseLeave={scheduleClose}
     >
-      {/* Home — scrolls to top of the page, in its own bubble */}
-      <a
-        href="#overview"
-        onClick={handleHome}
-        aria-label="Back to top"
-        title="Back to top"
+      {/* ── Rail (bars + home icon) ───────────────────────────── */}
+      <div
         style={{
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '4px',
-          borderRadius: '50%',
-          cursor: 'pointer',
-          textDecoration: 'none',
-          color: 'var(--color-text-dim)',
-          transition: 'color 0.2s ease',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: '8px',
+          padding: '14px 10px',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-pill)',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+          transition: 'box-shadow 0.2s',
         }}
-        onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-dim)'; }}
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 11l9-8 9 8" />
-          <path d="M5 10v10h14V10" />
-        </svg>
-      </a>
-      {/* Divider between Home and section dots */}
-      <div style={{ width: '16px', height: '1px', background: 'var(--color-border)', margin: '2px 0' }} />
-      {sections.map((s) => {
-        const isActive = active === s.id;
-        const isHovered = hoveredId === s.id;
-        return (
-          <a
-            key={s.id}
-            href={`#${s.id}`}
-            onClick={(e) => handleClick(e, s.id)}
-            onMouseEnter={() => setHoveredId(s.id)}
-            onMouseLeave={() => setHoveredId(null)}
-            onFocus={() => setHoveredId(s.id)}
-            onBlur={() => setHoveredId(null)}
-            aria-label={`Jump to ${s.num} — ${s.title}`}
-            aria-current={isActive ? 'true' : undefined}
-            data-active={isActive ? 'true' : 'false'}
+        {/* Home — scrolls to top, own bubble */}
+        <a
+          href="#overview"
+          onClick={handleHome}
+          aria-label="Back to top"
+          title="Back to top"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '4px',
+            borderRadius: '50%',
+            cursor: 'pointer',
+            textDecoration: 'none',
+            color: 'var(--color-text-dim)',
+            transition: 'color 0.2s ease',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--color-accent)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-dim)'; }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 11l9-8 9 8" />
+            <path d="M5 10v10h14V10" />
+          </svg>
+        </a>
+
+        {/* Divider */}
+        <div style={{ width: '20px', height: '1px', background: 'var(--color-border)' }} />
+
+        {/* Bars — visual indicators for each section */}
+        <div
+          aria-hidden="true"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            gap: '8px',
+            padding: '2px 0',
+          }}
+        >
+          {sections.map((s) => {
+            const isActive = active === s.id;
+            return (
+              <span
+                key={s.id}
+                style={{
+                  display: 'block',
+                  width: isActive ? '24px' : '16px',
+                  height: '2px',
+                  borderRadius: '1px',
+                  background: isActive ? 'var(--color-accent)' : 'var(--color-text-dim)',
+                  transition: 'width 0.2s ease, background 0.2s ease',
+                }}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Floating panel (appears on hover) ─────────────────── */}
+      {open && (
+        <div
+          role="navigation"
+          aria-label="Table of contents"
+          style={{
+            position: 'absolute',
+            right: 'calc(100% + 12px)',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-card)',
+            padding: '16px 20px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+            minWidth: '220px',
+            animation: 'atlas-toc-enter 0.15s ease',
+          }}
+        >
+          <p
             style={{
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              gap: '8px',
-              padding: '4px',
-              borderRadius: '50%',
-              cursor: 'pointer',
-              textDecoration: 'none',
-              outline: 'none',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '10px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.12em',
+              color: 'var(--color-text-dim)',
+              marginBottom: '12px',
             }}
           >
-            <span
-              aria-hidden="true"
-              style={{
-                display: 'inline-block',
-                width: isActive ? '12px' : '8px',
-                height: isActive ? '12px' : '8px',
-                borderRadius: '50%',
-                background: isActive ? 'var(--color-accent)' : 'var(--color-text-dim)',
-                transition: 'all 0.2s ease',
-                flexShrink: 0,
-              }}
-            />
-            {isHovered && (
-              <span
-                role="tooltip"
-                style={{
-                  position: 'absolute',
-                  right: 'calc(100% + 12px)',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  padding: '6px 12px',
-                  background: 'var(--color-surface-elevated)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 'var(--radius-button)',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '11px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  color: isActive ? 'var(--color-accent)' : 'var(--color-text-muted)',
-                  whiteSpace: 'nowrap',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                  pointerEvents: 'none',
-                }}
-              >
-                {s.num} — {s.title}
-              </span>
-            )}
-          </a>
-        );
-      })}
-    </nav>
+            Contents
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            {sections.map((s) => {
+              const isActive = active === s.id;
+              return (
+                <a
+                  key={s.id}
+                  href={`#${s.id}`}
+                  onClick={(e) => handleClick(e, s.id)}
+                  aria-current={isActive ? 'true' : undefined}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '6px 8px',
+                    borderRadius: 'var(--radius-element)',
+                    textDecoration: 'none',
+                    color: isActive ? 'var(--color-accent)' : 'var(--color-text-muted)',
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: '13px',
+                    transition: 'background 0.15s ease, color 0.15s ease',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) e.currentTarget.style.background = 'var(--color-surface-elevated)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '10px',
+                      color: 'var(--color-text-dim)',
+                      minWidth: '18px',
+                    }}
+                  >
+                    {s.num}
+                  </span>
+                  {s.label}
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

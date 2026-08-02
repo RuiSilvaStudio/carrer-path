@@ -310,3 +310,9 @@ svg, img { max-width: 100%; height: auto; }
     display: flex !important;
   }
 }
+
+/* ── Chapter rail floating-panel entrance animation ─────── */
+@keyframes atlas-toc-enter {
+  from { opacity: 0; transform: translateY(-50%) translateX(8px); }
+  to { opacity: 1; transform: translateY(-50%) translateX(0); }
+}

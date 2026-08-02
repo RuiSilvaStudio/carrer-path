@@ -15,22 +15,23 @@ interface Section {
   id: string;
   num: string;
   title: string;
+  label: string; // short 1-2 word label for the ChapterRail
 }
 
 const SECTIONS: Section[] = [
-  { id: 'overview', num: '01', title: 'What is the Atlas Path?' },
-  { id: 'science', num: '02', title: 'The Science' },
-  { id: 'instruments', num: '03', title: 'Assessment Instruments' },
-  { id: 'scoring', num: '04', title: 'Scoring Methodology' },
-  { id: 'pulse-design', num: '05', title: 'Pulse Design' },
-  { id: 'visualization', num: '06', title: 'Data Visualization' },
-  { id: 'sigil', num: '07', title: 'The Sigil' },
-  { id: 'career-direction', num: '08', title: 'Career Direction' },
-  { id: 'llm-use', num: '09', title: 'Using Your Data with LLMs' },
-  { id: 'data-sources', num: '10', title: 'Data Sources' },
-  { id: 'privacy', num: '11', title: 'Privacy & Ethics' },
-  { id: 'future', num: '12', title: 'Future: Smoothing & Aggregation' },
-  { id: 'accessibility', num: '13', title: 'Accessibility' },
+  { id: 'overview', num: '01', title: 'What is the Atlas Path?', label: 'Overview' },
+  { id: 'science', num: '02', title: 'The Science', label: 'Science' },
+  { id: 'instruments', num: '03', title: 'Assessment Instruments', label: 'Instruments' },
+  { id: 'scoring', num: '04', title: 'Scoring Methodology', label: 'Scoring' },
+  { id: 'pulse-design', num: '05', title: 'Pulse Design', label: 'Pulses' },
+  { id: 'visualization', num: '06', title: 'Data Visualization', label: 'Charts' },
+  { id: 'sigil', num: '07', title: 'The Sigil', label: 'Sigil' },
+  { id: 'career-direction', num: '08', title: 'Career Direction', label: 'Direction' },
+  { id: 'llm-use', num: '09', title: 'Using Your Data with LLMs', label: 'LLM Use' },
+  { id: 'data-sources', num: '10', title: 'Data Sources', label: 'Sources' },
+  { id: 'privacy', num: '11', title: 'Privacy & Ethics', label: 'Privacy' },
+  { id: 'future', num: '12', title: 'Future: Smoothing & Aggregation', label: 'Future' },
+  { id: 'accessibility', num: '13', title: 'Accessibility', label: 'Access' },
 ];
 
 // ── Hover-share anchor link ─────────────────────────────────────
