@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
-import { AuthGate } from './components/AuthGate';
+import { LandingPage } from './components/LandingPage';
+import { LandingBackdrop } from './components/LandingBackdrop';
+import type { AuthMode } from './components/AuthModal';
 import { Nav } from './components/Nav';
 import { DashboardProvider } from './state/DashboardContext';
 import { DashboardPage } from './pages/DashboardPage';
@@ -55,13 +58,14 @@ function LegacyAppShell() {
 function CareerProtectedLayout() {
   const { user, loading } = useAuth();
   if (loading) return <div style={{ padding: '40px', color: 'var(--color-text-muted)' }}>Loading…</div>;
-  if (!user) return <AuthGate><div /></AuthGate>;
+  if (!user) return <LandingBackdrop />;
   return <div style={{ minHeight: '100vh' }}><Nav /><Outlet /></div>;
 }
 
 function LegacyProtectedLayout() {
   const { user, loading } = useAuth();
+  const [authOpen, setAuthOpen] = useState<AuthMode | null>(null);
   if (loading) return <div style={{ padding: '40px', color: 'var(--color-text-muted)' }}>Loading…</div>;
-  if (!user) return <AuthGate><div /></AuthGate>;
+  if (!user) return <LandingPage authOpen={authOpen} onOpenAuth={setAuthOpen} onCloseAuth={() => setAuthOpen(null)} />;
   return <div style={{ minHeight: '100vh' }}><Nav /><Outlet /><PulseReminder /></div>;
 }

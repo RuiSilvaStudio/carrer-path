@@ -17,6 +17,8 @@ import {
   type StageStatus,
   type WizardStep,
 } from '../lib/careerDirection';
+import { track } from '../lib/analytics';
+import { supabase } from '../lib/supabase';
 import { WorkValuesAssessment } from '../components/career/WorkValuesAssessment';
 import { ProfileBuilder } from '../components/career/ProfileBuilder';
 import { VALUE_LABELS, type WorkValuesResult } from '../lib/work-values-data';
@@ -183,9 +185,14 @@ function ProfileStep({ data, setData, saving, move, touchProfile }: PageProps & 
     setData(updated);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSavedSnapshot(currentSnapshot);
-    move(data, 'Profile saved.');
+    await move(data, 'Profile saved.');
+    void track('profile_saved', {
+      has_roles: data.profile.roles.length > 0,
+      has_summary: !!data.profile.careerSummary,
+      has_work_values: !!data.preferences.workValues,
+    });
   };
 
   return (
@@ -257,6 +264,7 @@ function ExplorerStep({ data, setData, saving, save, newDirection, setNewDirecti
     };
     // Save and navigate to Brief
     await save(stage(updated, 'brief'), 'Direction chosen. Building brief.');
+    void track('direction_chosen', { direction_id: directionId });
   };
 
   return (
@@ -325,7 +333,6 @@ function DirectionsContent({ data, setData, saving, newDirection, setNewDirectio
 
   const SUGGEST_URL = 'https://ncwtmagvjtpqnwroyuha.supabase.co/functions/v1/suggest-direction';
   const ENRICH_URL = 'https://ncwtmagvjtpqnwroyuha.supabase.co/functions/v1/enrich-direction';
-  const ANON_KEY = 'sb_publishable_MtH4laIgqpmwU1a5XpWmPg_-eOrrSxE';
 
   const hasProfile = data.profile.roles.length > 0;
   const savedSuggestions = data.savedSuggestions ?? [];
@@ -353,9 +360,15 @@ function DirectionsContent({ data, setData, saving, newDirection, setNewDirectio
     setSuggestionError(null);
     setHasFetched(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not signed in');
+
       const response = await fetch(SUGGEST_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ANON_KEY}` },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({ profile: data.profile, workValues: data.preferences.workValues ?? null }),
       });
       if (!response.ok) {
@@ -366,6 +379,7 @@ function DirectionsContent({ data, setData, saving, newDirection, setNewDirectio
       const newSuggestions = result.suggestions || [];
       setData(prev => ({ ...prev, savedSuggestions: newSuggestions }));
       setDismissed(new Set());
+      void track('suggestions_fetched', { count: newSuggestions.length });
     } catch (err: any) {
       setSuggestionError(err.message || 'Could not load suggestions.');
     } finally {
@@ -380,9 +394,15 @@ function DirectionsContent({ data, setData, saving, newDirection, setNewDirectio
     if (!direction || !hasProfile) return;
     setEnrichingIds(prev => new Set(prev).add(directionId));
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
       const response = await fetch(ENRICH_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ANON_KEY}` },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({ title: direction.title, profile: data.profile, workValues: data.preferences.workValues ?? null }),
       });
       if (!response.ok) return;
@@ -397,6 +417,7 @@ function DirectionsContent({ data, setData, saving, newDirection, setNewDirectio
           nextTest: enrichment.suggestedTest || d.nextTest,
         } : d),
       }));
+      void track('direction_enriched', { direction_id: directionId });
     } catch { /* silent */ }
     finally {
       setEnrichingIds(prev => { const n = new Set(prev); n.delete(directionId); return n; });
@@ -410,6 +431,7 @@ function DirectionsContent({ data, setData, saving, newDirection, setNewDirectio
     const newDir = directionFromTitle(cleaned);
     setData(prev => ({ ...prev, directions: [...prev.directions, newDir] }));
     setNewDirection('');
+    void track('direction_added', { title: cleaned, total_directions: data.directions.length + 1 });
     // Auto-enrich on add
     if (hasProfile) {
       // Use setTimeout to let state settle before enriching
@@ -931,7 +953,6 @@ function MarketActionStep({ data, setData, saving, save }: StepProps & { save: (
   const [loadingActions, setLoadingActions] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasFetched, setHasFetched] = useState(false);
-  const ANON_KEY = 'sb_publishable_MtH4laIgqpmwU1a5XpWmPg_-eOrrSxE';
   const MARKET_URL = 'https://ncwtmagvjtpqnwroyuha.supabase.co/functions/v1/market-insight';
   const ACTIONS_URL = 'https://ncwtmagvjtpqnwroyuha.supabase.co/functions/v1/suggest-actions';
 
@@ -959,15 +980,23 @@ function MarketActionStep({ data, setData, saving, save }: StepProps & { save: (
     setLoadingMarket(true);
     setLoadingActions(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not signed in');
+
+      const authHeaders = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      };
+
       const [marketRes, actionsRes] = await Promise.all([
         fetch(MARKET_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ANON_KEY}` },
+          headers: authHeaders,
           body: JSON.stringify({ direction: direction.title, profile: data.profile }),
         }),
         fetch(ACTIONS_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ANON_KEY}` },
+          headers: authHeaders,
           body: JSON.stringify({ direction: direction.title }),
         }),
       ]);
@@ -978,6 +1007,7 @@ function MarketActionStep({ data, setData, saving, save }: StepProps & { save: (
       if (marketRes.ok) {
         const marketData = await marketRes.json();
         marketInsight = { ...marketData, generatedAt: new Date().toISOString() };
+        void track('market_insight_generated');
       }
 
       if (actionsRes.ok) {
@@ -989,9 +1019,11 @@ function MarketActionStep({ data, setData, saving, save }: StepProps & { save: (
           category: a.category,
           done: false,
         }));
+        void track('actions_generated', { count: actionItems.length });
       }
 
       save({ ...data, marketInsight, actionItems });
+      void track('market_actions_loaded', { has_market: !!marketInsight, action_count: actionItems.length });
 
       if (!marketRes.ok && !actionsRes.ok) {
         setError('Could not load market insight or actions. Try again.');
