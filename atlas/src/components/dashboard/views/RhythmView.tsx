@@ -184,7 +184,7 @@ function EmotionHeatmap({ demoData }: { demoData: DemoPulse[] }) {
   if (emotions.length === 0) return null;
 
   const cellSize = 16;
-  const labelW = 90;
+  const labelW = 120;
   const topPad = 24;
   const svgW = labelW + 24 * cellSize;
   const svgH = topPad + 8 + emotions.length * cellSize;
@@ -196,7 +196,7 @@ function EmotionHeatmap({ demoData }: { demoData: DemoPulse[] }) {
           {/* Hour headers */}
           {Array.from({ length: 24 }, (_, h) => h).map(h => (
             <text key={h}
-              x={90 + h * cellSize + cellSize / 2}
+              x={labelW + h * cellSize + cellSize / 2}
               y={16}
               textAnchor="middle"
               fontSize={8}
@@ -211,7 +211,7 @@ function EmotionHeatmap({ demoData }: { demoData: DemoPulse[] }) {
           {emotions.map((emotion, ri) => (
             <g key={emotion}>
               <text
-                x={36}
+                x={labelW - 8}
                 y={topPad + ri * cellSize + cellSize / 2 + 3}
                 textAnchor="end"
                 fontSize={9}
@@ -227,7 +227,7 @@ function EmotionHeatmap({ demoData }: { demoData: DemoPulse[] }) {
                   <rect
                     key={h}
                     data-emo-cell
-                    x={40 + h * cellSize}
+                    x={labelW + h * cellSize}
                     y={topPad + ri * cellSize}
                     width={cellSize - 1}
                     height={cellSize - 1}
