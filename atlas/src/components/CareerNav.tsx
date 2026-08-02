@@ -5,7 +5,7 @@ import { useTheme } from '../hooks/useTheme';
 
 const links = [
   { path: '/career-direction', label: 'Career Direction' },
-  { path: '/', label: 'Personality Atlas' },
+  { path: '/', label: 'Atlas Path' },
 ];
 
 export function CareerNav() {

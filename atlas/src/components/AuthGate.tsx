@@ -44,7 +44,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h1)', fontWeight: 500,
           color: 'var(--color-text)', marginBottom: '8px', letterSpacing: '-0.02em',
         }}>
-          Personality Atlas
+          Atlas Path
         </h1>
         <p style={{
           color: 'var(--color-text-muted)', fontSize: '14px',

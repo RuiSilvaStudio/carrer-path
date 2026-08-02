@@ -18,7 +18,7 @@ import { FirstChartTour } from './components/ui/FirstChartTour';
 export default function App() {
   return (
     <Routes>
-      {/* Existing Personality Atlas remains in its original provider and UI shell. */}
+      {/* Existing Atlas Path remains in its original provider and UI shell. */}
       <Route element={<LegacyAppShell />}>
         <Route path="/docs" element={<LegacyDocsLayout />} />
         <Route element={<LegacyProtectedLayout />}>

@@ -448,6 +448,34 @@ export const direction_enrichment: GlossaryEntry = {
 };
 
 // ---------------------------------------------------------------------------
+// Data export & LLM use
+// ---------------------------------------------------------------------------
+
+export const data_export: GlossaryEntry = {
+  id: 'data-export',
+  term: 'Data Export',
+  short:
+    'Download your assessment data as CSV (baseline, pulses) or career data as JSON. Available on each page where the data lives.',
+  long:
+    'Three export paths exist: Baseline CSV (Big Five, facets, SD3, ICAR, context — one row, spreadsheet-friendly), Pulse CSV (per-pulse: date, time, week, phase, context, emotions, note, 5 scores), and Career Direction JSON (full structured profile, work values, directions, enrichments, market insight, actions). Exports are triggered by buttons on the respective pages.',
+  docsAnchor: '/docs#llm-use',
+  scope: 'concept',
+  related: ['pulse-history'],
+};
+
+export const llm_prompt_pattern: GlossaryEntry = {
+  id: 'llm-prompt-pattern',
+  term: 'LLM Prompt Pattern',
+  short:
+    'A reusable prompt template for feeding exported Atlas data to external AI assistants for reflection, career analysis, or coaching.',
+  long:
+    'The Docs page provides three ready-to-copy prompt patterns: trajectory reflection (baseline + pulses → pattern analysis), career direction stress-test (baseline + career JSON → direction critique and experiment suggestions), and work values alignment (work values JSON → environment fit and interview questions). Each pattern includes context about the scoring scales so the LLM interprets the data correctly.',
+  docsAnchor: '/docs#llm-use',
+  scope: 'concept',
+  related: ['data-export', 'career-direction'],
+};
+
+// ---------------------------------------------------------------------------
 // IPIP-NEO-120 facets (30 entries)
 // IDs follow the pattern facet-{trait}-{kebab-facet}.
 // ---------------------------------------------------------------------------
@@ -711,6 +739,8 @@ export const GLOSSARY: Record<string, GlossaryEntry> = Object.freeze({
   'concept-pulse-timing': pulse_timing,
   'concept-career-direction': career_direction,
   'concept-direction-enrichment': direction_enrichment,
+  'concept-data-export': data_export,
+  'concept-llm-prompt-pattern': llm_prompt_pattern,
   // charts (additional)
   'chart-facet-breakdown': facet_breakdown,
   // instruments (additional)

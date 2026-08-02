@@ -17,7 +17,7 @@ interface Section {
 }
 
 const SECTIONS: Section[] = [
-  { id: 'overview', num: '01', title: 'What is the Personality Atlas?' },
+  { id: 'overview', num: '01', title: 'What is the Atlas Path?' },
   { id: 'science', num: '02', title: 'The Science' },
   { id: 'instruments', num: '03', title: 'Assessment Instruments' },
   { id: 'scoring', num: '04', title: 'Scoring Methodology' },
@@ -25,10 +25,11 @@ const SECTIONS: Section[] = [
   { id: 'visualization', num: '06', title: 'Data Visualization' },
   { id: 'sigil', num: '07', title: 'The Sigil' },
   { id: 'career-direction', num: '08', title: 'Career Direction' },
-  { id: 'data-sources', num: '09', title: 'Data Sources' },
-  { id: 'privacy', num: '10', title: 'Privacy & Ethics' },
-  { id: 'future', num: '11', title: 'Future: Smoothing & Aggregation' },
-  { id: 'accessibility', num: '12', title: 'Accessibility' },
+  { id: 'llm-use', num: '09', title: 'Using Your Data with LLMs' },
+  { id: 'data-sources', num: '10', title: 'Data Sources' },
+  { id: 'privacy', num: '11', title: 'Privacy & Ethics' },
+  { id: 'future', num: '12', title: 'Future: Smoothing & Aggregation' },
+  { id: 'accessibility', num: '13', title: 'Accessibility' },
 ];
 
 // ── Hover-share anchor link ─────────────────────────────────────
@@ -456,7 +457,7 @@ export function DocsPage() {
             marginBottom: '8px',
           }}
         >
-          The Personality Atlas
+          The Atlas Path
         </h1>
         <p
           style={{
@@ -561,9 +562,9 @@ export function DocsPage() {
         }}
       >
         {/* 01 — Overview */}
-        <DocCard id="overview" num="01" title="What is the Personality Atlas?" nextSection={{ id: 'science', num: '02', title: 'The Science' }}>
+        <DocCard id="overview" num="01" title="What is the Atlas Path?" nextSection={{ id: 'science', num: '02', title: 'The Science' }}>
           <p style={{ marginBottom: '16px' }}>
-            The Personality Atlas is a <strong style={{ color: 'var(--color-text)' }}>longitudinal
+            The Atlas Path is a <strong style={{ color: 'var(--color-text)' }}>longitudinal
             self-insight instrument</strong>. It is not a hiring tool. It is not a predictive
             screening device. It does not rank you against a norm group to decide anything about you.
           </p>
@@ -634,7 +635,7 @@ export function DocsPage() {
           <p style={{ marginBottom: '16px' }}>
             ESM asks participants to complete brief assessments repeatedly, in their natural
             contexts, as they go about daily life. Instead of a one-shot lab questionnaire, you get
-            a time series. The Personality Atlas uses a lightweight form of ESM — weekly pulses of
+            a time series. The Atlas Path uses a lightweight form of ESM — weekly pulses of
             5–10 items — rather than the intensive 6–9×/day schedule of academic ESM studies.
           </p>
 
@@ -910,7 +911,7 @@ export function DocsPage() {
             administration. A short survey answered consistently beats a long survey abandoned.
           </p>
           <p style={{ marginBottom: '16px' }}>
-            Traditional ESM studies sample 6–9 times per day. The Personality Atlas uses a weekly
+            Traditional ESM studies sample 6–9 times per day. The Atlas Path uses a weekly
             cadence — orders of magnitude less burdensome. The challenge is keeping each pulse
             short enough that users never think "this is too much."
           </p>
@@ -1225,7 +1226,7 @@ export function DocsPage() {
         </DocCard>
 
         {/* 08 — Career Direction */}
-        <DocCard id="career-direction" num="08" title="Career Direction" nextSection={{ id: 'data-sources', num: '09', title: 'Data Sources' }}>
+        <DocCard id="career-direction" num="08" title="Career Direction" nextSection={{ id: 'llm-use', num: '09', title: 'Using Your Data with LLMs' }}>
           <p style={{ marginBottom: '16px' }}>
             Career Direction is where your personality data becomes a decision tool. The same
             Big Five traits, facets, and work values you've been tracking through the Atlas feed
@@ -1386,8 +1387,228 @@ export function DocsPage() {
           </p>
         </DocCard>
 
-        {/* 09 — Data Sources */}
-        <DocCard id="data-sources" num="09" title="Data Sources" nextSection={{ id: 'privacy', num: '10', title: 'Privacy & Ethics' }}>
+        {/* 09 — Using Your Data with LLMs */}
+        <DocCard id="llm-use" num="09" title="Using Your Data with LLMs" nextSection={{ id: 'data-sources', num: '10', title: 'Data Sources' }}>
+          <p style={{ marginBottom: '16px' }}>
+            Your Atlas data is yours. Every assessment — baseline, pulse, and career direction —
+            can be exported and fed to any external AI assistant (ChatGPT, Claude, Gemini, etc.)
+            for your own reflection, career coaching, or deeper analysis. This section explains
+            how to get the data out and what to ask once you have it.
+          </p>
+
+          <h3
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '18px',
+              fontWeight: 500,
+              color: 'var(--color-text)',
+              marginBottom: '12px',
+              marginTop: '24px',
+            }}
+          >
+            What you can export
+          </h3>
+          <p style={{ marginBottom: '16px' }}>
+            Three export paths exist, each on the page where the data lives:
+          </p>
+          <ul style={{ paddingLeft: '20px', marginBottom: '16px' }}>
+            <li style={{ marginBottom: '6px' }}>
+              <strong style={{ color: 'var(--color-text)' }}>Baseline CSV</strong> — on the Baseline page,
+              the Export button downloads a CSV with your Big Five scores, facet scores, motivational
+              drivers, and cognitive result, plus context (role, life events, stress, energy). One row,
+              spreadsheet-friendly.
+            </li>
+            <li style={{ marginBottom: '6px' }}>
+              <strong style={{ color: 'var(--color-text)' }}>Pulse CSV</strong> — on the Pulse page, each
+              row in the history list has an Export button. Downloads that single pulse's data:
+              date, time, week, phase, context, emotions, note, and all five Big Five scores.
+            </li>
+            <li style={{ marginBottom: '6px' }}>
+              <strong style={{ color: 'var(--color-text)' }}>Career Direction JSON</strong> — on the
+              Career Direction page, the Export button downloads your full career profile, work values
+              scores, all directions with enrichments, market insight, and action items as structured JSON.
+            </li>
+          </ul>
+
+          <Callout type="warning">
+            <strong style={{ color: 'var(--color-text)' }}>You are sharing your data with a
+            third party.</strong> Once you paste exported data into an external AI, it is no longer
+            covered by Atlas's row-level security or Supabase encryption. Read the provider's privacy
+            policy before sharing sensitive data. Atlas never sends your data to any LLM unless you
+            explicitly export it — the only built-in AI (career enrichment) runs in Supabase Edge
+            Functions and does not store your data beyond the function call.
+          </Callout>
+
+          <h3
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '18px',
+              fontWeight: 500,
+              color: 'var(--color-text)',
+              marginBottom: '12px',
+              marginTop: '24px',
+            }}
+          >
+            Prompt patterns
+          </h3>
+          <p style={{ marginBottom: '16px' }}>
+            These are starting points. Replace the bracketed text with your actual exported data.
+            The more specific your data, the more specific the response.
+          </p>
+
+          <h3
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '16px',
+              fontWeight: 500,
+              color: 'var(--color-text)',
+              marginBottom: '8px',
+              marginTop: '20px',
+            }}
+          >
+            1. Trajectory reflection
+          </h3>
+          <p style={{ marginBottom: '12px' }}>
+            Paste your baseline CSV and a few pulse CSVs, then ask:
+          </p>
+          <Formula text={`Here is my baseline personality assessment and several weekly pulse check-ins. The scores are on a 0–100 scale where 50 is the population average. Emotional Stability is the inverse of Neuroticism (higher = calmer).
+
+[Paste baseline CSV]
+
+[Paste pulse CSVs]
+
+Based on this data:
+1. What patterns do you see in how my traits move week to week?
+2. Which traits are most stable, and which fluctuate most?
+3. Are there any correlations between the contexts I report (Work, Home, etc.) and my scores?
+4. What's one question about myself this data raises that I can't yet answer?`}>
+            Here is my baseline personality assessment and several weekly pulse{'\n'}
+            check-ins. The scores are on a 0–100 scale where 50 is the population{'\n'}
+            average. Emotional Stability is the inverse of Neuroticism (higher ={'\n'}
+            calmer).{'\n\n'}
+            [Paste baseline CSV]{'\n\n'}
+            [Paste pulse CSVs]{'\n\n'}
+            Based on this data:{'\n'}
+            1. What patterns do you see in how my traits move week to week?{'\n'}
+            2. Which traits are most stable, and which fluctuate most?{'\n'}
+            3. Are there any correlations between the contexts I report and my scores?{'\n'}
+            4. What's one question about myself this data raises that I can't yet answer?
+          </Formula>
+
+          <h3
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '16px',
+              fontWeight: 500,
+              color: 'var(--color-text)',
+              marginBottom: '8px',
+              marginTop: '20px',
+            }}
+          >
+            2. Career direction stress-test
+          </h3>
+          <p style={{ marginBottom: '12px' }}>
+            Paste your baseline CSV + career direction JSON, then ask:
+          </p>
+          <Formula text={`Here is my personality profile (Big Five + facets) and my career direction data including a direction I'm considering. The facet scores show sub-trait detail within each Big Five trait.
+
+[Paste baseline CSV]
+
+[Paste career direction JSON]
+
+For the chosen direction:
+1. Which of my personality traits or facets are assets for this direction? Which are risks?
+2. Where does the AI enrichment's fit assessment seem right, and where do I disagree?
+3. What's the weakest assumption in the brief — the thing most likely to be wrong?
+4. Suggest three concrete experiments I could run in the next 30 days to test this direction without quitting my job.`}>
+            Here is my personality profile (Big Five + facets) and my career{'\n'}
+            direction data including a direction I'm considering. The facet{'\n'}
+            scores show sub-trait detail within each Big Five trait.{'\n\n'}
+            [Paste baseline CSV]{'\n\n'}
+            [Paste career direction JSON]{'\n\n'}
+            For the chosen direction:{'\n'}
+            1. Which of my traits or facets are assets? Which are risks?{'\n'}
+            2. Where does the enrichment's fit assessment seem right or wrong?{'\n'}
+            3. What's the weakest assumption in the brief?{'\n'}
+            4. Suggest three 30-day experiments to test this direction{'\n'}
+            {'   '}without quitting my job.
+          </Formula>
+
+          <h3
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '16px',
+              fontWeight: 500,
+              color: 'var(--color-text)',
+              marginBottom: '8px',
+              marginTop: '20px',
+            }}
+          >
+            3. Work values alignment
+          </h3>
+          <p style={{ marginBottom: '12px' }}>
+            Paste just the career direction JSON (which contains your work values scores), then ask:
+          </p>
+          <Formula text={`Here are my work values scores from a Minnesota Theory of Work Adjustment assessment. Scores are 0–100 (higher = more important). The six values are Achievement, Independence, Recognition, Relationships, Support, and Working Conditions.
+
+[Paste career direction JSON — the preferences.workValues section]
+
+Based on these scores:
+1. What kind of work environment would naturally satisfy my top three values?
+2. What trade-offs am I likely to face given my values profile?
+3. What's a question I should ask in an interview to test whether a role aligns with my values?
+4. Where might my values conflict with each other in a real job?`}>
+            Here are my work values scores from a Minnesota Theory of Work{'\n'}
+            Adjustment assessment. Scores are 0–100 (higher = more important).{'\n'}
+            The six values are Achievement, Independence, Recognition,{'\n'}
+            Relationships, Support, and Working Conditions.{'\n\n'}
+            [Paste career direction JSON — the preferences.workValues section]{'\n\n'}
+            Based on these scores:{'\n'}
+            1. What work environment would satisfy my top three values?{'\n'}
+            2. What trade-offs am I likely to face given this profile?{'\n'}
+            3. What interview question would test role alignment with my values?{'\n'}
+            4. Where might my values conflict with each other in a real job?
+          </Formula>
+
+          <h3
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '18px',
+              fontWeight: 500,
+              color: 'var(--color-text)',
+              marginBottom: '12px',
+              marginTop: '24px',
+            }}
+          >
+            What LLMs are good at (and not)
+          </h3>
+          <p style={{ marginBottom: '16px' }}>
+            <strong style={{ color: 'var(--color-text)' }}>Good at:</strong> summarizing patterns across
+            multiple data points, generating hypotheses about why your traits move, suggesting
+            experiments to test a career direction, reframing a problem from a new angle, and drafting
+            outreach or reflection prompts.
+          </p>
+          <p style={{ marginBottom: '16px' }}>
+            <strong style={{ color: 'var(--color-text)' }}>Not good at:</strong> diagnosing mental health
+            conditions, predicting whether you'll succeed in a specific role, replacing professional
+            career coaching or therapy, or knowing anything about your life that isn't in the data you
+            paste. An LLM's response is only as good as the data you give it and the specificity of
+            your question. If you ask "what should I do with my life?" you'll get generic advice. If
+            you ask "given my high Conscientiousness (87) but low Assertiveness (42), what's a low-risk
+            way to practice speaking up in meetings?" you'll get something useful.
+          </p>
+
+          <Callout>
+            The Atlas built-in career enrichment (Section 08) is already an LLM analysis — it
+            runs on Supabase Edge Functions and never stores your data beyond the call. This
+            section is about <strong style={{ color: 'var(--color-text)' }}>your own</strong> use of
+            external LLMs with exported data, which is a separate choice with separate privacy
+            implications.
+          </Callout>
+        </DocCard>
+
+        {/* 10 — Data Sources */}
+        <DocCard id="data-sources" num="10" title="Data Sources" nextSection={{ id: 'privacy', num: '11', title: 'Privacy & Ethics' }}>
           <h3
             style={{
               fontFamily: 'var(--font-serif)',
@@ -1433,11 +1654,11 @@ export function DocsPage() {
           </p>
         </DocCard>
 
-        {/* 10 — Privacy & Ethics */}
-        <DocCard id="privacy" num="10" title="Privacy & Ethics" nextSection={{ id: 'future', num: '11', title: 'Future: Smoothing & Aggregation' }}>
+        {/* 11 — Privacy & Ethics */}
+        <DocCard id="privacy" num="11" title="Privacy & Ethics" nextSection={{ id: 'future', num: '12', title: 'Future: Smoothing & Aggregation' }}>
           <Callout type="warning">
             <strong style={{ color: 'var(--color-text)' }}>This is not a clinical assessment or
-            diagnostic tool.</strong> The Personality Atlas does not diagnose, treat, or recommend
+            diagnostic tool.</strong> The Atlas Path does not diagnose, treat, or recommend
             treatment for any mental health condition. The data is descriptive, not prescriptive. If
             you are experiencing psychological distress, please consult a licensed professional.
           </Callout>
@@ -1492,8 +1713,8 @@ export function DocsPage() {
           </ul>
         </DocCard>
 
-        {/* 11 — Future */}
-        <DocCard id="future" num="11" title="Future: Smoothing & Aggregation">
+        {/* 12 — Future */}
+        <DocCard id="future" num="12" title="Future: Smoothing & Aggregation">
           <p style={{ marginBottom: '16px' }}>
             ESM time-series data is inherently noisy — a single bad day can create a spike that
             distorts the trajectory. Research shows that <strong style={{ color: 'var(--color-text)'
@@ -1552,10 +1773,10 @@ export function DocsPage() {
           </div>
         </DocCard>
 
-        {/* 12 — Accessibility Statement */}
-        <DocCard id="accessibility" num="12" title="Accessibility Statement">
+        {/* 13 — Accessibility Statement */}
+        <DocCard id="accessibility" num="13" title="Accessibility Statement">
           <p style={{ marginBottom: '16px' }}>
-            The Personality Atlas aims to conform to{' '}
+            The Atlas Path aims to conform to{' '}
             <strong style={{ color: 'var(--color-text)' }}>WCAG 2.2 Level AA</strong>.
             We test against keyboard navigation, screen readers (NVDA, VoiceOver),
             and reduced-motion preferences, and we publish the results here.
