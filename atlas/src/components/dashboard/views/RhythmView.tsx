@@ -2,6 +2,7 @@ import { useRef, useMemo } from 'react';
 import { useGSAP } from '../../../lib/motion';
 import gsap from 'gsap';
 import type { DemoPulse, Assessment } from '../../../types';
+import { pulsesToDemoData } from '../../../lib/pulseAdapter';
 import { Card } from '../../ui/Card';
 
 interface RhythmViewProps {
@@ -264,39 +265,90 @@ export function RhythmView({ demoData, pulses, dataSource }: RhythmViewProps) {
   // USER MODE (baseline + pulses)
   // ═══════════════════════════════════════════════════════════════
   if (dataSource === 'user') {
-    const remaining = Math.max(0, 5 - (pulses?.length ?? 0));
+    const userPulses = pulses ?? [];
+    const remaining = Math.max(0, 5 - userPulses.length);
+    const userData = pulsesToDemoData(userPulses);
+    const validUserData = userData.filter(d => {
+      return !(d.openness === 0 && d.conscientiousness === 0 &&
+               d.extraversion === 0 && d.agreeableness === 0 &&
+               d.emotional_stability === 100);
+    });
+
+    if (userPulses.length < 5) {
+      return (
+        <div ref={containerRef}>
+          <Card
+            label="04 · Rhythm"
+            title="Time-of-day patterns appear after more pulses."
+            subtitle="Why the rhythm view is empty, and what it will show."
+            infoText="Rhythm views need pulses at varied hours of day. Once you have them, radial clocks show your trait scores by hour; heatmaps show your emotional patterns by time."
+          >
+            <p style={{
+              fontFamily: 'var(--font-sans)', fontSize: '14px', lineHeight: 1.6,
+              color: 'var(--color-text-muted)', maxWidth: '480px', marginBottom: '16px',
+            }}>
+              As you complete pulses at different times of day, radial clock charts and emotion heatmaps will reveal your circadian personality rhythms — when you're most open, most focused, most sociable.
+            </p>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '12px 16px', background: 'var(--color-surface-elevated)',
+              borderRadius: 'var(--radius-button)', maxWidth: '400px',
+            }}>
+              <span style={{
+                fontFamily: 'var(--font-mono)', fontSize: '24px', fontWeight: 500,
+                color: 'var(--color-accent)',
+              }}>
+                {remaining}
+              </span>
+              <span style={{
+                fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-text-muted)',
+              }}>
+                more {remaining === 1 ? 'pulse' : 'pulses'} needed for rhythm patterns
+              </span>
+            </div>
+          </Card>
+        </div>
+      );
+    }
+
     return (
       <div ref={containerRef}>
+        {/* ── Radial Clock Charts ────────────────────────── */}
         <Card
           label="04 · Rhythm"
-          title="Time-of-day patterns appear after more pulses."
-          subtitle="Why the rhythm view is empty, and what it will show."
-          infoText="Rhythm views need pulses at varied hours of day. Once you have them, radial clocks show your trait scores by hour; heatmaps show your emotional patterns by time."
+          title="Circadian Trait Patterns"
+          subtitle="Average trait scores by hour of day across your pulses"
+          infoTerm="chart-rhythm-radial-clock"
+          data-anim
         >
-          <p style={{
-            fontFamily: 'var(--font-sans)', fontSize: '14px', lineHeight: 1.6,
-            color: 'var(--color-text-muted)', maxWidth: '480px', marginBottom: '16px',
-          }}>
-            As you complete pulses at different times of day, radial clock charts and emotion heatmaps will reveal your circadian personality rhythms — when you're most open, most focused, most sociable.
-          </p>
           <div style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '12px 16px', background: 'var(--color-surface-elevated)',
-            borderRadius: 'var(--radius-button)', maxWidth: '400px',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: '20px',
           }}>
-            <span style={{
-              fontFamily: 'var(--font-mono)', fontSize: '24px', fontWeight: 500,
-              color: 'var(--color-accent)',
-            }}>
-              {remaining}
-            </span>
-            <span style={{
-              fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-text-muted)',
-            }}>
-              more {remaining === 1 ? 'pulse' : 'pulses'} needed for rhythm patterns
-            </span>
+            {TRAIT_CONFIG.map(trait => (
+              <RadialClock
+                key={trait.key}
+                demoData={validUserData}
+                traitKey={trait.key}
+                traitLabel={trait.label}
+                color={trait.color}
+              />
+            ))}
           </div>
         </Card>
+
+        {/* ── Emotion Heatmap ────────────────────────────── */}
+        <div style={{ marginTop: '20px' }} data-anim>
+          <Card
+            label="Emotions"
+            title="Emotion Heatmap by Hour"
+            subtitle="Frequency of emotions across hours of the day"
+            infoTerm="chart-rhythm-heatmap"
+          >
+            <EmotionHeatmap demoData={validUserData} />
+          </Card>
+        </div>
       </div>
     );
   }

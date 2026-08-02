@@ -2,9 +2,10 @@ import { useRef, useMemo } from 'react';
 import { useGSAP } from '../../../lib/motion';
 import gsap from 'gsap';
 import type { DemoPulse, Assessment } from '../../../types';
+import { pulsesToDemoData } from '../../../lib/pulseAdapter';
 import { Card } from '../../ui/Card';
 import { EmptyState } from '../../ui/EmptyState';
-import { InfoTooltip } from '../../ui/InfoTooltip';
+
 
 interface ContextViewProps {
   demoData: DemoPulse[];
@@ -402,6 +403,8 @@ export function ContextView({ demoData, baseline, pulses, dataSource }: ContextV
     }
   }, { scope: containerRef, dependencies: [dataSource] });
 
+  const userData = useMemo(() => pulsesToDemoData(pulses), [pulses]);
+
   // ═══════════════════════════════════════════════════════════════
   // DEMO MODE
   // ═══════════════════════════════════════════════════════════════
@@ -526,47 +529,81 @@ export function ContextView({ demoData, baseline, pulses, dataSource }: ContextV
         </Card>
       )}
 
-      {/* Placeholder for future context patterns */}
-      <div style={{ marginTop: '20px' }} data-anim>
-        <Card
-            label="Pending"
-            title="Context patterns appear with more pulses."
-            subtitle="What the context view will reveal once you have more data."
-            infoText="Heatmaps, variance, stress delta and DIAMONDS all need 5+ pulses to surface meaningful patterns."
+      {pulses.length >= 5 ? (
+        /* ── Real context charts (5+ pulses) ── */
+        <>
+          <div className="atlas-grid-auto" style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: '20px', marginTop: '20px',
+          }}>
+            <Card
+              label="03 · Context"
+              title="Context Heatmap"
+              subtitle="Average trait scores by context"
+              infoTerm="chart-context-heatmap"
+              data-anim
+            >
+              <ContextHeatmap demoData={userData} />
+            </Card>
+
+            <Card
+              label="Variance"
+              title="Trait Flexibility"
+              subtitle="Which traits flex most across contexts"
+              infoText="Standard deviation of each trait across contexts. Higher bar = more flexible; lower = more stable across situations."
+              data-anim
+            >
+              <VarianceChart demoData={userData} />
+            </Card>
+          </div>
+
+          <Card
+            label="Raw Contexts"
+            title="Context Tags"
+            subtitle="Frequency of situational contexts across all pulses"
+            infoText="How often you tagged each context in pulses. Useful for spotting which situations dominate your weeks."
+            data-anim
+            style={{ marginTop: '20px' }}
           >
-          <p style={{
-            fontFamily: 'var(--font-sans)', fontSize: '14px', lineHeight: 1.6,
-            color: 'var(--color-text-muted)', maxWidth: '480px',
-          }}>
-            As you complete weekly pulses, context heatmaps, variance, stress levels, and DIAMONDS dimensions will emerge to reveal how different situations shape your personality expression.
-          </p>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '12px 16px', background: 'var(--color-surface-elevated)',
-            borderRadius: 'var(--radius-button)', marginTop: '16px', maxWidth: '400px',
-          }}>
-            <span style={{
-              fontFamily: 'var(--font-mono)', fontSize: '24px', fontWeight: 500,
-              color: 'var(--color-accent)',
+            <ContextTags demoData={userData} />
+          </Card>
+        </>
+      ) : (
+        /* ── Countdown placeholder (< 5 pulses) ── */
+        <div style={{ marginTop: '20px' }} data-anim>
+          <Card
+              label="Pending"
+              title="Context patterns appear with more pulses."
+              subtitle="What the context view will reveal once you have more data."
+              infoText="Heatmaps, variance, stress delta and DIAMONDS all need 5+ pulses to surface meaningful patterns."
+            >
+            <p style={{
+              fontFamily: 'var(--font-sans)', fontSize: '14px', lineHeight: 1.6,
+              color: 'var(--color-text-muted)', maxWidth: '480px',
             }}>
-              {Math.max(0, 5 - pulses.length)}
-            </span>
-            <span style={{
-              fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-text-muted)',
+              As you complete weekly pulses, context heatmaps, variance, stress levels, and DIAMONDS dimensions will emerge to reveal how different situations shape your personality expression.
+            </p>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '12px 16px', background: 'var(--color-surface-elevated)',
+              borderRadius: 'var(--radius-button)', marginTop: '16px', maxWidth: '400px',
             }}>
-              more {5 - pulses.length === 1 ? 'pulse' : 'pulses'} needed for context patterns
-            </span>
-          </div>
-          <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <InfoTooltip text="DIAMONDS is a framework for characterizing situations along 8 dimensions: Diversity, Novelty, Depth, Adversity, Deception, Sociality, Stress, and Performance." />
-            <span style={{
-              fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-text-muted)',
-            }}>
-              What is DIAMONDS?
-            </span>
-          </div>
-        </Card>
-      </div>
+              <span style={{
+                fontFamily: 'var(--font-mono)', fontSize: '24px', fontWeight: 500,
+                color: 'var(--color-accent)',
+              }}>
+                {Math.max(0, 5 - pulses.length)}
+              </span>
+              <span style={{
+                fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-text-muted)',
+              }}>
+                more {5 - pulses.length === 1 ? 'pulse' : 'pulses'} needed for context patterns
+              </span>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
