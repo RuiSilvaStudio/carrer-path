@@ -415,6 +415,57 @@ export function DistributionView({ demoData, baseline, pulses, dataSource }: Dis
           ))}
         </div>
       </Card>
+
+      {/* Stats summary */}
+      <div style={{ marginTop: '20px' }} data-anim>
+        <Card
+          label="Summary Statistics"
+          title="Trait Ranges & Means"
+          subtitle="Mean · std · min · max across all your pulses for each trait."
+          infoTerm="concept-trait-score"
+        >
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: '12px',
+          }}>
+            {TRAIT_CONFIG.map(trait => {
+              const vals = traitValues[trait.key];
+              const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+              const min = Math.min(...vals);
+              const max = Math.max(...vals);
+              const std = Math.sqrt(vals.reduce((a, b) => a + (b - mean) ** 2, 0) / vals.length);
+              return (
+                <div key={trait.key} style={{
+                  padding: '14px 16px', background: 'var(--color-surface-elevated)',
+                  borderRadius: 'var(--radius-button)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '2px', background: trait.color }} />
+                    <span style={{
+                      fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase',
+                      letterSpacing: '0.08em', color: 'var(--color-text-dim)',
+                    }}>
+                      {trait.label}
+                    </span>
+                  </div>
+                  <p style={{
+                    fontFamily: 'var(--font-serif)', fontSize: '24px', fontWeight: 500,
+                    color: 'var(--color-text)', letterSpacing: '-0.02em', marginBottom: '4px',
+                  }}>
+                    {mean.toFixed(1)}
+                  </p>
+                  <p style={{
+                    fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--color-text-dim)',
+                  }}>
+                    {min.toFixed(0)}–{max.toFixed(0)} · σ={std.toFixed(1)}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
