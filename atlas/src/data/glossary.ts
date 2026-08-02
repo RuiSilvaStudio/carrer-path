@@ -408,6 +408,46 @@ export const pulse_timing: GlossaryEntry = {
 };
 
 // ---------------------------------------------------------------------------
+// Career Direction
+// ---------------------------------------------------------------------------
+
+export const career_direction: GlossaryEntry = {
+  id: 'career-direction',
+  term: 'Career Direction',
+  short:
+    'A 4-step flow (Profile → Explorer → Brief → Market & Action) that turns your personality data into a testable career hypothesis.',
+  long:
+    'Career Direction is a separate page (/career-direction) where your Big Five traits, facets, and work values feed into a structured career exploration. The flow is: 01 Profile (career history + work values), 02 Explorer (re-runnable AI suggestions + your own directions, compared with fit badges), 03 Brief (the chosen direction with full analysis), 04 Market & Action (live market context + action checklist). The Explorer is re-runnable — picking a direction commits you to examining it, not to changing careers.',
+  docsAnchor: '/docs#career-direction',
+  scope: 'concept',
+  related: ['work-values', 'direction-enrichment'],
+};
+
+export const work_values: GlossaryEntry = {
+  id: 'work-values',
+  term: 'Work Values',
+  short:
+    '21 needs mapped to 6 values (Achievement, Independence, Recognition, Relationships, Support, Working Conditions). Based on Minnesota Theory of Work Adjustment.',
+  long:
+    'The Work Values instrument uses dual scoring: a ranking phase (balanced incomplete block design, 21 items in blocks of 5) produces an ipsative score, and a rating phase (1–5 intensity) produces a normative score. Combined into 0–100 per value, with a consistency check that detects circular preferences. Based on Dawis & Lofquist (1984).',
+  docsAnchor: '/docs#career-direction',
+  scope: 'instrument',
+  related: ['career-direction'],
+};
+
+export const direction_enrichment: GlossaryEntry = {
+  id: 'direction-enrichment',
+  term: 'Direction Enrichment',
+  short:
+    'LLM analysis of a career direction against your profile, producing 4 dimension ratings (Skills, Work values, Practical, Evidence) with fit badges.',
+  long:
+    'When you add a direction, an Edge Function analyses it against your profile and work values in real time. Each of the four dimensions gets a Strong/Good/Stretch badge, plus a full analysis (rationale, skill overlap, skill gaps, practical fit, biggest unknown, first step). The enrichment is an LLM analysis, not a lookup — two people with the same job title but different profiles get different assessments.',
+  docsAnchor: '/docs#career-direction',
+  scope: 'concept',
+  related: ['career-direction', 'work-values'],
+};
+
+// ---------------------------------------------------------------------------
 // IPIP-NEO-120 facets (30 entries)
 // IDs follow the pattern facet-{trait}-{kebab-facet}.
 // ---------------------------------------------------------------------------
@@ -669,8 +709,12 @@ export const GLOSSARY: Record<string, GlossaryEntry> = Object.freeze({
   'concept-sigil-milestone': sigil_milestone,
   'concept-pulse-history': pulse_history,
   'concept-pulse-timing': pulse_timing,
+  'concept-career-direction': career_direction,
+  'concept-direction-enrichment': direction_enrichment,
   // charts (additional)
   'chart-facet-breakdown': facet_breakdown,
+  // instruments (additional)
+  'instrument-work-values': work_values,
   // emotions + facets
   ...Object.fromEntries(
     [...positiveEmotions, ...neutralEmotions, ...negativeEmotions].map(e => [`emotion-${e.id}`, e]),

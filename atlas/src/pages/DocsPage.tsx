@@ -24,10 +24,11 @@ const SECTIONS: Section[] = [
   { id: 'pulse-design', num: '05', title: 'Pulse Design' },
   { id: 'visualization', num: '06', title: 'Data Visualization' },
   { id: 'sigil', num: '07', title: 'The Sigil' },
-  { id: 'data-sources', num: '08', title: 'Data Sources' },
-  { id: 'privacy', num: '09', title: 'Privacy & Ethics' },
-  { id: 'future', num: '10', title: 'Future: Smoothing & Aggregation' },
-  { id: 'accessibility', num: '11', title: 'Accessibility' },
+  { id: 'career-direction', num: '08', title: 'Career Direction' },
+  { id: 'data-sources', num: '09', title: 'Data Sources' },
+  { id: 'privacy', num: '10', title: 'Privacy & Ethics' },
+  { id: 'future', num: '11', title: 'Future: Smoothing & Aggregation' },
+  { id: 'accessibility', num: '12', title: 'Accessibility' },
 ];
 
 // ── Hover-share anchor link ─────────────────────────────────────
@@ -1087,7 +1088,7 @@ export function DocsPage() {
         </DocCard>
 
         {/* 07 — The Sigil */}
-        <DocCard id="sigil" num="07" title="The Sigil" nextSection={{ id: 'data-sources', num: '08', title: 'Data Sources' }}>
+        <DocCard id="sigil" num="07" title="The Sigil" nextSection={{ id: 'career-direction', num: '08', title: 'Career Direction' }}>
           <p style={{ marginBottom: '16px' }}>
             The Sigil is a <strong style={{ color: 'var(--color-text)' }}>deterministic identity mark</strong> —
             a unique visual signature derived entirely from your assessment data. It is not random.
@@ -1223,8 +1224,170 @@ export function DocsPage() {
           </p>
         </DocCard>
 
-        {/* 08 — Data Sources */}
-        <DocCard id="data-sources" num="08" title="Data Sources" nextSection={{ id: 'privacy', num: '09', title: 'Privacy & Ethics' }}>
+        {/* 08 — Career Direction */}
+        <DocCard id="career-direction" num="08" title="Career Direction" nextSection={{ id: 'data-sources', num: '09', title: 'Data Sources' }}>
+          <p style={{ marginBottom: '16px' }}>
+            Career Direction is where your personality data becomes a decision tool. The same
+            Big Five traits, facets, and work values you've been tracking through the Atlas feed
+            into a structured 4-step flow that turns "I should probably think about my career"
+            into a specific hypothesis you can test.
+          </p>
+
+          <h3
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '18px',
+              fontWeight: 500,
+              color: 'var(--color-text)',
+              marginBottom: '12px',
+              marginTop: '24px',
+            }}
+          >
+            The 4-step flow
+          </h3>
+          <p style={{ marginBottom: '16px' }}>
+            The flow runs at <Code>/career-direction</Code> — a separate page from the dashboard,
+            because it's a working session, not a monitoring view. Each step builds on the last:
+          </p>
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'auto 1fr',
+              gap: '8px 16px',
+              padding: '16px 20px',
+              background: 'var(--color-surface-elevated)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-button)',
+              fontFamily: 'var(--font-sans)',
+              fontSize: '14px',
+              lineHeight: 1.6,
+              color: 'var(--color-text-muted)',
+            }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-accent)', fontWeight: 600 }}>01</span>
+              <span><strong style={{ color: 'var(--color-text)' }}>Profile</strong> — your career history (roles, industries, timeline) plus a Work Values assessment. This is the raw material everything else uses.</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-accent)', fontWeight: 600 }}>02</span>
+              <span><strong style={{ color: 'var(--color-text)' }}>Explorer</strong> — a re-runnable wizard. AI suggests directions based on your profile and values; you add your own, select at least two, and compare side by side with fit badges.</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-accent)', fontWeight: 600 }}>03</span>
+              <span><strong style={{ color: 'var(--color-text)' }}>Brief</strong> — the persistent output of one Explorer run: a chosen direction with its full analysis, skill gaps, and the single most important unknown to resolve first.</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-accent)', fontWeight: 600 }}>04</span>
+              <span><strong style={{ color: 'var(--color-text)' }}>Market & Action</strong> — live market context (demand, salary, AI impact) for the chosen direction, plus a checklist of concrete next actions you can track.</span>
+            </div>
+          </div>
+          <p style={{ marginBottom: '16px' }}>
+            The Explorer is deliberately re-runnable. You don't commit to a career change by
+            picking a direction — you commit to <em>examining</em> one. Re-run the Explorer
+            whenever your profile or values change, and the brief refreshes.
+          </p>
+
+          <h3
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '18px',
+              fontWeight: 500,
+              color: 'var(--color-text)',
+              marginBottom: '12px',
+              marginTop: '24px',
+            }}
+          >
+            Work Values instrument
+          </h3>
+          <p style={{ marginBottom: '16px' }}>
+            The Work Values assessment is based on the <strong style={{ color: 'var(--color-text)' }}>
+            Minnesota Theory of Work Adjustment</strong> (Dawis & Lofquist, 1984) — a
+            well-established vocational psychology framework that maps 21 specific needs onto
+            6 broad work values: Achievement, Independence, Recognition, Relationships, Support,
+            and Working Conditions.
+          </p>
+          <p style={{ marginBottom: '16px' }}>
+            It uses <strong style={{ color: 'var(--color-text)' }}>dual scoring</strong>. First,
+            a ranking phase uses a balanced incomplete block design: 21 statements grouped into
+            blocks of 5, where you rank by importance within each block. This produces an
+            <em> ipsative</em> score (relative importance to you). Second, a rating phase asks
+            you to rate each statement's intensity on a 1–5 scale, producing a <em>normative</em>
+            score. The two are combined into a 0–100 score per value, with a consistency check
+            that detects circular preferences (saying A matters more than B, B more than C, then
+            C more than A).
+          </p>
+
+          <h3
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '18px',
+              fontWeight: 500,
+              color: 'var(--color-text)',
+              marginBottom: '12px',
+              marginTop: '24px',
+            }}
+          >
+            Direction enrichment
+          </h3>
+          <p style={{ marginBottom: '16px' }}>
+            When you add a direction (either from AI suggestions or your own), an Edge Function
+            analyses it against your profile and work values. The enrichment produces four
+            <strong style={{ color: 'var(--color-text)' }}> dimension ratings</strong>:
+          </p>
+          <ul style={{ paddingLeft: '20px', marginBottom: '16px' }}>
+            <li style={{ marginBottom: '4px' }}><strong style={{ color: 'var(--color-text)' }}>Skills</strong> — how much your existing skill set transfers, and what gaps you'd need to prove</li>
+            <li style={{ marginBottom: '4px' }}><strong style={{ color: 'var(--color-text)' }}>Work values</strong> — whether the direction serves the values you scored highest, or tensions them</li>
+            <li style={{ marginBottom: '4px' }}><strong style={{ color: 'var(--color-text)' }}>Practical</strong> — feasibility given your constraints (location, arrangement, availability)</li>
+            <li style={{ marginBottom: '4px' }}><strong style={{ color: 'var(--color-text)' }}>Evidence</strong> — how much real-world signal backs this direction vs. how much is assumption</li>
+          </ul>
+          <p style={{ marginBottom: '16px' }}>
+            Each dimension gets a <strong style={{ color: 'var(--color-text)' }}>fit badge</strong> —
+            Strong, Good, or Stretch — so you can compare directions at a glance without reading
+            the full analysis. The full analysis (rationale, skill overlap, skill gaps, practical
+            fit, biggest unknown, first step) is always available behind a toggle.
+          </p>
+
+          <Callout>
+            The enrichment is an <strong style={{ color: 'var(--color-text)' }}>LLM analysis</strong>,
+            not a lookup. It reasons about your specific profile against the direction title in real
+            time. This means two people with the same job title but different profiles will get
+            different fit assessments — and the same person re-running with an updated profile will
+            get a fresh analysis.
+          </Callout>
+
+          <h3
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '18px',
+              fontWeight: 500,
+              color: 'var(--color-text)',
+              marginBottom: '12px',
+              marginTop: '24px',
+            }}
+          >
+            Staleness tracking
+          </h3>
+          <p style={{ marginBottom: '16px' }}>
+            The flow tracks when each step was generated relative to its upstream inputs. If you
+            edit your profile after running the Explorer, the Explorer and everything downstream
+            (Brief, Market) is flagged as <strong style={{ color: 'var(--color-text)' }}>stale</strong> —
+            a warning banner appears and a re-run is recommended. This prevents you from acting on
+            an analysis that was built for a different version of your profile.
+          </p>
+
+          <h3
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '18px',
+              fontWeight: 500,
+              color: 'var(--color-text)',
+              marginBottom: '12px',
+              marginTop: '24px',
+            }}
+          >
+            Data controls
+          </h3>
+          <p style={{ marginBottom: '0' }}>
+            The bottom of the Career Direction page has Export (downloads all career data as JSON)
+            and Delete (permanently removes it). These controls apply <em>only</em> to career
+            direction data — your assessment and pulse data is separate and unaffected.
+          </p>
+        </DocCard>
+
+        {/* 09 — Data Sources */}
+        <DocCard id="data-sources" num="09" title="Data Sources" nextSection={{ id: 'privacy', num: '10', title: 'Privacy & Ethics' }}>
           <h3
             style={{
               fontFamily: 'var(--font-serif)',
@@ -1270,8 +1433,8 @@ export function DocsPage() {
           </p>
         </DocCard>
 
-        {/* 09 — Privacy & Ethics */}
-        <DocCard id="privacy" num="09" title="Privacy & Ethics" nextSection={{ id: 'future', num: '10', title: 'Future: Smoothing & Aggregation' }}>
+        {/* 10 — Privacy & Ethics */}
+        <DocCard id="privacy" num="10" title="Privacy & Ethics" nextSection={{ id: 'future', num: '11', title: 'Future: Smoothing & Aggregation' }}>
           <Callout type="warning">
             <strong style={{ color: 'var(--color-text)' }}>This is not a clinical assessment or
             diagnostic tool.</strong> The Personality Atlas does not diagnose, treat, or recommend
@@ -1329,8 +1492,8 @@ export function DocsPage() {
           </ul>
         </DocCard>
 
-        {/* 10 — Future */}
-        <DocCard id="future" num="10" title="Future: Smoothing & Aggregation">
+        {/* 11 — Future */}
+        <DocCard id="future" num="11" title="Future: Smoothing & Aggregation">
           <p style={{ marginBottom: '16px' }}>
             ESM time-series data is inherently noisy — a single bad day can create a spike that
             distorts the trajectory. Research shows that <strong style={{ color: 'var(--color-text)'
@@ -1389,8 +1552,8 @@ export function DocsPage() {
           </div>
         </DocCard>
 
-        {/* 11 — Accessibility Statement */}
-        <DocCard id="accessibility" num="11" title="Accessibility Statement">
+        {/* 12 — Accessibility Statement */}
+        <DocCard id="accessibility" num="12" title="Accessibility Statement">
           <p style={{ marginBottom: '16px' }}>
             The Personality Atlas aims to conform to{' '}
             <strong style={{ color: 'var(--color-text)' }}>WCAG 2.2 Level AA</strong>.
