@@ -35,13 +35,14 @@ function ContextHeatmap({ demoData }: { demoData: DemoPulse[] }) {
     demoData.forEach(d => {
       const ctxs = d.contexts ?? d.raw_contexts ?? [];
       ctxs.forEach(c => {
-        ctxCounts[c] = (ctxCounts[c] || 0) + 1;
-        if (!ctxTraits[c]) ctxTraits[c] = { openness: [], conscientiousness: [], extraversion: [], agreeableness: [], emotional_stability: [] };
-        ctxTraits[c].openness.push(d.openness);
-        ctxTraits[c].conscientiousness.push(d.conscientiousness);
-        ctxTraits[c].extraversion.push(d.extraversion);
-        ctxTraits[c].agreeableness.push(d.agreeableness);
-        ctxTraits[c].emotional_stability.push(d.emotional_stability);
+        const key = c.charAt(0).toUpperCase() + c.slice(1).toLowerCase();
+        ctxCounts[key] = (ctxCounts[key] || 0) + 1;
+        if (!ctxTraits[key]) ctxTraits[key] = { openness: [], conscientiousness: [], extraversion: [], agreeableness: [], emotional_stability: [] };
+        ctxTraits[key].openness.push(d.openness);
+        ctxTraits[key].conscientiousness.push(d.conscientiousness);
+        ctxTraits[key].extraversion.push(d.extraversion);
+        ctxTraits[key].agreeableness.push(d.agreeableness);
+        ctxTraits[key].emotional_stability.push(d.emotional_stability);
       });
     });
 
