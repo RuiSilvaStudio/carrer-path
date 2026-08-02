@@ -26,7 +26,7 @@ describe('career direction data integrity', () => {
 
   it('preserves all profile fields through normalisation', () => {
     const raw = {
-      currentStage: 'shortlist',
+      currentStage: 'shortlist' as any,
       profile: {
         currentSituation: 'employed_exploring',
         changeDriver: 'career_growth',
@@ -60,7 +60,7 @@ describe('career direction data integrity', () => {
       directions: [],
       chosenDirectionId: null,
       explorerCompletedAt: null,
-    };
+    } as any;
 
     const normalised = normaliseCareerDirection(raw);
 
