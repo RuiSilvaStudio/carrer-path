@@ -89,6 +89,14 @@ export function HelpMenu() {
       },
     },
     {
+      label: 'Privacy policy',
+      description: 'What data we collect, where it\'s stored, and your GDPR rights.',
+      action: () => {
+        navigate('/privacy');
+        setOpen(false);
+      },
+    },
+    {
       label: 'Contact',
       description: 'Report a bug, request a feature, or ask a question.',
       action: () => {
