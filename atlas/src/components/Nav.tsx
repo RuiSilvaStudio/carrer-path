@@ -55,9 +55,12 @@ function ThemeToggle({ theme, onToggle }: { theme: string; onToggle: () => void 
   );
 }
 
-// Rui's user ID — only he sees the Cockpit link
-// Read from env so it works across cloud and self-hosted Supabase (different user IDs)
-const RUI_USER_ID = import.meta.env.VITE_RUI_USER_ID ?? '37d25257-5fcf-4318-b1b6-5bdb48288a71';
+// Rui's user IDs — only he sees the Cockpit link
+// Supports both cloud (old) and self-hosted (new) Supabase
+const RUI_USER_IDS = [
+  'ef659d7c-60bb-4336-83e2-db5a804d4dfb', // self-hosted Supabase
+  '37d25257-5fcf-4318-b1b6-5bdb48288a71', // cloud Supabase (legacy)
+];
 
 const NAV_LINKS = [
   { path: '/', label: 'Dashboard' },
@@ -73,7 +76,7 @@ export function Nav() {
   const { baseline, pulses } = useAssessments(user?.id ?? null);
   const navigate = useNavigate();
   const location = useLocation();
-  const isRui = user?.id === RUI_USER_ID;
+  const isRui = user ? RUI_USER_IDS.includes(user.id) : false;
   const [menuOpen, setMenuOpen] = useState(false);
   const sigilInput = baseline
     ? sigilInputFromData(baseline.scores as AssessmentScores, pulses.length, pulses)
