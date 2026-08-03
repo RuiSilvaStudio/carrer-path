@@ -4,14 +4,16 @@
 // Paste this entire file as the function body.
 //
 // After deploying, set the secret:
-//   Supabase Dashboard → Edge Functions → extract-cv → Secrets
-//   Add: OPENROUTER_API_KEY = sk-or-... (your OpenRouter key)
+// After deploying, set the secrets:
+//   LLM_API_KEY = atlas_... (the Atlas LLM API key)
+//   LLM_URL = https://llm.ruisilvastudio.com/v1/chat/completions (optional, has default)
 //
 // The function receives raw CV text (from PDF extraction or paste),
 // sends it to an LLM, and returns structured JSON.
 
-const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') ?? '';
-const MODEL = 'openai/gpt-4o-mini'; // cheap, fast, good at structured extraction
+const LLM_API_KEY = Deno.env.get('LLM_API_KEY') ?? '';
+const LLM_URL = Deno.env.get('LLM_URL') ?? 'https://llm.ruisilvastudio.com/v1/chat/completions';
+const MODEL = 'qwen2.5:7b';
 
 const SYSTEM_PROMPT = `You are a career CV extraction assistant. You receive raw text from a CV, LinkedIn profile, or career summary. Extract structured information and return ONLY valid JSON — no markdown, no commentary.
 
@@ -80,13 +82,11 @@ Deno.serve(async (req: Request) => {
     // Truncate to 15000 chars to stay within token limits
     const truncated = text.slice(0, 15000);
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetch(LLM_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Authorization': `Bearer ${LLM_API_KEY}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://atlas.ruisilvastudio.com',
-        'X-Title': 'Atlas CV Extractor',
       },
       body: JSON.stringify({
         model: MODEL,

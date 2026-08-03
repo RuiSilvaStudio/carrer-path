@@ -1,10 +1,11 @@
 // Supabase Edge Function: suggest-actions
 // Deploy via Supabase Dashboard: Edge Functions → New Function
 // Name: suggest-actions
-// Uses the same OPENROUTER_API_KEY secret already set.
+// Uses the same LLM_API_KEY secret.
 
-const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') ?? '';
-const MODEL = 'openai/gpt-4o-mini';
+const LLM_API_KEY = Deno.env.get('LLM_API_KEY') ?? '';
+const LLM_URL = Deno.env.get('LLM_URL') ?? 'https://llm.ruisilvastudio.com/v1/chat/completions';
+const MODEL = 'qwen2.5:7b';
 
 const SYSTEM_PROMPT = `You are a career action advisor. Given a career direction, generate 4 specific, intentional actions the user should take to move forward. These should feel relevant to the direction without being hyper-personalized — generic enough to always produce useful output, specific enough to feel intentional.
 
@@ -62,13 +63,11 @@ Deno.serve(async (req: Request) => {
 
     const userPrompt = `DIRECTION: "${direction.trim()}"\n\nGenerate 4 actions for this direction.`;
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetch(LLM_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Authorization': `Bearer ${LLM_API_KEY}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://atlas.ruisilvastudio.com',
-        'X-Title': 'Atlas Action Advisor',
       },
       body: JSON.stringify({
         model: MODEL,
