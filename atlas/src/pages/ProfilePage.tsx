@@ -6,6 +6,7 @@ import { supabase, EDGE_FUNCTIONS_BASE } from '../lib/supabase';
 import { Sigil } from '../components/sigil/Sigil';
 import { FeedbackPrompt } from '../components/ui/FeedbackPrompt';
 import { sigilInputFromData, dominantTraitIndex, TRAIT_CSS_VARS, EMPTY_SIGIL_INPUT } from '../lib/sigil';
+import { exportAllData } from '../lib/exportAllData';
 import type { AssessmentScores, BigFiveScores } from '../types';
 
 const TRAIT_LABELS = ['Openness', 'Conscientiousness', 'Extraversion', 'Agreeableness', 'Emotional Stability'];
@@ -35,6 +36,10 @@ export function ProfilePage() {
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+
+  // ── Export all data state ──
+  const [exportBusy, setExportBusy] = useState(false);
+  const [exportMsg, setExportMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
 
   if (!user) return null;
 
@@ -72,6 +77,27 @@ export function ProfilePage() {
       setPwMsg({ kind: 'err', text: e instanceof Error ? e.message : 'Failed to update password.' });
     } finally {
       setPwBusy(false);
+    }
+  };
+
+  const handleExportAll = async () => {
+    if (!user?.id) return;
+    setExportBusy(true);
+    setExportMsg(null);
+    try {
+      const { exported, skipped } = await exportAllData(user.id);
+      if (exported.length > 0) {
+        const msg = skipped.length > 0
+          ? `Downloaded ${exported.length} file${exported.length === 1 ? '' : 's'}: ${exported.join(', ')}. Skipped (empty): ${skipped.join(', ')}.`
+          : `Downloaded ${exported.length} file${exported.length === 1 ? '' : 's'}: ${exported.join(', ')}.`;
+        setExportMsg({ kind: 'ok', text: msg });
+      } else {
+        setExportMsg({ kind: 'err', text: 'No data found to export.' });
+      }
+    } catch (e) {
+      setExportMsg({ kind: 'err', text: e instanceof Error ? e.message : 'Failed to export data.' });
+    } finally {
+      setExportBusy(false);
     }
   };
 
@@ -230,6 +256,22 @@ export function ProfilePage() {
           One question, asked once. Your answer sets our direction.
         </p>
         <FeedbackPrompt surface="nps" itemId={`nps-${user.id}`} />
+      </section>
+
+      {/* ── GDPR: Export all my data ── */}
+      <section style={cardStyle}>
+        <h2 style={sectionTitleStyle}>Export my data</h2>
+        <p style={sectionDescStyle}>
+          Downloads all your data as CSV files — assessments, pulses, contacts, contact log, job listings, career profile, and feedback. Your right under GDPR data portability.
+        </p>
+        <button
+          onClick={handleExportAll}
+          disabled={exportBusy}
+          style={{ ...primaryBtnStyle, opacity: exportBusy ? 0.5 : 1, cursor: exportBusy ? 'not-allowed' : 'pointer' }}
+        >
+          {exportBusy ? 'Exporting…' : 'Download all my data'}
+        </button>
+        {exportMsg && <div style={msgStyle(exportMsg.kind)}>{exportMsg.text}</div>}
       </section>
 
       {/* ── Danger zone: delete account ── */}
