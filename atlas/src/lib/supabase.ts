@@ -8,3 +8,10 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 }
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/**
+ * Base URL for Supabase Edge Functions.
+ * Derived from VITE_SUPABASE_URL so it works with both cloud and self-hosted.
+ * e.g. https://supabase.ruisilvastudio.com/functions/v1/
+ */
+export const EDGE_FUNCTIONS_BASE = `${SUPABASE_URL.replace(/\/$/, '')}/functions/v1/`;

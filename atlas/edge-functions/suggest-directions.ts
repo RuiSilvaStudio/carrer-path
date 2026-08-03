@@ -3,11 +3,13 @@
 // Name: suggest-directions
 // Paste this entire file as the function body.
 //
-// After deploying, set the secret (same as bright-worker):
-//   OPENROUTER_API_KEY = sk-or-... (already set if bright-worker is deployed)
+// After deploying, set the secret:
+//   LLM_API_KEY = atlas_... (the Atlas LLM API key)
+//   LLM_URL = https://llm.ruisilvastudio.com/v1/chat/completions (optional, has default)
 
-const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY') ?? '';
-const MODEL = 'openai/gpt-4o-mini';
+const LLM_API_KEY = Deno.env.get('LLM_API_KEY') ?? '';
+const LLM_URL = Deno.env.get('LLM_URL') ?? 'https://llm.ruisilvastudio.com/v1/chat/completions';
+const MODEL = 'qwen2.5:7b';
 
 const SYSTEM_PROMPT = `You are a career direction advisor for senior professionals. You receive a user's career profile (skills, roles, work values, practical conditions) and suggest 3 career directions they may NOT have considered but could plausibly pursue given their skill overlap.
 
@@ -95,13 +97,11 @@ ${valuesSummary}
 
 Suggest 3 career directions this person should consider exploring that are NOT their current or recent role. Leverage their skill overlap but push into new contexts, sectors, or adjacent fields.`;
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetch(LLM_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Authorization': `Bearer ${LLM_API_KEY}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://atlas.ruisilvastudio.com',
-        'X-Title': 'Atlas Direction Advisor',
       },
       body: JSON.stringify({
         model: MODEL,

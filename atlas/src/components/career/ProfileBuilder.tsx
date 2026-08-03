@@ -27,8 +27,9 @@ import {
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 // ── Edge Function config ────────────────────────────────────────
-const EDGE_FUNCTION_URL = 'https://ncwtmagvjtpqnwroyuha.supabase.co/functions/v1/bright-worker';
-const SUPABASE_ANON_KEY = 'sb_publishable_MtH4laIgqpmwU1a5XpWmPg_-eOrrSxE';
+import { EDGE_FUNCTIONS_BASE } from '../../lib/supabase';
+const EDGE_FUNCTION_URL = `${EDGE_FUNCTIONS_BASE}bright-worker`;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
 // ── Props ───────────────────────────────────────────────────────
 interface ProfileBuilderProps {

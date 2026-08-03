@@ -18,7 +18,7 @@ import {
   type WizardStep,
 } from '../lib/careerDirection';
 import { track } from '../lib/analytics';
-import { supabase } from '../lib/supabase';
+import { supabase, EDGE_FUNCTIONS_BASE } from '../lib/supabase';
 import { WorkValuesAssessment } from '../components/career/WorkValuesAssessment';
 import { ProfileBuilder } from '../components/career/ProfileBuilder';
 import { FeedbackPrompt } from '../components/ui/FeedbackPrompt';
@@ -332,8 +332,8 @@ function DirectionsContent({ data, setData, saving, newDirection, setNewDirectio
   const [enrichingIds, setEnrichingIds] = useState<Set<string>>(new Set());
   const [hasFetched, setHasFetched] = useState(false);
 
-  const SUGGEST_URL = 'https://ncwtmagvjtpqnwroyuha.supabase.co/functions/v1/suggest-direction';
-  const ENRICH_URL = 'https://ncwtmagvjtpqnwroyuha.supabase.co/functions/v1/enrich-direction';
+  const SUGGEST_URL = `${EDGE_FUNCTIONS_BASE}suggest-direction`;
+  const ENRICH_URL = `${EDGE_FUNCTIONS_BASE}enrich-direction`;
 
   const hasProfile = data.profile.roles.length > 0;
   const savedSuggestions = data.savedSuggestions ?? [];
@@ -959,8 +959,8 @@ function MarketActionStep({ data, setData, saving, save }: StepProps & { save: (
   const [loadingActions, setLoadingActions] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasFetched, setHasFetched] = useState(false);
-  const MARKET_URL = 'https://ncwtmagvjtpqnwroyuha.supabase.co/functions/v1/market-insight';
-  const ACTIONS_URL = 'https://ncwtmagvjtpqnwroyuha.supabase.co/functions/v1/suggest-actions';
+  const MARKET_URL = `${EDGE_FUNCTIONS_BASE}market-insight`;
+  const ACTIONS_URL = `${EDGE_FUNCTIONS_BASE}suggest-actions`;
 
   const direction = getChosenDirection(data);
   const insight = data.marketInsight;
