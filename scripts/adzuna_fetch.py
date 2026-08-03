@@ -201,7 +201,7 @@ def main():
 
     import psycopg2
     conn = psycopg2.connect(
-        host="db.ncwtmagvjtpqnwroyuha.supabase.co", port=5432, dbname="postgres",
+        host="db.ncwtmagvjtpqnwroyuha.supabase.co", port=5432, dbname="postgres",  # DECOMMISSIONED — update to self-hosted Supabase
         user="postgres", password=db_password, connect_timeout=15,
     )
     conn.autocommit = True

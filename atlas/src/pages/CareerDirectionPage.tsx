@@ -21,6 +21,7 @@ import { track } from '../lib/analytics';
 import { supabase, EDGE_FUNCTIONS_BASE } from '../lib/supabase';
 import { WorkValuesAssessment } from '../components/career/WorkValuesAssessment';
 import { ProfileBuilder } from '../components/career/ProfileBuilder';
+import { LLMLoader } from '../components/ui/LLMLoader';
 import { FeedbackPrompt } from '../components/ui/FeedbackPrompt';
 import { VALUE_LABELS, type WorkValuesResult } from '../lib/work-values-data';
 import { type StructuredProfile } from '../lib/profile-data';
@@ -455,7 +456,7 @@ function DirectionsContent({ data, setData, saving, newDirection, setNewDirectio
               </button>
             )}
           </div>
-          {loading && <p style={{ ...ui.quiet, fontSize: '14px', padding: '20px 0' }}>Finding directions that match your profile…</p>}
+          {loading && <LLMLoader message="Finding directions that match your profile" loading={loading} />}
           {suggestionError && (
             <div style={{ ...ui.panel, borderLeft: '3px solid var(--color-warning)', marginBottom: '12px' }}>
               <p style={{ ...ui.quiet, fontSize: '13px', margin: 0 }}>{suggestionError}</p>
@@ -559,7 +560,7 @@ function DirectionChoice({ direction, enriching, onToggle }: { direction: Career
         <p style={ui.kicker}>{direction.selected ? 'Included in comparison' : 'Not selected'}</p>
         <h3 style={{ font: '400 var(--fs-h2)/1.12 var(--font-serif)', margin: '8px 0 8px' }}>{direction.title}</h3>
         <p style={{ ...ui.quiet, fontSize: '13px' }}>{reference?.description ?? direction.summary}</p>
-        {enriching && <p style={{ ...ui.quiet, fontSize: '11px', color: 'var(--color-accent)', marginTop: '8px' }}>Analysing…</p>}
+        {enriching && <LLMLoader message="Analysing direction" loading={enriching} />}
         {!enriching && hasEnrichment && (
           <p style={{ ...ui.quiet, fontSize: '11px', color: 'var(--color-success)', marginTop: '8px' }}>✓ Analysed — see in Compare</p>
         )}
@@ -1102,7 +1103,7 @@ function MarketActionStep({ data, setData, saving, save }: StepProps & { save: (
           )}
         </div>
 
-        {loadingMarket && <p style={{ ...ui.quiet, fontSize: '14px', padding: '20px 0' }}>Researching market for this direction…</p>}
+        {loadingMarket && <LLMLoader message="Researching market for this direction" loading={loadingMarket} />}
 
         {insight && !loadingMarket && (
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
@@ -1177,7 +1178,7 @@ function MarketActionStep({ data, setData, saving, save }: StepProps & { save: (
           )}
         </div>
 
-        {loadingActions && <p style={{ ...ui.quiet, fontSize: '14px', padding: '20px 0' }}>Generating actions…</p>}
+        {loadingActions && <LLMLoader message="Generating actions" loading={loadingActions} />}
 
         {!loadingActions && actions.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
