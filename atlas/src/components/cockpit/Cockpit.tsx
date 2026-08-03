@@ -192,7 +192,7 @@ export function Cockpit() {
       </div>
 
       {/* Tab navigation */}
-      <div className="atlas-tabs" style={{ display: 'flex', gap: '0', borderBottom: '1px solid var(--color-border)', marginBottom: '28px' }}>
+      <div className="atlas-tabs atlas-sticky-tabs" style={{ display: 'flex', gap: '0', borderBottom: '1px solid var(--color-border)', marginBottom: '28px' }}>
         {COCKPIT_TABS.map(tab => {
           const active = activeTab === tab.id;
           return (

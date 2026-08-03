@@ -118,6 +118,7 @@ body {
   --nav-gap-sm: 12px;
   --nav-pad: 40px;
   --nav-pad-sm: 16px; /* match --space-page-sm so nav aligns with page content */
+  --nav-height: 44px; /* nav bar pixel height; sticky offset for in-page tab bars */
 
   /* ── Radius scale (theme-agnostic) ──────────────────────────
      One scale, applied consistently across all pages. Previously
@@ -161,6 +162,21 @@ svg, img { max-width: 100%; height: auto; }
 /* Mouse/touch users keep the clean look — only keyboard focus shows the ring */
 :focus:not(:focus-visible) {
   outline: none;
+}
+
+/* ============================================================
+   STICKY TAB BARS — pin in-page tab bars just below the nav on scroll.
+   Add `.atlas-sticky-tabs` to the tab bar wrapper. The bar parks at
+   `top: var(--nav-height)` (directly under the 44px sticky nav, z-index 100)
+   and releases automatically when scrolled back to its natural place.
+   Background = page bg so content scrolls cleanly behind it; the existing
+   bottom border on each tab bar is the only visible divider.
+   ============================================================ */
+.atlas-sticky-tabs {
+  position: sticky;
+  top: var(--nav-height);
+  z-index: 90;
+  background: var(--color-bg);
 }
 
 /* Stack two-column dashboard grids to one column on tablet/phone */

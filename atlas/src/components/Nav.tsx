@@ -123,7 +123,7 @@ export function Nav() {
       {/* ── Bar row ── */}
       <div className="atlas-nav-bar" style={{
         display: 'flex', alignItems: 'center', gap: 'var(--nav-gap)',
-        padding: '0 var(--nav-pad)', height: '44px',
+        padding: '0 var(--nav-pad)', height: 'var(--nav-height)',
       }}>
         {/* Desktop links (hidden on mobile via CSS) */}
         <div className="atlas-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 'var(--nav-gap)' }}>
