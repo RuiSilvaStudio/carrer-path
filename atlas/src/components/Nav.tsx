@@ -56,7 +56,8 @@ function ThemeToggle({ theme, onToggle }: { theme: string; onToggle: () => void 
 }
 
 // Rui's user ID — only he sees the Cockpit link
-const RUI_USER_ID = '37d25257-5fcf-4318-b1b6-5bdb48288a71';
+// Read from env so it works across cloud and self-hosted Supabase (different user IDs)
+const RUI_USER_ID = import.meta.env.VITE_RUI_USER_ID ?? '37d25257-5fcf-4318-b1b6-5bdb48288a71';
 
 const NAV_LINKS = [
   { path: '/', label: 'Dashboard' },
