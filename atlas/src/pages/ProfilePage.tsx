@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAssessments } from '../hooks/useAssessments';
+import { supabase, EDGE_FUNCTIONS_BASE } from '../lib/supabase';
 import { Sigil } from '../components/sigil/Sigil';
 import { FeedbackPrompt } from '../components/ui/FeedbackPrompt';
 import { sigilInputFromData, dominantTraitIndex, TRAIT_CSS_VARS, EMPTY_SIGIL_INPUT } from '../lib/sigil';
@@ -9,8 +11,9 @@ import type { AssessmentScores, BigFiveScores } from '../types';
 const TRAIT_LABELS = ['Openness', 'Conscientiousness', 'Extraversion', 'Agreeableness', 'Emotional Stability'];
 
 export function ProfilePage() {
-  const { user, updateDisplayName, updatePassword } = useAuth();
+  const { user, updateDisplayName, updatePassword, signOut } = useAuth();
   const { baseline, pulses, loading } = useAssessments(user?.id ?? null);
+  const navigate = useNavigate();
 
   const sigilInput = baseline
     ? sigilInputFromData(baseline.scores as AssessmentScores, pulses.length, pulses)
@@ -26,6 +29,12 @@ export function ProfilePage() {
   const [pw2, setPw2] = useState('');
   const [pwMsg, setPwMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
   const [pwBusy, setPwBusy] = useState(false);
+
+  // ── Delete account state ──
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   if (!user) return null;
 
@@ -63,6 +72,37 @@ export function ProfilePage() {
       setPwMsg({ kind: 'err', text: e instanceof Error ? e.message : 'Failed to update password.' });
     } finally {
       setPwBusy(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm !== 'DELETE') return;
+    setDeleteBusy(true);
+    setDeleteError('');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('No active session.');
+
+      const res = await fetch(`${EDGE_FUNCTIONS_BASE}delete-account`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Request failed (${res.status})`);
+      }
+
+      // Account deleted — sign out locally and redirect
+      await signOut();
+      navigate('/');
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : 'Failed to delete account.');
+    } finally {
+      setDeleteBusy(false);
     }
   };
 
@@ -191,6 +231,141 @@ export function ProfilePage() {
         </p>
         <FeedbackPrompt surface="nps" itemId={`nps-${user.id}`} />
       </section>
+
+      {/* ── Danger zone: delete account ── */}
+      <section style={{ ...cardStyle, borderColor: 'var(--color-danger)' }}>
+        <h2 style={{ ...sectionTitleStyle, color: 'var(--color-danger)' }}>Delete account</h2>
+        <p style={sectionDescStyle}>
+          Permanently deletes your account and all associated data — assessments, pulses, contacts, job listings, career profile, and feedback. This action cannot be undone and is done to comply with GDPR data-erasure rights.
+        </p>
+        <button
+          onClick={() => { setDeleteOpen(true); setDeleteConfirm(''); setDeleteError(''); }}
+          style={{
+            padding: '10px 20px',
+            background: 'transparent',
+            color: 'var(--color-danger)',
+            border: '1px solid var(--color-danger)',
+            borderRadius: 'var(--radius-button)',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '12px',
+            fontWeight: 500,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+          }}
+        >
+          Delete my account
+        </button>
+      </section>
+
+      {/* ── Delete confirmation modal (typed) ── */}
+      {deleteOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.55)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => !deleteBusy && setDeleteOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              borderRadius: 'var(--radius-card)',
+              padding: '32px',
+              maxWidth: '420px',
+              width: '90%',
+            }}
+          >
+            <h3 style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: 'var(--fs-h3)',
+              fontWeight: 400,
+              color: 'var(--color-text)',
+              marginBottom: '12px',
+              marginTop: 0,
+              letterSpacing: '-0.01em',
+            }}>
+              Delete your account?
+            </h3>
+            <p style={{
+              fontSize: '14px',
+              color: 'var(--color-text-muted)',
+              lineHeight: 1.6,
+              marginBottom: '20px',
+            }}>
+              This permanently erases everything — your baseline, pulses, contacts, job listings, career profile, and feedback. <strong style={{ color: 'var(--color-text)' }}>This cannot be undone.</strong>
+            </p>
+            <p style={{
+              fontSize: '13px',
+              color: 'var(--color-text-muted)',
+              marginBottom: '8px',
+            }}>
+              Type <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-danger)', fontWeight: 600 }}>DELETE</span> to confirm:
+            </p>
+            <input
+              type="text"
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              placeholder="DELETE"
+              disabled={deleteBusy}
+              autoFocus
+              style={{
+                ...inputStyle,
+                marginBottom: '20px',
+                borderColor: deleteConfirm === 'DELETE' ? 'var(--color-danger)' : 'var(--color-border)',
+              }}
+            />
+            {deleteError && (
+              <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginBottom: '16px' }}>
+                {deleteError}
+              </p>
+            )}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setDeleteOpen(false)}
+                disabled={deleteBusy}
+                style={{
+                  padding: '10px 20px',
+                  background: 'transparent',
+                  color: 'var(--color-text-muted)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-button)',
+                  fontSize: '13px',
+                  fontFamily: 'var(--font-sans)',
+                  cursor: deleteBusy ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteBusy || deleteConfirm !== 'DELETE'}
+                style={{
+                  padding: '10px 20px',
+                  background: 'var(--color-danger)',
+                  color: 'var(--color-bg)',
+                  border: 'none',
+                  borderRadius: 'var(--radius-button)',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  fontFamily: 'var(--font-sans)',
+                  cursor: (deleteBusy || deleteConfirm !== 'DELETE') ? 'not-allowed' : 'pointer',
+                  opacity: deleteConfirm !== 'DELETE' ? 0.5 : 1,
+                }}
+              >
+                {deleteBusy ? 'Deleting…' : 'Delete permanently'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
