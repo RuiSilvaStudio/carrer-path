@@ -606,7 +606,7 @@ function DirectionChoice({ direction, enriching, onToggle, onDelete }: { directi
   const reference = matchReference(direction.title);
   const hasEnrichment = !!direction.enrichment;
   return (
-    <div className="career-choice" style={{ ...ui.panel, borderColor: direction.selected ? 'var(--color-accent)' : 'var(--color-border)', position: 'relative' }}>
+    <div style={{ ...ui.panel, borderColor: direction.selected ? 'var(--color-accent)' : 'var(--color-border)', position: 'relative' }}>
       <button
         onClick={(e) => { e.preventDefault(); onDelete(); }}
         aria-label="Delete direction"
@@ -616,21 +616,24 @@ function DirectionChoice({ direction, enriching, onToggle, onDelete }: { directi
           color: 'var(--color-text-dim)', fontSize: '16px', lineHeight: 1,
           padding: '4px 6px', minHeight: 'auto', minWidth: 'auto',
           opacity: 0.5, transition: 'opacity 0.15s ease, color 0.15s ease',
+          zIndex: 1,
         }}
         onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-danger)'; }}
         onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.color = 'var(--color-text-dim)'; }}
       >
         ×
       </button>
-      <label style={{ cursor: 'pointer' }}>
+      <label className="career-choice" style={{ cursor: 'pointer' }}>
         <input type="checkbox" checked={direction.selected} onChange={onToggle} />
-        <p style={ui.kicker}>{direction.selected ? 'Included' : 'Not selected'}</p>
-        <h3 style={{ font: '400 var(--fs-h2)/1.12 var(--font-serif)', margin: '8px 0 8px', paddingRight: '24px' }}>{direction.title}</h3>
-        {enriching && <LLMLoader message="Analysing direction" loading={enriching} />}
-        {!enriching && hasEnrichment && (
-          <p style={{ ...ui.quiet, fontSize: '11px', color: 'var(--color-success)', margin: 0 }}>✓ Analysed — see in Compare</p>
-        )}
-        <p style={{ color: 'var(--color-text-dim)', font: '10px/1.55 var(--font-mono)', letterSpacing: '.04em', marginTop: hasEnrichment ? '8px' : '0' }}>{reference ? `ESCO / ISCO-08 ${reference.iscoCode}` : 'Your own direction'}</p>
+        <div>
+          <p style={ui.kicker}>{direction.selected ? 'Included' : 'Not selected'}</p>
+          <h3 style={{ font: '400 var(--fs-h2)/1.12 var(--font-serif)', margin: '8px 0 8px', paddingRight: '20px' }}>{direction.title}</h3>
+          {enriching && <LLMLoader message="Analysing direction" loading={enriching} />}
+          {!enriching && hasEnrichment && (
+            <p style={{ ...ui.quiet, fontSize: '11px', color: 'var(--color-success)', margin: 0 }}>✓ Analysed — see in Compare</p>
+          )}
+          <p style={{ color: 'var(--color-text-dim)', font: '10px/1.55 var(--font-mono)', letterSpacing: '.04em', marginTop: hasEnrichment ? '8px' : '0' }}>{reference ? `ESCO / ISCO-08 ${reference.iscoCode}` : 'Your own direction'}</p>
+        </div>
       </label>
     </div>
   );
