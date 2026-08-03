@@ -179,6 +179,12 @@ svg, img { max-width: 100%; height: auto; }
   background: var(--color-bg);
 }
 
+/* Save-status pill fade animation */
+@keyframes savePillFade {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* Stack two-column dashboard grids to one column on tablet/phone */
 @media (max-width: 720px) {
   .atlas-2col { grid-template-columns: 1fr !important; }

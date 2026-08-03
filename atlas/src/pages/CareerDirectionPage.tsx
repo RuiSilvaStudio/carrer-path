@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useCareerDirection } from '../hooks/useCareerDirection';
+import type { SaveStatus } from '../hooks/useCareerDirection';
 import { matchReference } from '../lib/careerRoleReference';
 import {
   CAREER_STAGES,
@@ -54,6 +55,45 @@ const STATUS_COLOR: Record<StageStatus, string> = {
   stale: 'var(--color-warning)',
 };
 
+// ── Auto-save status pill ───────────────────────────────────────────
+// Sits in the sticky stage-nav bar. Fades in when saving starts,
+// fades out ~2.5s after save completes. Always visible when scrolled
+// because the stage-nav bar is sticky (top: var(--nav-height)).
+function SaveStatusPill({ status }: { status: SaveStatus }) {
+  // Only render when there's something to show
+  if (status === 'idle') return null;
+
+  const config: Record<SaveStatus, { label: string; color: string; bg: string; border: string }> = {
+    idle:     { label: '',         color: '',                    bg: '',                     border: '' },
+    saving:   { label: 'Saving…', color: 'var(--color-text-muted)',  bg: 'var(--color-surface)',     border: 'var(--color-border)' },
+    saved:    { label: 'Saved ✓', color: 'var(--color-success)', bg: 'var(--color-surface)',     border: 'var(--color-border)' },
+    error:    { label: 'Couldn’t save', color: 'var(--color-danger)', bg: 'var(--color-surface)',  border: 'var(--color-danger)' },
+  };
+
+  const c = config[status];
+
+  return (
+    <span
+      key={status}
+      style={{
+        font: '10px var(--font-mono)',
+        letterSpacing: '.08em',
+        textTransform: 'uppercase',
+        color: c.color,
+        background: c.bg,
+        border: `1px solid ${c.border}`,
+        borderRadius: 'var(--radius-pill)',
+        padding: '3px 10px',
+        whiteSpace: 'nowrap',
+        flexShrink: 0,
+        animation: 'savePillFade 0.3s ease',
+      }}
+    >
+      {c.label}
+    </span>
+  );
+}
+
 function stage(data: CareerDirectionData, next: CareerStage): CareerDirectionData {
   return { ...data, currentStage: next };
 }
@@ -75,10 +115,15 @@ function StaleBanner({ message, onAction, actionLabel, onDismiss }: { message: s
 }
 
 export function CareerDirectionPage() {
-  const { data, setData, loading, saving, error, notice, save, deleteCareerData } = useCareerDirection();
+  const { data, setData, loading, saving, error, notice, save, saveStatus, deleteCareerData, flushPendingSave } = useCareerDirection();
   const [newDirection, setNewDirection] = useState('');
 
-  const move = async (next: CareerDirectionData, message: string) => save(stage(next, advanceStage(next.currentStage)), message);
+  // Advance to next stage — flush any pending debounced auto-save first,
+  // then save the stage change immediately.
+  const move = async (next: CareerDirectionData, message: string) => {
+    await flushPendingSave();
+    return save(stage(next, advanceStage(next.currentStage)), message);
+  };
 
   // Touch profile to mark downstream as stale
   const touchProfile = (next: CareerDirectionData): CareerDirectionData => ({
@@ -92,8 +137,8 @@ export function CareerDirectionPage() {
 
   return (
     <main id="atlas-main" className="atlas-page career-direction-page" tabIndex={-1} style={ui.page}>
-      {/* ── Nav with status dots ── */}
-      <nav className="career-progress atlas-sticky-tabs" aria-label="Career direction stages" style={{ borderBottom: '1px solid var(--color-border)', marginBottom: '40px', display: 'flex', overflowX: 'auto' }}>
+      {/* ── Nav with status dots + save pill ── */}
+      <nav className="career-progress atlas-sticky-tabs" aria-label="Career direction stages" style={{ borderBottom: '1px solid var(--color-border)', marginBottom: '40px', display: 'flex', alignItems: 'center', overflowX: 'auto' }}>
         {CAREER_STAGES.map((item, index) => {
           const status = currentStageStatus(item.id);
           const isActive = item.id === data.currentStage;
@@ -117,6 +162,10 @@ export function CareerDirectionPage() {
             </button>
           );
         })}
+        {/* Auto-save status pill — sits in the sticky bar, always visible */}
+        <div style={{ marginLeft: 'auto', paddingLeft: '12px', flexShrink: 0 }}>
+          <SaveStatusPill status={saveStatus} />
+        </div>
       </nav>
 
       {error && <p role="alert" style={{ color: 'var(--color-danger)', marginBottom: '20px' }}>{error}</p>}
@@ -165,16 +214,6 @@ function ProfileStep({ data, setData, saving, move, touchProfile }: PageProps & 
   const profileStatus = hasProfile ? '✓' : '○';
   const valuesStatus = hasValues ? '✓' : '○';
 
-  // Track whether the user has made changes since last save.
-  // On save, we snapshot the profile + values. Button re-activates only when
-  // current data differs from the snapshot.
-  const [savedSnapshot, setSavedSnapshot] = useState<string | null>(
-    hasProfile || hasValues ? JSON.stringify({ p: data.profile, wv: data.preferences.workValues }) : null,
-  );
-  const currentSnapshot = JSON.stringify({ p: data.profile, wv: data.preferences.workValues });
-  const hasUnsavedChanges = currentSnapshot !== savedSnapshot;
-  const canSave = (hasProfile || hasValues) && hasUnsavedChanges;
-
   const handleProfileChange = (profile: StructuredProfile) => {
     setData(touchProfile({ ...data, profile }));
   };
@@ -185,11 +224,6 @@ function ProfileStep({ data, setData, saving, move, touchProfile }: PageProps & 
       preferences: { ...data.preferences, workValues: result },
     });
     setData(updated);
-  };
-
-  const handleSave = async () => {
-    setSavedSnapshot(currentSnapshot);
-    await move(data, 'Profile saved.');
     void track('profile_saved', {
       has_roles: data.profile.roles.length > 0,
       has_summary: !!data.profile.careerSummary,
@@ -197,10 +231,15 @@ function ProfileStep({ data, setData, saving, move, touchProfile }: PageProps & 
     });
   };
 
+  // Continue to Explorer — auto-save has already persisted everything.
+  const handleContinue = () => {
+    void move(data, '');
+  };
+
   return (
     <section>
       <Title kicker="01 / Your profile" title="Build your career foundation.">
-        Atlas needs your career history and what matters to you. Both sections below are editable — fill them in any order.
+        Atlas needs your career history and what matters to you. Both sections below are editable — fill them in any order. Your changes save automatically.
       </Title>
       <hr style={ui.rule} />
 
@@ -226,19 +265,19 @@ function ProfileStep({ data, setData, saving, move, touchProfile }: PageProps & 
         <p style={{ ...ui.kicker, marginBottom: '16px' }}>What matters to you</p>
         <WorkValuesAssessment
           onComplete={handleValuesComplete}
-          onBack={() => { /* no-op: both sections are on one page */ }}
           initialResult={data.preferences.workValues ?? null}
           saving={saving}
         />
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px' }}>
+      {/* ── Continue — saves are automatic, this just advances ── */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '32px' }}>
         <button
-          onClick={handleSave}
-          disabled={saving || !canSave}
-          style={{ ...ui.primary, opacity: saving || !canSave ? 0.5 : 1 }}
+          onClick={handleContinue}
+          disabled={saving}
+          style={{ ...ui.primary, opacity: saving ? 0.5 : 1 }}
         >
-          {saving ? 'Saving…' : hasUnsavedChanges ? 'Save and continue →' : 'Saved ✓'}
+          Continue →
         </button>
       </div>
     </section>
@@ -938,7 +977,7 @@ function BriefStep({ data, setData, saving, move }: PageProps) {
         </div>
       )}
 
-      <Actions back="← Re-run Explorer" onBack={() => setData(stage(data, 'explorer'))} next="Continue to market & action →" onNext={() => move(data, 'Brief saved.')} saving={saving} />
+      <Actions back="← Re-run Explorer" onBack={() => setData(stage(data, 'explorer'))} next="Continue to market & action →" onNext={() => move(data, '')} saving={saving} />
     </section>
   );
 }

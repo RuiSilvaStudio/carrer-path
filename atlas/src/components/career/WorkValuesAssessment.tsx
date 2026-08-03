@@ -12,7 +12,6 @@ import {
 // ── Props ──────────────────────────────────────────────────────
 interface WorkValuesAssessmentProps {
   onComplete: (result: WorkValuesResult) => void;
-  onBack: () => void;
   initialResult?: WorkValuesResult | null;
   saving?: boolean;
 }
@@ -169,7 +168,7 @@ function RankCard({
 }
 
 // ── Main component ──────────────────────────────────────────────
-export function WorkValuesAssessment({ onComplete, onBack, initialResult, saving }: WorkValuesAssessmentProps) {
+export function WorkValuesAssessment({ onComplete, initialResult, saving }: WorkValuesAssessmentProps) {
   const [phase, setPhase] = useState<Phase>(initialResult ? 'review' : 'intro');
   const [blocks] = useState<number[][]>(() => {
     try {
@@ -384,9 +383,6 @@ export function WorkValuesAssessment({ onComplete, onBack, initialResult, saving
           <button onClick={() => setPhase('ranking')} style={ui.primary}>
             Begin →
           </button>
-          <button onClick={onBack} style={ui.secondary}>
-            ← Back
-          </button>
         </div>
       </div>
     );
@@ -562,7 +558,7 @@ export function WorkValuesAssessment({ onComplete, onBack, initialResult, saving
             disabled={saving}
             style={{ ...ui.primary, opacity: saving ? 0.5 : 1 }}
           >
-            {saving ? 'Saving…' : 'Save and continue →'}
+            Done
           </button>
         </div>
       </div>
