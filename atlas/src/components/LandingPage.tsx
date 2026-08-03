@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AuthModal, type AuthMode } from './AuthModal';
 import '../landing.css';
 
@@ -16,6 +17,7 @@ interface Props {
 export function LandingPage({ authOpen, onOpenAuth, onCloseAuth }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const root = rootRef.current!;
@@ -474,6 +476,7 @@ export function LandingPage({ authOpen, onOpenAuth, onCloseAuth }: Props) {
       <footer className="l-footer">
         <span>The Atlas Path — career direction you can trust</span>
         <span>
+          <button onClick={() => navigate('/privacy')} style={{ marginRight: '22px' }}>Privacy</button>
           <button onClick={() => onOpenAuth('signin')}>Log in</button>
           <button onClick={() => onOpenAuth('signup')}>Register</button>
         </span>

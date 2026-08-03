@@ -12,6 +12,7 @@ import { PulsePage } from './pages/PulsePage';
 import { DocsPage } from './pages/DocsPage';
 import { CockpitPage } from './pages/CockpitPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { PrivacyPage } from './pages/PrivacyPage';
 import { SigilLabPage } from './pages/SigilLabPage';
 import { CareerDirectionPage } from './pages/CareerDirectionPage';
 import { PulseReminder } from './components/PulseReminder';
@@ -30,9 +31,13 @@ export default function App() {
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/cockpit" element={<CockpitPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/sigil-lab" element={<SigilLabPage />} />
         </Route>
       </Route>
+
+      {/* Privacy policy is accessible without login (legal requirement) */}
+      <Route path="/privacy" element={<PrivacyPage />} />
 
       {/* Career Direction has an intentionally separate shell. No dashboard state,
           assessment navigation, pulse reminder, sigil, or chart tour is mounted. */}
