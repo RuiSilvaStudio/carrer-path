@@ -5,24 +5,18 @@ import {
   VALUE_LABELS,
   VALUE_DESCRIPTIONS,
   generateShuffledBlocks,
-  scoreWorkValues,
   type WorkValuesResult,
 } from '../../lib/work-values-data';
+import { useWorkValues } from '../../hooks/useWorkValues';
 
 // ── Props ──────────────────────────────────────────────────────
 interface WorkValuesAssessmentProps {
   onComplete: (result: WorkValuesResult) => void;
-  initialResult?: WorkValuesResult | null;
-  saving?: boolean;
 }
-
-type Phase = 'intro' | 'ranking' | 'rating' | 'review';
-
-const STORAGE_KEY = 'atlas_work_values_progress';
 
 // ── Styles (matching Atlas design system) ───────────────────────
 const ui = {
-  page: { maxWidth: '760px', margin: '0 auto', padding: '52px 24px 100px' },
+  page: { maxWidth: '760px', margin: '0 auto', padding: '0 0 0' },
   kicker: {
     color: 'var(--color-accent)' as const,
     font: '11px var(--font-mono)' as const,
@@ -116,47 +110,23 @@ const ui = {
   },
 };
 
-// ── Drag-and-drop ranking card with drop indicator ──────────────
+// ── Drag-and-drop ranking card ──────────────────────────────────
 function RankCard({
-  text,
-  rankPos,
-  onDragStart,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  onDragEnd,
-  isDragging,
-  showDropBefore,
-  showDropAfter,
+  text, rankPos, onDragStart, onDragOver, onDragLeave, onDrop, onDragEnd,
+  isDragging, showDropBefore, showDropAfter,
 }: {
-  text: string;
-  rankPos: number;
-  onDragStart: () => void;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragLeave: () => void;
-  onDrop: () => void;
-  onDragEnd: () => void;
-  isDragging: boolean;
-  showDropBefore: boolean;
-  showDropAfter: boolean;
+  text: string; rankPos: number;
+  onDragStart: () => void; onDragOver: (e: React.DragEvent) => void;
+  onDragLeave: () => void; onDrop: () => void; onDragEnd: () => void;
+  isDragging: boolean; showDropBefore: boolean; showDropAfter: boolean;
 }) {
   return (
     <>
       {showDropBefore && <div style={ui.dropLine} />}
       <div
-        draggable
-        onDragStart={onDragStart}
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onDrop={onDrop}
-        onDragEnd={onDragEnd}
-        style={{
-          ...ui.card,
-          ...(isDragging ? ui.cardActive : {}),
-          display: 'flex',
-          alignItems: 'center',
-          gap: '14px',
-        }}
+        draggable onDragStart={onDragStart} onDragOver={onDragOver}
+        onDragLeave={onDragLeave} onDrop={onDrop} onDragEnd={onDragEnd}
+        style={{ ...ui.card, ...(isDragging ? ui.cardActive : {}), display: 'flex', alignItems: 'center', gap: '14px' }}
       >
         <span style={ui.rankLabel}>{rankPos + 1}</span>
         <span style={{ flex: 1 }}>{text}</span>
@@ -168,60 +138,79 @@ function RankCard({
 }
 
 // ── Main component ──────────────────────────────────────────────
-export function WorkValuesAssessment({ onComplete, initialResult, saving }: WorkValuesAssessmentProps) {
-  const [phase, setPhase] = useState<Phase>(initialResult ? 'review' : 'intro');
-  const [blocks] = useState<number[][]>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_blocks`);
-      if (saved) return JSON.parse(saved);
-    } catch { /* ignore */ }
-    return generateShuffledBlocks();
-  });
+export function WorkValuesAssessment({ onComplete }: WorkValuesAssessmentProps) {
+  const {
+    phase: hookPhase, activeResult, draftState, loading, error,
+    startAssessment, scheduleDraftSave, resumeDraft, discardDraft,
+    completeAssessment, redo,
+  } = useWorkValues();
+
+  // Local assessment state — initialized from draft or fresh
+  const [blocks, setBlocks] = useState<number[][]>([]);
   const [currentBlock, setCurrentBlock] = useState(0);
   const [rankings, setRankings] = useState<Record<number, number[]>>({});
   const [intensityRatings, setIntensityRatings] = useState<Record<number, number>>({});
   const [currentRatingIdx, setCurrentRatingIdx] = useState(0);
-  const [result, setResult] = useState<WorkValuesResult | null>(initialResult ?? null);
+  const [localOrder, setLocalOrder] = useState<number[]>([]);
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
   const [dropTargetIdx, setDropTargetIdx] = useState<number | null>(null);
   const [dropPosition, setDropPosition] = useState<'before' | 'after' | null>(null);
+  const [assessmentStarted, setAssessmentStarted] = useState(false);
 
-  // Persist blocks to localStorage
+  // ── Initialize from draft when entering assessment ─────────
   useEffect(() => {
-    try { localStorage.setItem(`${STORAGE_KEY}_blocks`, JSON.stringify(blocks)); } catch { /* ignore */ }
-  }, [blocks]);
-
-  // Auto-save progress
-  const saveProgress = useCallback(() => {
-    if (phase === 'intro' || phase === 'review') return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ rankings, intensityRatings, currentBlock, currentRatingIdx, phase }));
-    } catch { /* ignore */ }
-  }, [rankings, intensityRatings, currentBlock, currentRatingIdx, phase]);
-
-  useEffect(() => { saveProgress(); }, [saveProgress]);
-
-  // Load saved progress on mount
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const data = JSON.parse(saved);
-        if (data.rankings) setRankings(data.rankings);
-        if (data.intensityRatings) setIntensityRatings(data.intensityRatings);
-        if (data.currentBlock) setCurrentBlock(data.currentBlock);
-        if (data.currentRatingIdx) setCurrentRatingIdx(data.currentRatingIdx);
-        if (data.phase && data.phase !== 'intro' && data.phase !== 'review') setPhase(data.phase);
+    if (hookPhase === 'assessment' && !assessmentStarted) {
+      if (draftState) {
+        // Resume from draft
+        setBlocks(draftState.blocks);
+        setRankings(draftState.rankings);
+        setIntensityRatings(draftState.intensityRatings);
+        setCurrentBlock(draftState.currentBlock);
+        setCurrentRatingIdx(draftState.currentRatingIdx);
+        // Set local order for the current block
+        const blockItems = draftState.blocks[draftState.currentBlock] ?? [];
+        const savedOrder = draftState.rankings[draftState.currentBlock];
+        setLocalOrder(savedOrder ?? blockItems);
+      } else {
+        // Fresh start
+        const freshBlocks = generateShuffledBlocks();
+        setBlocks(freshBlocks);
+        setLocalOrder(freshBlocks[0] ?? []);
       }
-    } catch { /* ignore */ }
-  }, []);
+      setAssessmentStarted(true);
+    }
+  }, [hookPhase, draftState, assessmentStarted]);
 
-  // ── Ranking phase ───────────────────────────────────────────
-  const blockItems = blocks[currentBlock] ?? [];
-  const [localOrder, setLocalOrder] = useState<number[]>(blockItems);
+  // ── Update local order when block changes ──────────────────
+  useEffect(() => {
+    if (blocks.length > 0 && assessmentStarted) {
+      const blockItems = blocks[currentBlock] ?? [];
+      const savedOrder = rankings[currentBlock];
+      setLocalOrder(savedOrder ?? blockItems);
+    }
+  }, [currentBlock]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { setLocalOrder(blockItems); }, [currentBlock]); // eslint-disable-line react-hooks/exhaustive-deps
+  // ── Persist draft to DB (debounced) ────────────────────────
+  const persistDraft = useCallback((updates: {
+    rankings?: Record<number, number[]>;
+    intensityRatings?: Record<number, number>;
+    currentBlock?: number;
+    currentRatingIdx?: number;
+    phase?: string;
+  }) => {
+    if (!blocks.length) return;
+    const state = {
+      blocks,
+      rankings: updates.rankings ?? rankings,
+      intensityRatings: updates.intensityRatings ?? intensityRatings,
+      currentBlock: updates.currentBlock ?? currentBlock,
+      currentRatingIdx: updates.currentRatingIdx ?? currentRatingIdx,
+      phase: updates.phase ?? 'ranking',
+    };
+    scheduleDraftSave(state);
+  }, [blocks, rankings, intensityRatings, currentBlock, currentRatingIdx, scheduleDraftSave]);
 
+  // ── Ranking phase handlers ─────────────────────────────────
   const handleDragStart = (idx: number) => setDraggedIdx(idx);
 
   const handleDragOver = (e: React.DragEvent, targetIdx: number) => {
@@ -232,81 +221,66 @@ export function WorkValuesAssessment({ onComplete, initialResult, saving }: Work
       setDropPosition(null);
       return;
     }
-
-    // Determine if cursor is in the top or bottom half of the target card
     const cardEl = e.currentTarget as HTMLDivElement;
     const rect = cardEl.getBoundingClientRect();
     const midpoint = rect.top + rect.height / 2;
-    const isAbove = e.clientY < midpoint;
-
     setDropTargetIdx(targetIdx);
-    setDropPosition(isAbove ? 'before' : 'after');
+    setDropPosition(e.clientY < midpoint ? 'before' : 'after');
   };
 
-  const handleDragLeave = () => {
-    // Don't clear immediately — let the next card's dragover set the new target
-    // Only clear if we actually left the list area
-  };
+  const handleDragLeave = () => { /* let next card's dragover handle it */ };
 
   const handleDrop = () => {
     if (draggedIdx === null || dropTargetIdx === null || dropPosition === null) {
-      setDraggedIdx(null);
-      setDropTargetIdx(null);
-      setDropPosition(null);
+      setDraggedIdx(null); setDropTargetIdx(null); setDropPosition(null);
       return;
     }
-
-    // Calculate the actual insertion index
     let insertAt = dropTargetIdx;
     if (dropPosition === 'after') insertAt = dropTargetIdx + 1;
-
-    // If dragging from below the insertion point, adjust for removal
     if (draggedIdx < insertAt) insertAt -= 1;
-
     if (draggedIdx === insertAt || (draggedIdx === insertAt + 1 && dropPosition === 'before')) {
-      setDraggedIdx(null);
-      setDropTargetIdx(null);
-      setDropPosition(null);
+      setDraggedIdx(null); setDropTargetIdx(null); setDropPosition(null);
       return;
     }
-
     const newOrder = [...localOrder];
     const [moved] = newOrder.splice(draggedIdx, 1);
     newOrder.splice(insertAt, 0, moved);
     setLocalOrder(newOrder);
-    setDraggedIdx(null);
-    setDropTargetIdx(null);
-    setDropPosition(null);
+    setDraggedIdx(null); setDropTargetIdx(null); setDropPosition(null);
   };
 
   const handleDragEnd = () => {
-    setDraggedIdx(null);
-    setDropTargetIdx(null);
-    setDropPosition(null);
+    setDraggedIdx(null); setDropTargetIdx(null); setDropPosition(null);
   };
 
   const confirmRanking = () => {
     const updated = { ...rankings, [currentBlock]: localOrder };
     setRankings(updated);
     if (currentBlock < blocks.length - 1) {
-      setCurrentBlock(currentBlock + 1);
+      const nextBlock = currentBlock + 1;
+      setCurrentBlock(nextBlock);
+      persistDraft({ rankings: updated, currentBlock: nextBlock, phase: 'ranking' });
     } else {
-      setPhase('rating');
+      // Move to rating phase
+      persistDraft({ rankings: updated, phase: 'rating' });
+      // Trigger re-render to rating phase via a local state
+      setRatingPhaseActive(true);
     }
   };
 
   const goBackRanking = () => {
     if (currentBlock > 0) {
-      // Load previous block's saved order
-      const prevOrder = rankings[currentBlock - 1];
+      const prevBlock = currentBlock - 1;
+      const prevOrder = rankings[prevBlock];
       if (prevOrder) setLocalOrder(prevOrder);
-      setCurrentBlock(currentBlock - 1);
-    } else {
-      setPhase('intro');
+      setCurrentBlock(prevBlock);
     }
+    // If at first block, we can't go back further in assessment
+    // (the resume/discard decision was already made before entering)
   };
 
   // ── Rating phase ────────────────────────────────────────────
+  const [ratingPhaseActive, setRatingPhaseActive] = useState(false);
   const ratingItems = NEED_ITEMS;
   const currentRatingItem = ratingItems[currentRatingIdx];
 
@@ -314,16 +288,17 @@ export function WorkValuesAssessment({ onComplete, initialResult, saving }: Work
     const updated = { ...intensityRatings, [currentRatingIdx]: value };
     setIntensityRatings(updated);
     if (currentRatingIdx < ratingItems.length - 1) {
-      setCurrentRatingIdx(currentRatingIdx + 1);
+      const nextIdx = currentRatingIdx + 1;
+      setCurrentRatingIdx(nextIdx);
+      persistDraft({ intensityRatings: updated, currentRatingIdx: nextIdx, phase: 'rating' });
     } else {
-      // All rated — compute scores, pass result to parent immediately,
-      // then show the review phase. No "Done" button needed — the result
-      // is already in parent state and auto-saved.
-      const computed = scoreWorkValues(updated ? { ...rankings } : rankings, updated);
-      setResult(computed);
-      onComplete(computed);
-      setPhase('review');
-      try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(`${STORAGE_KEY}_blocks`); } catch { /* ignore */ }
+      // All rated — complete the assessment
+      completeAssessment(rankings, updated).then(result => {
+        if (result) {
+          onComplete(result);
+          setRatingPhaseActive(false);
+        }
+      });
     }
   };
 
@@ -331,35 +306,89 @@ export function WorkValuesAssessment({ onComplete, initialResult, saving }: Work
     if (currentRatingIdx > 0) {
       setCurrentRatingIdx(currentRatingIdx - 1);
     } else {
-      setPhase('ranking');
+      // Back to ranking
+      setRatingPhaseActive(false);
       setCurrentBlock(blocks.length - 1);
       const lastOrder = rankings[blocks.length - 1];
       if (lastOrder) setLocalOrder(lastOrder);
     }
   };
 
-  // ── Review phase ─────────────────────────────────────────────
-  const handleRedo = () => {
-    try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(`${STORAGE_KEY}_blocks`); } catch { /* ignore */ }
+  // ── Progress bar ─────────────────────────────────────────────
+  const totalSteps = blocks.length + ratingItems.length;
+  const currentStep = !ratingPhaseActive
+    ? currentBlock + 1
+    : blocks.length + currentRatingIdx + 1;
+  const progressPct = ratingPhaseActive && currentRatingIdx >= ratingItems.length - 1
+    ? 100
+    : Math.round((currentStep / totalSteps) * 100);
+
+  // ── Handlers for intro/redo ─────────────────────────────────
+  const handleBegin = () => {
+    const freshBlocks = generateShuffledBlocks();
+    setBlocks(freshBlocks);
+    setLocalOrder(freshBlocks[0] ?? []);
     setRankings({});
     setIntensityRatings({});
     setCurrentBlock(0);
     setCurrentRatingIdx(0);
-    setResult(null);
-    setPhase('intro');
+    setRatingPhaseActive(false);
+    setAssessmentStarted(false);
+    void startAssessment(freshBlocks);
   };
 
-  // ── Progress bar ─────────────────────────────────────────────
-  const totalSteps = blocks.length + ratingItems.length;
-  const currentStep = phase === 'ranking'
-    ? currentBlock + 1
-    : phase === 'rating'
-      ? blocks.length + currentRatingIdx + 1
-      : totalSteps;
-  const progressPct = phase === 'review' ? 100 : Math.round((currentStep / totalSteps) * 100);
+  const handleRedo = () => {
+    setRankings({});
+    setIntensityRatings({});
+    setCurrentBlock(0);
+    setCurrentRatingIdx(0);
+    setRatingPhaseActive(false);
+    setAssessmentStarted(false);
+    const freshBlocks = generateShuffledBlocks();
+    setBlocks(freshBlocks);
+    setLocalOrder(freshBlocks[0] ?? []);
+    void redo(freshBlocks);
+  };
 
-  // ── Render ────────────────────────────────────────────────────
-  if (phase === 'intro') {
+  // ── Loading state ────────────────────────────────────────────
+  if (loading || hookPhase === 'loading') {
+    return (
+      <div style={ui.page}>
+        <p style={{ ...ui.quiet, margin: 0 }}>Loading…</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={ui.page}>
+        <div style={{ ...ui.panel, borderLeft: '3px solid var(--color-danger)', marginBottom: '16px' }}>
+          <p style={{ ...ui.quiet, fontSize: '13px', margin: 0, color: 'var(--color-danger)' }}>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Draft resume prompt ─────────────────────────────────────
+  if (hookPhase === 'draft-resume') {
+    return (
+      <div style={ui.page}>
+        <p style={ui.kicker}>Work preferences</p>
+        <h1 style={ui.h1}>Unfinished assessment.</h1>
+        <p style={ui.quiet}>
+          You started a work values assessment but didn't finish it. Your progress is saved —
+          you can pick up where you left off, or discard it and start fresh.
+        </p>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button onClick={resumeDraft} style={ui.primary}>Resume →</button>
+          <button onClick={() => void discardDraft()} style={ui.secondary}>Discard and start fresh</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Intro phase ──────────────────────────────────────────────
+  if (hookPhase === 'intro') {
     return (
       <div style={ui.page}>
         <p style={ui.kicker}>Work preferences</p>
@@ -368,7 +397,7 @@ export function WorkValuesAssessment({ onComplete, initialResult, saving }: Work
           These are editable statements about what you want from work. There are no right answers
           and no personality label at the end. You'll rank aspects of work by importance, then rate
           how essential each one is. Your choices stay editable and show where they influence a
-          role comparison.
+          role comparison. Your progress saves automatically.
         </p>
         <div style={{ ...ui.panel, borderLeft: '3px solid var(--color-accent)', marginBottom: '32px' }}>
           <p style={{ ...ui.kicker, marginBottom: '8px' }}>How this works</p>
@@ -379,15 +408,14 @@ export function WorkValuesAssessment({ onComplete, initialResult, saving }: Work
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <button onClick={() => setPhase('ranking')} style={ui.primary}>
-            Begin →
-          </button>
+          <button onClick={handleBegin} style={ui.primary}>Begin →</button>
         </div>
       </div>
     );
   }
 
-  if (phase === 'ranking') {
+  // ── Assessment: ranking phase ────────────────────────────────
+  if (hookPhase === 'assessment' && !ratingPhaseActive) {
     return (
       <div style={ui.page}>
         <div style={ui.progressBar}>
@@ -403,37 +431,23 @@ export function WorkValuesAssessment({ onComplete, initialResult, saving }: Work
           {localOrder.map((itemIdx, displayPos) => {
             const item = NEED_ITEMS[itemIdx];
             if (!item) return null;
-
-            // Determine if this card should show a drop indicator
             const showDropBefore = dropTargetIdx === displayPos && dropPosition === 'before' && draggedIdx !== displayPos;
             const showDropAfter = dropTargetIdx === displayPos && dropPosition === 'after' && draggedIdx !== displayPos;
-
             return (
               <RankCard
-                key={itemIdx}
-                text={item.text}
-                rankPos={displayPos}
+                key={itemIdx} text={item.text} rankPos={displayPos}
                 onDragStart={() => handleDragStart(displayPos)}
                 onDragOver={(e) => handleDragOver(e, displayPos)}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onDragEnd={handleDragEnd}
+                onDragLeave={handleDragLeave} onDrop={handleDrop} onDragEnd={handleDragEnd}
                 isDragging={draggedIdx === displayPos}
-                showDropBefore={showDropBefore}
-                showDropAfter={showDropAfter}
+                showDropBefore={showDropBefore} showDropAfter={showDropAfter}
               />
             );
           })}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginTop: '28px' }}>
-          <button onClick={goBackRanking} style={ui.secondary}>
-            ← Back
-          </button>
-          <button
-            onClick={confirmRanking}
-            disabled={saving}
-            style={{ ...ui.primary, opacity: saving ? 0.5 : 1 }}
-          >
+          <button onClick={goBackRanking} style={ui.secondary}>← Back</button>
+          <button onClick={confirmRanking} style={ui.primary}>
             {currentBlock < blocks.length - 1 ? 'Confirm →' : 'Next phase →'}
           </button>
         </div>
@@ -441,7 +455,8 @@ export function WorkValuesAssessment({ onComplete, initialResult, saving }: Work
     );
   }
 
-  if (phase === 'rating') {
+  // ── Assessment: rating phase ─────────────────────────────────
+  if (hookPhase === 'assessment' && ratingPhaseActive) {
     const item = currentRatingItem;
     if (!item) return null;
     return (
@@ -487,18 +502,16 @@ export function WorkValuesAssessment({ onComplete, initialResult, saving }: Work
           })}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginTop: '28px' }}>
-          <button onClick={goBackRating} style={ui.secondary}>
-            ← Back
-          </button>
+          <button onClick={goBackRating} style={ui.secondary}>← Back</button>
         </div>
       </div>
     );
   }
 
   // ── Review phase ─────────────────────────────────────────────
-  if (phase === 'review' && result) {
-    const topValue = result.values[0];
-    const consistencyLevel = result.consistency >= 0.8 ? 'high' : result.consistency >= 0.5 ? 'moderate' : 'low';
+  if (hookPhase === 'review' && activeResult) {
+    const topValue = activeResult.values[0];
+    const consistencyLevel = activeResult.consistency >= 0.8 ? 'high' : activeResult.consistency >= 0.5 ? 'moderate' : 'low';
     return (
       <div style={ui.page}>
         <p style={ui.kicker}>Your work values profile</p>
@@ -511,7 +524,7 @@ export function WorkValuesAssessment({ onComplete, initialResult, saving }: Work
 
         {/* Value bars */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', margin: '0 0 32px' }}>
-          {result.values.map((vs) => (
+          {activeResult.values.map((vs) => (
             <div key={vs.value}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
                 <span style={{ font: '500 14px var(--font-sans)', color: 'var(--color-text)' }}>
@@ -523,8 +536,7 @@ export function WorkValuesAssessment({ onComplete, initialResult, saving }: Work
               </div>
               <div style={{ height: '8px', background: 'var(--color-surface-elevated)', borderRadius: '2px', overflow: 'hidden' }}>
                 <div style={{
-                  height: '100%',
-                  width: `${vs.score}%`,
+                  height: '100%', width: `${vs.score}%`,
                   background: vs === topValue ? 'var(--color-accent)' : 'var(--color-text-dim)',
                   transition: 'width .4s ease',
                 }} />
@@ -549,9 +561,7 @@ export function WorkValuesAssessment({ onComplete, initialResult, saving }: Work
         )}
 
         <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
-          <button onClick={handleRedo} style={ui.secondary}>
-            Redo assessment
-          </button>
+          <button onClick={handleRedo} style={ui.secondary}>Redo assessment</button>
         </div>
       </div>
     );
