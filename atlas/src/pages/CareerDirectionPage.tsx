@@ -93,7 +93,7 @@ export function CareerDirectionPage() {
   return (
     <main id="atlas-main" className="atlas-page career-direction-page" tabIndex={-1} style={ui.page}>
       {/* ── Nav with status dots ── */}
-      <nav className="career-progress" aria-label="Career direction stages" style={{ borderBottom: '1px solid var(--color-border)', marginBottom: '40px', display: 'flex', overflowX: 'auto' }}>
+      <nav className="career-progress atlas-sticky-tabs" aria-label="Career direction stages" style={{ borderBottom: '1px solid var(--color-border)', marginBottom: '40px', display: 'flex', overflowX: 'auto' }}>
         {CAREER_STAGES.map((item, index) => {
           const status = currentStageStatus(item.id);
           const isActive = item.id === data.currentStage;

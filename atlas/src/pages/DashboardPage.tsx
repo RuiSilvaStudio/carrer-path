@@ -147,7 +147,7 @@ export function DashboardPage() {
       </header>
 
       {/* ── View Tabs ─────────────────────────────────────── */}
-      <div style={{ marginBottom: '28px' }}>
+      <div className="atlas-sticky-tabs" style={{ marginBottom: '28px' }}>
         <ViewTabs />
       </div>
 
