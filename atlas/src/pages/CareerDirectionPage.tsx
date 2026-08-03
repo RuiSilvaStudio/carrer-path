@@ -265,8 +265,6 @@ function ProfileStep({ data, setData, saving, move, touchProfile }: PageProps & 
         <p style={{ ...ui.kicker, marginBottom: '16px' }}>What matters to you</p>
         <WorkValuesAssessment
           onComplete={handleValuesComplete}
-          initialResult={data.preferences.workValues ?? null}
-          saving={saving}
         />
       </div>
 
