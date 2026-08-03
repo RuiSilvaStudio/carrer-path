@@ -22,6 +22,11 @@ import { FirstChartTour } from './components/ui/FirstChartTour';
 export default function App() {
   return (
     <Routes>
+      {/* Privacy policy is accessible without login (legal requirement).
+          Must come before the protected routes so it doesn't hit the
+          LegacyProtectedLayout redirect. */}
+      <Route path="/privacy" element={<PrivacyPage />} />
+
       {/* Existing Atlas Path remains in its original provider and UI shell. */}
       <Route element={<LegacyAppShell />}>
         <Route element={<LegacyProtectedLayout />}>
@@ -31,13 +36,9 @@ export default function App() {
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/cockpit" element={<CockpitPage />} />
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/sigil-lab" element={<SigilLabPage />} />
         </Route>
       </Route>
-
-      {/* Privacy policy is accessible without login (legal requirement) */}
-      <Route path="/privacy" element={<PrivacyPage />} />
 
       {/* Career Direction has an intentionally separate shell. No dashboard state,
           assessment navigation, pulse reminder, sigil, or chart tour is mounted. */}
