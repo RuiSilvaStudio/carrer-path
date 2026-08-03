@@ -12,7 +12,6 @@ import {
 // ── Props ──────────────────────────────────────────────────────
 interface WorkValuesAssessmentProps {
   onComplete: (result: WorkValuesResult) => void;
-  onBack: () => void;
   initialResult?: WorkValuesResult | null;
   saving?: boolean;
 }
@@ -169,7 +168,7 @@ function RankCard({
 }
 
 // ── Main component ──────────────────────────────────────────────
-export function WorkValuesAssessment({ onComplete, onBack, initialResult, saving }: WorkValuesAssessmentProps) {
+export function WorkValuesAssessment({ onComplete, initialResult, saving }: WorkValuesAssessmentProps) {
   const [phase, setPhase] = useState<Phase>(initialResult ? 'review' : 'intro');
   const [blocks] = useState<number[][]>(() => {
     try {
@@ -317,9 +316,12 @@ export function WorkValuesAssessment({ onComplete, onBack, initialResult, saving
     if (currentRatingIdx < ratingItems.length - 1) {
       setCurrentRatingIdx(currentRatingIdx + 1);
     } else {
-      // All rated — compute scores
+      // All rated — compute scores, pass result to parent immediately,
+      // then show the review phase. No "Done" button needed — the result
+      // is already in parent state and auto-saved.
       const computed = scoreWorkValues(updated ? { ...rankings } : rankings, updated);
       setResult(computed);
+      onComplete(computed);
       setPhase('review');
       try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(`${STORAGE_KEY}_blocks`); } catch { /* ignore */ }
     }
@@ -337,10 +339,6 @@ export function WorkValuesAssessment({ onComplete, onBack, initialResult, saving
   };
 
   // ── Review phase ─────────────────────────────────────────────
-  const handleComplete = () => {
-    if (result) onComplete(result);
-  };
-
   const handleRedo = () => {
     try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(`${STORAGE_KEY}_blocks`); } catch { /* ignore */ }
     setRankings({});
@@ -383,9 +381,6 @@ export function WorkValuesAssessment({ onComplete, onBack, initialResult, saving
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <button onClick={() => setPhase('ranking')} style={ui.primary}>
             Begin →
-          </button>
-          <button onClick={onBack} style={ui.secondary}>
-            ← Back
           </button>
         </div>
       </div>
@@ -553,16 +548,9 @@ export function WorkValuesAssessment({ onComplete, onBack, initialResult, saving
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
           <button onClick={handleRedo} style={ui.secondary}>
             Redo assessment
-          </button>
-          <button
-            onClick={handleComplete}
-            disabled={saving}
-            style={{ ...ui.primary, opacity: saving ? 0.5 : 1 }}
-          >
-            {saving ? 'Saving…' : 'Save and continue →'}
           </button>
         </div>
       </div>
