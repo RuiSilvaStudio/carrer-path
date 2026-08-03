@@ -342,7 +342,7 @@ def db_connect():
         sys.exit("Set SUPABASE_DB_PASSWORD (env or .env).")
     import psycopg2
     conn = psycopg2.connect(
-        host="db.ncwtmagvjtpqnwroyuha.supabase.co", port=5432, dbname="postgres",
+        host="db.ncwtmagvjtpqnwroyuha.supabase.co", port=5432, dbname="postgres",  # DECOMMISSIONED — update to self-hosted Supabase
         user="postgres", password=pw, connect_timeout=15,
     )
     conn.autocommit = True
