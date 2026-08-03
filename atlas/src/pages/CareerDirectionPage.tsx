@@ -536,6 +536,12 @@ function DirectionsContent({ data, setData, saving, save, newDirection, setNewDi
             direction={direction}
             enriching={enrichingIds.has(direction.id)}
             onToggle={() => setData(prev => ({ ...prev, directions: prev.directions.map((item) => item.id === direction.id ? { ...item, selected: !item.selected } : item) }))}
+            onDelete={() => {
+              const next = { ...data, directions: data.directions.filter(d => d.id !== direction.id) };
+              setData(next);
+              void save(next, 'Direction removed.');
+              void track('direction_deleted', { title: direction.title });
+            }}
           />
         ))}
       </div>
@@ -596,23 +602,37 @@ function SuggestionCard({ suggestion, onAdd, onDismiss }: { suggestion: Suggesti
   );
 }
 
-function DirectionChoice({ direction, enriching, onToggle }: { direction: CareerDirection; enriching?: boolean; onToggle: () => void }) {
+function DirectionChoice({ direction, enriching, onToggle, onDelete }: { direction: CareerDirection; enriching?: boolean; onToggle: () => void; onDelete: () => void }) {
   const reference = matchReference(direction.title);
   const hasEnrichment = !!direction.enrichment;
   return (
-    <label className="career-choice" style={{ ...ui.panel, borderColor: direction.selected ? 'var(--color-accent)' : 'var(--color-border)', cursor: 'pointer' }}>
-      <input type="checkbox" checked={direction.selected} onChange={onToggle} />
-      <div>
-        <p style={ui.kicker}>{direction.selected ? 'Included in comparison' : 'Not selected'}</p>
-        <h3 style={{ font: '400 var(--fs-h2)/1.12 var(--font-serif)', margin: '8px 0 8px' }}>{direction.title}</h3>
-        <p style={{ ...ui.quiet, fontSize: '13px' }}>{reference?.description ?? direction.summary}</p>
+    <div className="career-choice" style={{ ...ui.panel, borderColor: direction.selected ? 'var(--color-accent)' : 'var(--color-border)', position: 'relative' }}>
+      <button
+        onClick={(e) => { e.preventDefault(); onDelete(); }}
+        aria-label="Delete direction"
+        style={{
+          position: 'absolute', top: '8px', right: '8px',
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: 'var(--color-text-dim)', fontSize: '16px', lineHeight: 1,
+          padding: '4px 6px', minHeight: 'auto', minWidth: 'auto',
+          opacity: 0.5, transition: 'opacity 0.15s ease, color 0.15s ease',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-danger)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.color = 'var(--color-text-dim)'; }}
+      >
+        ×
+      </button>
+      <label style={{ cursor: 'pointer' }}>
+        <input type="checkbox" checked={direction.selected} onChange={onToggle} />
+        <p style={ui.kicker}>{direction.selected ? 'Included' : 'Not selected'}</p>
+        <h3 style={{ font: '400 var(--fs-h2)/1.12 var(--font-serif)', margin: '8px 0 8px', paddingRight: '24px' }}>{direction.title}</h3>
         {enriching && <LLMLoader message="Analysing direction" loading={enriching} />}
         {!enriching && hasEnrichment && (
-          <p style={{ ...ui.quiet, fontSize: '11px', color: 'var(--color-success)', marginTop: '8px' }}>✓ Analysed — see in Compare</p>
+          <p style={{ ...ui.quiet, fontSize: '11px', color: 'var(--color-success)', margin: 0 }}>✓ Analysed — see in Compare</p>
         )}
-        <p style={{ color: 'var(--color-text-dim)', font: '10px/1.55 var(--font-mono)', letterSpacing: '.04em', marginTop: '12px' }}>{reference ? `ESCO / ISCO-08 ${reference.iscoCode}` : 'Your own direction'}</p>
-      </div>
-    </label>
+        <p style={{ color: 'var(--color-text-dim)', font: '10px/1.55 var(--font-mono)', letterSpacing: '.04em', marginTop: hasEnrichment ? '8px' : '0' }}>{reference ? `ESCO / ISCO-08 ${reference.iscoCode}` : 'Your own direction'}</p>
+      </label>
+    </div>
   );
 }
 
