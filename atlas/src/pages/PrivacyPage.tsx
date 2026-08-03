@@ -85,8 +85,7 @@ export function PrivacyPage() {
           <ul>
             <li><strong style={{ color: 'var(--color-text)' }}>Account:</strong> Email address and password (stored as a bcrypt hash).</li>
             <li><strong style={{ color: 'var(--color-text)' }}>Assessment data:</strong> Your Big Five personality scores (baseline + weekly pulses), responses, context tags, emotions, and notes.</li>
-            <li><strong style={{ color: 'var(--color-color-text)' }}>Career profile:</strong> Work history, skills, preferences, and career direction hypotheses you create.</li>
-            <li><strong style={{ color: 'var(--color-text)' }}>Contacts (cockpit):</strong> Names, companies, and outreach notes you manually add to your networking cockpit.</li>
+            <li><strong style={{ color: 'var(--color-text)' }}>Career profile:</strong> Work history, skills, preferences, and career direction hypotheses you create.</li>
             <li><strong style={{ color: 'var(--color-text)' }}>Job listings:</strong> Job postings you save or that are matched to your profile.</li>
             <li><strong style={{ color: 'var(--color-text)' }}>Feedback:</strong> Optional feedback you provide through in-app prompts (thumbs up/down, text, rankings).</li>
             <li><strong style={{ color: 'var(--color-text)' }}>Analytics events:</strong> Privacy-safe event names (e.g., "page_viewed") with no personal identifiers beyond your user ID.</li>
@@ -103,7 +102,7 @@ export function PrivacyPage() {
           <ul>
             <li>Display your assessment results and trajectory over time</li>
             <li>Generate career direction suggestions using the self-hosted AI model</li>
-            <li>Store your networking contacts and job listings</li>
+            <li>Store your job listings</li>
             <li>Improve the product based on aggregated, anonymized feedback</li>
           </ul>
           <p>
@@ -126,8 +125,8 @@ export function PrivacyPage() {
           <p>You have the following rights regarding your personal data:</p>
           <ul>
             <li><strong style={{ color: 'var(--color-text)' }}>Right of access (Art. 15):</strong> View all your data at any time within the app, or export it as CSV.</li>
-            <li><strong style={{ color: 'var(--color-text)' }}>Right to rectification (Art. 16):</strong> Edit your profile, assessment notes, and contact information at any time.</li>
-            <li><strong style={{ color: 'var(--color-text)' }}>Right to erasure (Art. 17):</strong> Delete individual assessments, contacts, or your entire account permanently. Account deletion wipes all associated data — this is a hard delete, not a soft deactivation.</li>
+            <li><strong style={{ color: 'var(--color-text)' }}>Right to rectification (Art. 16):</strong> Edit your profile and assessment notes at any time.</li>
+            <li><strong style={{ color: 'var(--color-text)' }}>Right to erasure (Art. 17):</strong> Delete individual assessments, job listings, or your entire account permanently. Account deletion wipes all associated data — this is a hard delete, not a soft deactivation.</li>
             <li><strong style={{ color: 'var(--color-text)' }}>Right to data portability (Art. 20):</strong> Download all your data as CSV files from the Profile page.</li>
             <li><strong style={{ color: 'var(--color-text)' }}>Right to restrict processing (Art. 18):</strong> Stop using specific features (e.g., the AI career direction tool) while keeping your account.</li>
             <li><strong style={{ color: 'var(--color-text)' }}>Right to object (Art. 21):</strong> Object to analytics or feedback processing — contact us and we will disable it.</li>
@@ -145,7 +144,7 @@ export function PrivacyPage() {
             <li><strong style={{ color: 'var(--color-text)' }}>Account data:</strong> Retained until you delete your account. No automatic expiration.</li>
             <li><strong style={{ color: 'var(--color-text)' }}>Analytics events:</strong> Automatically deleted after 24 months.</li>
             <li><strong style={{ color: 'var(--color-text)' }}>Feedback events:</strong> Automatically deleted after 24 months.</li>
-            <li><strong style={{ color: 'var(--color-text)' }}>Assessments, contacts, job listings:</strong> Retained until you delete them individually or delete your account.</li>
+            <li><strong style={{ color: 'var(--color-text)' }}>Assessments, job listings:</strong> Retained until you delete them individually or delete your account.</li>
             <li><strong style={{ color: 'var(--color-text)' }}>Backups:</strong> Daily database backups are retained for 7 days, then automatically deleted. Backups are stored on the same EU server.</li>
           </ul>
         </Section>
