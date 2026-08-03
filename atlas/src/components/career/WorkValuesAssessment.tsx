@@ -59,7 +59,7 @@ const ui = {
   },
   cardActive: {
     borderColor: 'var(--color-accent)' as const,
-    opacity: '0.5' as const,
+    opacity: '0.4' as const,
   },
   primary: {
     border: '1px solid var(--color-accent)' as const,
@@ -107,45 +107,64 @@ const ui = {
     cursor: 'pointer' as const,
     transition: 'border-color .15s, background .15s' as const,
   },
+  dropLine: {
+    height: '2px',
+    background: 'var(--color-accent)',
+    borderRadius: '1px',
+    margin: '-4px 0',
+    boxShadow: '0 0 6px 0 var(--color-accent)',
+    transition: 'opacity .1s',
+  },
 };
 
-// ── Drag-and-drop ranking card ──────────────────────────────────
+// ── Drag-and-drop ranking card with drop indicator ──────────────
 function RankCard({
   text,
   rankPos,
   onDragStart,
   onDragOver,
+  onDragLeave,
   onDrop,
   onDragEnd,
   isDragging,
+  showDropBefore,
+  showDropAfter,
 }: {
   text: string;
   rankPos: number;
   onDragStart: () => void;
   onDragOver: (e: React.DragEvent) => void;
+  onDragLeave: () => void;
   onDrop: () => void;
   onDragEnd: () => void;
   isDragging: boolean;
+  showDropBefore: boolean;
+  showDropAfter: boolean;
 }) {
   return (
-    <div
-      draggable
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
-      onDragEnd={onDragEnd}
-      style={{
-        ...ui.card,
-        ...(isDragging ? ui.cardActive : {}),
-        display: 'flex',
-        alignItems: 'center',
-        gap: '14px',
-      }}
-    >
-      <span style={ui.rankLabel}>{rankPos + 1}</span>
-      <span style={{ flex: 1 }}>{text}</span>
-      <span style={{ color: 'var(--color-text-dim)', fontSize: '18px', cursor: 'grab' }}>⋮⋮</span>
-    </div>
+    <>
+      {showDropBefore && <div style={ui.dropLine} />}
+      <div
+        draggable
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+        onDragEnd={onDragEnd}
+        style={{
+          ...ui.card,
+          ...(isDragging ? ui.cardActive : {}),
+          display: 'flex',
+          alignItems: 'center',
+          gap: '14px',
+        }}
+      >
+        <span style={ui.rankLabel}>{rankPos + 1}</span>
+        <span style={{ flex: 1 }}>{text}</span>
+        <span style={{ color: 'var(--color-text-dim)', fontSize: '18px', cursor: 'grab' }}>⋮⋮</span>
+      </div>
+      {showDropAfter && <div style={ui.dropLine} />}
+    </>
   );
 }
 
@@ -165,6 +184,8 @@ export function WorkValuesAssessment({ onComplete, onBack, initialResult, saving
   const [currentRatingIdx, setCurrentRatingIdx] = useState(0);
   const [result, setResult] = useState<WorkValuesResult | null>(initialResult ?? null);
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+  const [dropTargetIdx, setDropTargetIdx] = useState<number | null>(null);
+  const [dropPosition, setDropPosition] = useState<'before' | 'after' | null>(null);
 
   // Persist blocks to localStorage
   useEffect(() => {
@@ -203,16 +224,67 @@ export function WorkValuesAssessment({ onComplete, onBack, initialResult, saving
   useEffect(() => { setLocalOrder(blockItems); }, [currentBlock]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDragStart = (idx: number) => setDraggedIdx(idx);
-  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); };
-  const handleDrop = (targetIdx: number) => {
-    if (draggedIdx === null || draggedIdx === targetIdx) return;
+
+  const handleDragOver = (e: React.DragEvent, targetIdx: number) => {
+    e.preventDefault();
+    if (draggedIdx === null) return;
+    if (draggedIdx === targetIdx) {
+      setDropTargetIdx(null);
+      setDropPosition(null);
+      return;
+    }
+
+    // Determine if cursor is in the top or bottom half of the target card
+    const cardEl = e.currentTarget as HTMLDivElement;
+    const rect = cardEl.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    const isAbove = e.clientY < midpoint;
+
+    setDropTargetIdx(targetIdx);
+    setDropPosition(isAbove ? 'before' : 'after');
+  };
+
+  const handleDragLeave = () => {
+    // Don't clear immediately — let the next card's dragover set the new target
+    // Only clear if we actually left the list area
+  };
+
+  const handleDrop = () => {
+    if (draggedIdx === null || dropTargetIdx === null || dropPosition === null) {
+      setDraggedIdx(null);
+      setDropTargetIdx(null);
+      setDropPosition(null);
+      return;
+    }
+
+    // Calculate the actual insertion index
+    let insertAt = dropTargetIdx;
+    if (dropPosition === 'after') insertAt = dropTargetIdx + 1;
+
+    // If dragging from below the insertion point, adjust for removal
+    if (draggedIdx < insertAt) insertAt -= 1;
+
+    if (draggedIdx === insertAt || (draggedIdx === insertAt + 1 && dropPosition === 'before')) {
+      setDraggedIdx(null);
+      setDropTargetIdx(null);
+      setDropPosition(null);
+      return;
+    }
+
     const newOrder = [...localOrder];
     const [moved] = newOrder.splice(draggedIdx, 1);
-    newOrder.splice(targetIdx, 0, moved);
+    newOrder.splice(insertAt, 0, moved);
     setLocalOrder(newOrder);
     setDraggedIdx(null);
+    setDropTargetIdx(null);
+    setDropPosition(null);
   };
-  const handleDragEnd = () => setDraggedIdx(null);
+
+  const handleDragEnd = () => {
+    setDraggedIdx(null);
+    setDropTargetIdx(null);
+    setDropPosition(null);
+  };
 
   const confirmRanking = () => {
     const updated = { ...rankings, [currentBlock]: localOrder };
@@ -330,22 +402,30 @@ export function WorkValuesAssessment({ onComplete, onBack, initialResult, saving
         <h1 style={{ ...ui.h1, fontSize: '32px' }}>Rank these by importance.</h1>
         <p style={{ ...ui.quiet, fontSize: '14px', marginBottom: '24px' }}>
           Drag to reorder. The top item matters most to you in your next role. The bottom item
-          matters least.
+          matters least. A line shows where the item will land.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {localOrder.map((itemIdx, displayPos) => {
             const item = NEED_ITEMS[itemIdx];
             if (!item) return null;
+
+            // Determine if this card should show a drop indicator
+            const showDropBefore = dropTargetIdx === displayPos && dropPosition === 'before' && draggedIdx !== displayPos;
+            const showDropAfter = dropTargetIdx === displayPos && dropPosition === 'after' && draggedIdx !== displayPos;
+
             return (
               <RankCard
                 key={itemIdx}
                 text={item.text}
                 rankPos={displayPos}
                 onDragStart={() => handleDragStart(displayPos)}
-                onDragOver={handleDragOver}
-                onDrop={() => handleDrop(displayPos)}
+                onDragOver={(e) => handleDragOver(e, displayPos)}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
                 onDragEnd={handleDragEnd}
                 isDragging={draggedIdx === displayPos}
+                showDropBefore={showDropBefore}
+                showDropAfter={showDropAfter}
               />
             );
           })}
