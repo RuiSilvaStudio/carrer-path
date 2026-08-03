@@ -305,6 +305,7 @@ function ExplorerStep({ data, setData, saving, save, newDirection, setNewDirecti
           data={data}
           setData={setData}
           saving={saving}
+          save={save}
           newDirection={newDirection}
           setNewDirection={setNewDirection}
           onContinue={() => setWizardStep('compare')}
@@ -326,7 +327,7 @@ function ExplorerStep({ data, setData, saving, save, newDirection, setNewDirecti
 
 // ── Wizard Screen 1: Directions ────────────────────────────────────────
 
-function DirectionsContent({ data, setData, saving, newDirection, setNewDirection, onContinue }: StepProps & { newDirection: string; setNewDirection: (v: string) => void; onContinue: () => void }) {
+function DirectionsContent({ data, setData, saving, save, newDirection, setNewDirection, onContinue }: StepProps & { save: (next: CareerDirectionData, message?: string) => Promise<boolean>; newDirection: string; setNewDirection: (v: string) => void; onContinue: () => void }) {
   const [loading, setLoading] = useState(false);
   const [suggestionError, setSuggestionError] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
@@ -409,16 +410,21 @@ function DirectionsContent({ data, setData, saving, newDirection, setNewDirectio
       });
       if (!response.ok) return;
       const enrichment = await response.json();
-      setData(prev => ({
-        ...prev,
-        directions: prev.directions.map(d => d.id === directionId ? {
-          ...d,
-          enrichment: { ...enrichment, enrichedAt: new Date().toISOString() },
-          summary: enrichment.rationale || d.summary,
-          unknown: enrichment.whatIsUnknown || d.unknown,
-          nextTest: enrichment.suggestedTest || d.nextTest,
-        } : d),
-      }));
+      setData(prev => {
+        const updated = {
+          ...prev,
+          directions: prev.directions.map(d => d.id === directionId ? {
+            ...d,
+            enrichment: { ...enrichment, enrichedAt: new Date().toISOString() },
+            summary: enrichment.rationale || d.summary,
+            unknown: enrichment.whatIsUnknown || d.unknown,
+            nextTest: enrichment.suggestedTest || d.nextTest,
+          } : d),
+        };
+        // Persist enrichment so it survives tab switches / reloads
+        void save(updated);
+        return updated;
+      });
       void track('direction_enriched', { direction_id: directionId });
     } catch { /* silent */ }
     finally {
@@ -431,9 +437,12 @@ function DirectionsContent({ data, setData, saving, newDirection, setNewDirectio
     if (!cleaned) return;
     if (data.directions.some(item => item.title.toLowerCase() === cleaned.toLowerCase())) return;
     const newDir = directionFromTitle(cleaned);
-    setData(prev => ({ ...prev, directions: [...prev.directions, newDir] }));
+    const next = { ...data, directions: [...data.directions, newDir] };
+    setData(next);
     setNewDirection('');
-    void track('direction_added', { title: cleaned, total_directions: data.directions.length + 1 });
+    void track('direction_added', { title: cleaned, total_directions: next.directions.length });
+    // Persist immediately so data survives tab switches / reloads
+    void save(next, 'Direction added.');
     // Auto-enrich on add
     if (hasProfile) {
       // Use setTimeout to let state settle before enriching
