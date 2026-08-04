@@ -9,6 +9,7 @@ import { useAssessments } from '../hooks/useAssessments';
 import { useDemoData } from '../hooks/useDemoData';
 import { useTheme } from '../hooks/useTheme';
 import { Sigil } from '../components/sigil/Sigil';
+import { Spinner } from '../components/ui/Spinner';
 import { sigilInputFromData, type SigilInput } from '../lib/sigil';
 import type { AssessmentScores, DemoPulse } from '../types';
 
@@ -104,7 +105,7 @@ export function SigilLabPage() {
       </header>
 
       {(loading || demoLoading) && (
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-text-muted)' }}>Loading data…</p>
+        <Spinner message="Loading data…" />
       )}
 
       {!loading && !demoLoading && sources.map(src => (

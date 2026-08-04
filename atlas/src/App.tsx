@@ -4,6 +4,7 @@ import { useAuth } from './hooks/useAuth';
 import { LandingPage } from './components/LandingPage';
 import type { AuthMode } from './components/AuthModal';
 import { Nav } from './components/Nav';
+import { Spinner } from './components/ui/Spinner';
 import { DashboardProvider } from './state/DashboardContext';
 import { DashboardPage } from './pages/DashboardPage';
 import { BaselinePage } from './pages/BaselinePage';
@@ -63,7 +64,7 @@ function LegacyAppShell() {
 function CareerProtectedLayout() {
   const { user, loading } = useAuth();
   const [authOpen, setAuthOpen] = useState<AuthMode | null>(null);
-  if (loading) return <div style={{ padding: '40px', color: 'var(--color-text-muted)' }}>Loading…</div>;
+  if (loading) return <div style={{ padding: '40px' }}><Spinner message="Loading…" /></div>;
   if (!user) return <LandingPage authOpen={authOpen} onOpenAuth={setAuthOpen} onCloseAuth={() => setAuthOpen(null)} />;
   return <div style={{ minHeight: '100vh' }}><Nav /><Outlet /></div>;
 }
@@ -71,7 +72,7 @@ function CareerProtectedLayout() {
 function LegacyProtectedLayout() {
   const { user, loading } = useAuth();
   const [authOpen, setAuthOpen] = useState<AuthMode | null>(null);
-  if (loading) return <div style={{ padding: '40px', color: 'var(--color-text-muted)' }}>Loading…</div>;
+  if (loading) return <div style={{ padding: '40px' }}><Spinner message="Loading…" /></div>;
   if (!user) return <LandingPage authOpen={authOpen} onOpenAuth={setAuthOpen} onCloseAuth={() => setAuthOpen(null)} />;
   return <div style={{ minHeight: '100vh' }}><Nav /><Outlet /><PulseReminder /></div>;
 }

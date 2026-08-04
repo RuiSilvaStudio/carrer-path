@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { formatConnectionError } from '../lib/errors';
 import {
   createEmptyCareerDirection,
   normaliseCareerDirection,
@@ -40,7 +41,7 @@ export function useCareerDirection() {
       .from('career_direction_profiles')
       .upsert({ user_id: user.id, data: timestamped }, { onConflict: 'user_id' });
     if (saveError) {
-      setError(saveError.message);
+      setError(formatConnectionError(saveError.message));
       return false;
     }
     setData(timestamped);
@@ -129,7 +130,7 @@ export function useCareerDirection() {
       .maybeSingle();
 
     if (loadError) {
-      setError(loadError.message);
+      setError(formatConnectionError(loadError.message));
     } else {
       setData(normaliseCareerDirection(row?.data));
     }
@@ -168,7 +169,7 @@ export function useCareerDirection() {
       .eq('user_id', user.id);
     setSaving(false);
     if (deleteError) {
-      setError(deleteError.message);
+      setError(formatConnectionError(deleteError.message));
       setSaveStatus('error');
       skipAutoSaveRef.current = false;
       return false;

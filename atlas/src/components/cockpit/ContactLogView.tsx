@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useContactLog } from '../../hooks/useContactLog';
+import { Spinner } from '../ui/Spinner';
 import type { ContactLogEntry } from '../../types/contactLog';
 import type { CockpitContact } from '../../types/cockpit';
 
@@ -124,9 +125,7 @@ export function ContactLogView({ contact }: { contact: CockpitContact }) {
       </div>
 
       {loading && (
-        <div style={{ fontSize: '12px', color: 'var(--color-text-dim)', fontStyle: 'italic' }}>
-          Loading…
-        </div>
+        <Spinner message="Loading…" />
       )}
 
       {error && (

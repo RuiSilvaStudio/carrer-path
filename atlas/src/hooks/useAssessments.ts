@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Assessment } from '../types';
 import { supabase } from '../lib/supabase';
+import { formatConnectionError } from '../lib/errors';
 
 export function useAssessments(userId: string | null) {
   const [baseline, setBaseline] = useState<Assessment | null>(null);
@@ -41,7 +42,7 @@ export function useAssessments(userId: string | null) {
         setPulses(ps);
       } catch (e: any) {
         console.error('Failed to fetch assessments:', e);
-        setError(e?.message || 'Could not load your data.');
+        setError(formatConnectionError(e?.message || 'Could not load your data.'));
       }
       setFetchedForUserId(userId!);
       setLoading(false);

@@ -6,6 +6,7 @@ import { useAssessments } from '../hooks/useAssessments';
 import { useDemoData } from '../hooks/useDemoData';
 import { useDashboardState } from '../state/DashboardContext';
 import { ViewTabs } from '../components/dashboard/ViewTabs';
+import { Spinner } from '../components/ui/Spinner';
 import { TrajectoryView } from '../components/dashboard/views/TrajectoryView';
 import { DistributionView } from '../components/dashboard/views/DistributionView';
 import { ContextView } from '../components/dashboard/views/ContextView';
@@ -56,9 +57,7 @@ export function DashboardPage() {
   if (loading || demoLoading) {
     return (
       <div style={{ padding: '60px 40px', maxWidth: '1200px', margin: '0 auto', color: 'var(--color-text-muted)' }}>
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.12em' }}>
-          Loading…
-        </p>
+        <Spinner message="Loading your dashboard…" />
       </div>
     );
   }

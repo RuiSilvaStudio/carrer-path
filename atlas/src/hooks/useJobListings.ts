@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { formatConnectionError } from '../lib/errors';
 import { useAuth } from './useAuth';
 import type { JobListing, JobStatus } from '../types/cockpit';
 
@@ -26,7 +27,7 @@ export function useJobListings() {
       .order('match_score', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false });
     if (fetchError) {
-      setError(fetchError.message);
+      setError(formatConnectionError(fetchError.message));
     } else {
       setJobs((data as JobListing[]) || []);
     }
@@ -45,7 +46,7 @@ export function useJobListings() {
       .select()
       .single();
     if (insertError) {
-      setError(insertError.message);
+      setError(formatConnectionError(insertError.message));
       return;
     }
     if (data) {
@@ -61,7 +62,7 @@ export function useJobListings() {
       .select()
       .single();
     if (updateError) {
-      setError(updateError.message);
+      setError(formatConnectionError(updateError.message));
       return;
     }
     if (data) {
@@ -77,7 +78,7 @@ export function useJobListings() {
       .select()
       .single();
     if (updateError) {
-      setError(updateError.message);
+      setError(formatConnectionError(updateError.message));
       return;
     }
     if (data) {
@@ -91,7 +92,7 @@ export function useJobListings() {
       .delete()
       .eq('id', id);
     if (deleteError) {
-      setError(deleteError.message);
+      setError(formatConnectionError(deleteError.message));
       return;
     }
     setJobs(prev => prev.filter(j => j.id !== id));

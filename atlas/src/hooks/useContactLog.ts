@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { formatConnectionError } from '../lib/errors';
 import { useAuth } from './useAuth';
 import type { ContactLogEntry, NewLogEntry, LogEntryUpdate } from '../types/contactLog';
 
@@ -22,7 +23,7 @@ export function useContactLog(contactId: number | null) {
       .eq('contact_id', contactId)
       .order('sent_date', { ascending: false });
     if (fetchError) {
-      setError(fetchError.message);
+      setError(formatConnectionError(fetchError.message));
     } else {
       setLogs((data as ContactLogEntry[]) || []);
     }
@@ -41,7 +42,7 @@ export function useContactLog(contactId: number | null) {
       .select()
       .single();
     if (insertError) {
-      setError(insertError.message);
+      setError(formatConnectionError(insertError.message));
       return;
     }
     if (data) {
@@ -57,7 +58,7 @@ export function useContactLog(contactId: number | null) {
       .select()
       .single();
     if (updateError) {
-      setError(updateError.message);
+      setError(formatConnectionError(updateError.message));
       return;
     }
     if (data) {
@@ -71,7 +72,7 @@ export function useContactLog(contactId: number | null) {
       .delete()
       .eq('id', id);
     if (deleteError) {
-      setError(deleteError.message);
+      setError(formatConnectionError(deleteError.message));
       return;
     }
     setLogs(prev => prev.filter(l => l.id !== id));

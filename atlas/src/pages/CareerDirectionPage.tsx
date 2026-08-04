@@ -23,6 +23,7 @@ import { supabase, EDGE_FUNCTIONS_BASE } from '../lib/supabase';
 import { WorkValuesAssessment } from '../components/career/WorkValuesAssessment';
 import { ProfileBuilder } from '../components/career/ProfileBuilder';
 import { LLMLoader } from '../components/ui/LLMLoader';
+import { Spinner } from '../components/ui/Spinner';
 import { FeedbackPrompt } from '../components/ui/FeedbackPrompt';
 import { VALUE_LABELS, type WorkValuesResult } from '../lib/work-values-data';
 import { type StructuredProfile } from '../lib/profile-data';
@@ -131,7 +132,7 @@ export function CareerDirectionPage() {
     profileUpdatedAt: new Date().toISOString(),
   });
 
-  if (loading) return <main className="atlas-page" style={ui.page}><p style={ui.quiet}>Opening your direction work…</p></main>;
+  if (loading) return <main className="atlas-page" style={ui.page}><Spinner message="Opening your direction work…" /></main>;
 
   const currentStageStatus = (s: CareerStage) => getStageStatus(data, s);
 
