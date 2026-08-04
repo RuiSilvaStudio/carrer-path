@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { formatConnectionError } from '../lib/errors';
 import { useAuth } from './useAuth';
 import { scoreWorkValues, type WorkValuesResult } from '../lib/work-values-data';
 
@@ -117,7 +118,7 @@ export function useWorkValues() {
         setPhase('intro');
       }
     } catch (e: any) {
-      setError(e?.message || 'Could not load work values.');
+      setError(formatConnectionError(e?.message || 'Could not load work values.'));
       setPhase('intro');
     }
     setLoading(false);
@@ -163,7 +164,7 @@ export function useWorkValues() {
       setDraftState(initialDraft);
       setPhase('assessment');
     } catch (e: any) {
-      setError(e?.message || 'Could not start assessment.');
+      setError(formatConnectionError(e?.message || 'Could not start assessment.'));
     }
   }, [user]);
 
@@ -252,7 +253,7 @@ export function useWorkValues() {
 
       return computed;
     } catch (e: any) {
-      setError(e?.message || 'Could not save completed assessment.');
+      setError(formatConnectionError(e?.message || 'Could not save completed assessment.'));
       return null;
     }
   }, [user]);

@@ -8,6 +8,7 @@ import {
   type WorkValuesResult,
 } from '../../lib/work-values-data';
 import { useWorkValues } from '../../hooks/useWorkValues';
+import { Spinner } from '../ui/Spinner';
 
 // ── Props ──────────────────────────────────────────────────────
 interface WorkValuesAssessmentProps {
@@ -354,7 +355,7 @@ export function WorkValuesAssessment({ onComplete }: WorkValuesAssessmentProps) 
   if (loading || hookPhase === 'loading') {
     return (
       <div style={ui.page}>
-        <p style={{ ...ui.quiet, margin: 0 }}>Loading…</p>
+        <Spinner message="Loading…" />
       </div>
     );
   }

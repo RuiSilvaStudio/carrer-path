@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useCockpit } from '../../hooks/useCockpit';
 import { useJobListings } from '../../hooks/useJobListings';
+import { Spinner } from '../ui/Spinner';
 import type { CockpitContact, PipelineStatus } from '../../types/cockpit';
 import type { NewContact, ContactUpdate } from '../../hooks/useCockpit';
 import { CompaniesView } from './CompaniesView';
@@ -147,9 +148,7 @@ export function Cockpit() {
   if (activeTab === 'contacts' && loading) {
     return (
       <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-          Loading cockpit…
-        </div>
+        <Spinner message="Loading cockpit…" />
       </div>
     );
   }
@@ -540,9 +539,7 @@ export function Cockpit() {
       {activeTab === 'jobs' && (
         jobsLoading ? (
           <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-              Loading job listings…
-            </div>
+            <Spinner message="Loading job listings…" />
           </div>
         ) : jobsError ? (
           <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--color-danger)' }}>

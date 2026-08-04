@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAssessments } from '../hooks/useAssessments';
+import { Spinner } from '../components/ui/Spinner';
 import { supabase, EDGE_FUNCTIONS_BASE } from '../lib/supabase';
 import { Sigil } from '../components/sigil/Sigil';
 import { FeedbackPrompt } from '../components/ui/FeedbackPrompt';
@@ -155,7 +156,7 @@ export function ProfilePage() {
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: '28px', flexWrap: 'wrap' }}>
           {loading ? (
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-text-dim)' }}>Loading…</p>
+            <Spinner message="Loading…" />
           ) : sigilInput ? (
             <>
               <Sigil input={sigilInput} size={132} showInsignia />
