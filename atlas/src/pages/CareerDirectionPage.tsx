@@ -5,17 +5,14 @@ import { matchReference } from '../lib/careerRoleReference';
 import {
   CAREER_STAGES,
   advanceStage,
-  directionCountForComparison,
   directionFromTitle,
   getChosenDirection,
-  getActiveDirections,
   getStageStatus,
   isExplorerStale,
   isMarketStale,
   type CareerDirection,
   type CareerDirectionData,
   type CareerStage,
-  type StageStatus,
   type WizardStep,
 } from '../lib/careerDirection';
 import { track } from '../lib/analytics';
@@ -40,20 +37,6 @@ const ui = {
   primary: { border: '1px solid var(--color-accent)', background: 'var(--color-accent)', color: 'var(--color-bg)', borderRadius: 'var(--radius-button)', padding: '12px 16px', font: '600 11px var(--font-mono)', letterSpacing: '.08em', textTransform: 'uppercase' as const, cursor: 'pointer' },
   secondary: { border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-text-muted)', borderRadius: 'var(--radius-button)', padding: '12px 16px', font: '11px var(--font-mono)', letterSpacing: '.08em', textTransform: 'uppercase' as const, cursor: 'pointer' },
   tag: { display: 'inline-flex', alignItems: 'center', padding: '4px 8px', background: 'var(--color-surface-elevated)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-element)', font: '11px var(--font-sans)', color: 'var(--color-text)' },
-};
-
-// ── Nav status dot ─────────────────────────────────────────────────────
-const STATUS_SYMBOL: Record<StageStatus, string> = {
-  empty: '○',
-  in_progress: '●',
-  complete: '✓',
-  stale: '⚠',
-};
-const STATUS_COLOR: Record<StageStatus, string> = {
-  empty: 'var(--color-text-dim)',
-  in_progress: 'var(--color-accent)',
-  complete: 'var(--color-success)',
-  stale: 'var(--color-warning)',
 };
 
 // ── Auto-save status pill ───────────────────────────────────────────
@@ -138,7 +121,7 @@ export function CareerDirectionPage() {
 
   return (
     <main id="atlas-main" className="atlas-page career-direction-page" tabIndex={-1} style={ui.page}>
-      {/* ── Nav with status dots + save pill ── */}
+      {/* ── Stage tabs (Profile / Explorer / Market & Action) + save pill ── */}
       <nav className="career-progress atlas-sticky-tabs" aria-label="Career direction stages" style={{ borderBottom: '1px solid var(--color-border)', marginBottom: '40px', display: 'flex', alignItems: 'center', overflowX: 'auto' }}>
         {CAREER_STAGES.map((item, index) => {
           const status = currentStageStatus(item.id);
@@ -149,17 +132,11 @@ export function CareerDirectionPage() {
               key={item.id}
               onClick={() => isAccessible && setData(stage(data, item.id))}
               disabled={!isAccessible}
-              style={{
-                background: 'transparent', border: 0,
-                borderBottom: isActive ? '2px solid var(--color-accent)' : '2px solid transparent',
-                color: isActive ? 'var(--color-accent)' : isAccessible ? 'var(--color-text-muted)' : 'var(--color-text-dim)',
-                padding: '12px 12px', whiteSpace: 'nowrap',
-                font: '10px var(--font-mono)', letterSpacing: '.08em', textTransform: 'uppercase',
-                cursor: isAccessible ? 'pointer' : 'not-allowed', opacity: isAccessible ? 1 : 0.4,
-              }}
+              data-active={isActive ? 'true' : 'false'}
+              className={`atlas-tab-btn${isActive ? ' active' : ''}`}
             >
-              <span style={{ color: STATUS_COLOR[status], marginRight: '4px' }}>{STATUS_SYMBOL[status]}</span>
-              {String(index + 1).padStart(2, '0')} <span>{item.label}</span>
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <span className="atlas-tab-label">{item.label}</span>
             </button>
           );
         })}
@@ -174,7 +151,6 @@ export function CareerDirectionPage() {
 
       {data.currentStage === 'profile' && <ProfileStep data={data} setData={setData} saving={saving} move={move} touchProfile={touchProfile} />}
       {data.currentStage === 'explorer' && <ExplorerStep data={data} setData={setData} saving={saving} save={save} newDirection={newDirection} setNewDirection={setNewDirection} />}
-      {data.currentStage === 'brief' && <BriefStep data={data} setData={setData} saving={saving} move={move} />}
       {data.currentStage === 'marketAction' && <MarketActionStep data={data} setData={setData} saving={saving} save={save} />}
 
       <section style={{ ...ui.rule, paddingTop: '20px', borderTop: '1px solid var(--color-border)' }} aria-label="Career direction data controls">
@@ -284,153 +260,152 @@ function ProfileStep({ data, setData, saving, move, touchProfile }: PageProps & 
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// STEP 02 — EXPLORER (re-runnable wizard: Directions → Compare)
+// STEP 02 — EXPLORER (re-runnable wizard: Suggested → Manual → Compare)
+//            whose outcome is the Brief (the chosen direction)
 // ═══════════════════════════════════════════════════════════════════════
 
 function ExplorerStep({ data, setData, saving, save, newDirection, setNewDirection }: StepProps & { save: (next: CareerDirectionData, message?: string) => Promise<boolean>; newDirection: string; setNewDirection: (v: string) => void }) {
-  const [wizardStep, setWizardStep] = useState<WizardStep>('directions');
+  const wizardStep: WizardStep = data.explorerStep ?? (data.chosenDirectionId ? 'brief' : 'suggested');
   const explorerStale = isExplorerStale(data);
 
+  // Navigate the wizard and remember position (auto-saved via setData).
+  const goTo = (step: WizardStep) => setData(prev => ({ ...prev, explorerStep: step }));
+
+  // Pick one direction in Compare → mark chosen, land on the Brief outcome.
   const handleChooseDirection = async (directionId: string) => {
     const updated: CareerDirectionData = {
       ...data,
       chosenDirectionId: directionId,
       explorerCompletedAt: new Date().toISOString(),
+      explorerStep: 'brief',
       directions: data.directions.map(d => ({
         ...d,
         selected: d.id === directionId,
         status: d.id === directionId ? 'active' as const : d.status,
       })),
     };
-    // Save and navigate to Brief
-    await save(stage(updated, 'brief'), 'Direction chosen. Building brief.');
+    await save(updated, 'Direction chosen. Building brief.');
     void track('direction_chosen', { direction_id: directionId });
   };
 
+  // Slim progress: only shown while the wizard is running (not on the Brief).
+  const WIZARD_META: Record<Exclude<WizardStep, 'brief'>, { n: number; label: string; title: string; sub: string }> = {
+    suggested: { n: 1, label: 'Suggested for you', title: 'Choose what deserves attention.', sub: 'Atlas suggests directions from your profile. Add the ones worth comparing.' },
+    manual:    { n: 2, label: 'Add your own',       title: 'Add your own ideas.',            sub: 'Add your own directions on top of the suggestions.' },
+    compare:   { n: 3, label: 'Compare',            title: 'Compare and pick one.',          sub: 'Everything you saved, side by side. Take one forward.' },
+  };
+  const meta = wizardStep !== 'brief' ? WIZARD_META[wizardStep] : null;
+
   return (
     <section>
-      <Title kicker="02 / Explorer" title="Choose what deserves attention.">
-        Atlas suggests directions based on your profile and work values. Add your own ideas too. When you're ready, compare side by side and pick one to take forward.
-      </Title>
-      <hr style={ui.rule} />
+      {meta && (
+        <>
+          <Title kicker="02 / Explorer" title={meta.title}>{meta.sub}</Title>
+          <hr style={ui.rule} />
+          {/* ── Slim progress line (not a tab row — display only) ── */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', font: '10px var(--font-mono)', letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--color-text-dim)', margin: '6px 0 26px' }}>
+            <span>Step <span style={{ color: 'var(--color-accent)' }}>{meta.n}</span> of 3</span>
+            {[1, 2, 3].map(i => (
+              <span key={i} style={{ width: '22px', height: '2px', borderRadius: '2px', background: i <= meta.n ? 'var(--color-accent)' : 'var(--color-border)' }} />
+            ))}
+            <span style={{ marginLeft: 'auto' }}>{meta.label}</span>
+          </div>
+        </>
+      )}
 
-      {explorerStale && (
+      {explorerStale && wizardStep !== 'brief' && (
         <StaleBanner
           message="Your profile changed since your last exploration. Your directions may be different now."
           onDismiss={() => { /* user acknowledges */ }}
         />
       )}
 
-      {/* ── Wizard step indicator ── */}
-      <div style={{ display: 'flex', gap: '24px', marginBottom: '32px', font: '11px var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.1em' }}>
-        <button
-          onClick={() => setWizardStep('directions')}
-          style={{ background: 'none', border: 0, cursor: 'pointer', color: wizardStep === 'directions' ? 'var(--color-accent)' : 'var(--color-text-dim)' }}
-        >
-          {wizardStep === 'directions' ? '●' : '○'} Directions
-        </button>
-        <button
-          onClick={() => directionCountForComparison(data) >= 2 && setWizardStep('compare')}
-          disabled={directionCountForComparison(data) < 2}
-          style={{ background: 'none', border: 0, cursor: directionCountForComparison(data) >= 2 ? 'pointer' : 'not-allowed', color: wizardStep === 'compare' ? 'var(--color-accent)' : 'var(--color-text-dim)', opacity: directionCountForComparison(data) >= 2 ? 1 : 0.4 }}
-        >
-          {wizardStep === 'compare' ? '●' : '○'} Compare
-        </button>
-      </div>
+      {wizardStep === 'suggested' && (
+        <SuggestedContent data={data} setData={setData} saving={saving} save={save} onContinue={() => goTo('manual')} />
+      )}
 
-      {wizardStep === 'directions' && (
-        <DirectionsContent
-          data={data}
-          setData={setData}
-          saving={saving}
-          save={save}
-          newDirection={newDirection}
-          setNewDirection={setNewDirection}
-          onContinue={() => setWizardStep('compare')}
-        />
+      {wizardStep === 'manual' && (
+        <ManualContent data={data} setData={setData} saving={saving} save={save} newDirection={newDirection} setNewDirection={setNewDirection} onBack={() => goTo('suggested')} onContinue={() => goTo('compare')} />
       )}
 
       {wizardStep === 'compare' && (
-        <CompareContent
-          data={data}
-          setData={setData}
-          saving={saving}
-          onChoose={handleChooseDirection}
-          onBack={() => setWizardStep('directions')}
-        />
+        <CompareContent data={data} setData={setData} saving={saving} onChoose={handleChooseDirection} onBack={() => goTo('manual')} />
+      )}
+
+      {wizardStep === 'brief' && (
+        <BriefStep data={data} setData={setData} saving={saving} onRerun={() => goTo('suggested')} />
       )}
     </section>
   );
 }
 
+// ── Shared direction card (used in the wizard's saved lists) ────────────
+function DirectionCard({ direction, enriching, onDelete }: { direction: CareerDirection; enriching?: boolean; onDelete: () => void }) {
+  const reference = matchReference(direction.title);
+  const hasEnrichment = !!direction.enrichment;
+  return (
+    <div style={{ ...ui.panel, position: 'relative' }}>
+      <button
+        onClick={(e) => { e.preventDefault(); onDelete(); }}
+        aria-label="Delete direction"
+        style={{
+          position: 'absolute', top: '8px', right: '8px',
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: 'var(--color-text-dim)', fontSize: '16px', lineHeight: 1,
+          padding: '4px 6px', minHeight: 'auto', minWidth: 'auto',
+          opacity: 0.5, transition: 'opacity 0.15s ease, color 0.15s ease',
+          zIndex: 1,
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-danger)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.color = 'var(--color-text-dim)'; }}
+      >
+        ×
+      </button>
+      <h3 style={{ font: '400 var(--fs-h3-sm)/1.12 var(--font-serif)', margin: '0 0 8px', paddingRight: '20px' }}>{direction.title}</h3>
+      {enriching && <LLMLoader message="Analysing direction" loading={enriching} />}
+      {!enriching && hasEnrichment && (
+        <p style={{ ...ui.quiet, fontSize: '11px', color: 'var(--color-success)', margin: 0 }}>✓ Analysed — see in Compare</p>
+      )}
+      <p style={{ color: 'var(--color-text-dim)', font: '10px/1.55 var(--font-mono)', letterSpacing: '.04em', marginTop: hasEnrichment ? '8px' : '0' }}>{reference ? `ESCO / ISCO-08 ${reference.iscoCode}` : 'Your own direction'}</p>
+    </div>
+  );
+}
+
+// ── Shared saved-directions list ─────────────────────────────────────────
+function SavedDirectionsList({ data, setData, save, enrichingIds }: StepProps & { save: (next: CareerDirectionData, message?: string) => Promise<boolean>; enrichingIds: Set<string> }) {
+  if (data.directions.length === 0) return null;
+  return (
+    <div style={{ marginBottom: '24px' }}>
+      <p style={{ ...ui.kicker, marginBottom: '12px' }}>Your directions ({data.directions.length})</p>
+      <div className="career-choice-grid">
+        {data.directions.map((direction) => (
+          <DirectionCard
+            key={direction.id}
+            direction={direction}
+            enriching={enrichingIds.has(direction.id)}
+            onDelete={() => {
+              const next = { ...data, directions: data.directions.filter(d => d.id !== direction.id) };
+              setData(next);
+              void save(next, 'Direction removed.');
+              void track('direction_deleted', { title: direction.title });
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Wizard Screen 1: Directions ────────────────────────────────────────
 
-function DirectionsContent({ data, setData, saving, save, newDirection, setNewDirection, onContinue }: StepProps & { save: (next: CareerDirectionData, message?: string) => Promise<boolean>; newDirection: string; setNewDirection: (v: string) => void; onContinue: () => void }) {
-  const [loading, setLoading] = useState(false);
-  const [suggestionError, setSuggestionError] = useState<string | null>(null);
-  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+// ── Shared add + enrich logic (used by both Suggested and Manual steps) ──
+function useDirectionActions(data: CareerDirectionData, setData: React.Dispatch<React.SetStateAction<CareerDirectionData>>, save: (next: CareerDirectionData, message?: string) => Promise<boolean>) {
   const [enrichingIds, setEnrichingIds] = useState<Set<string>>(new Set());
-  const [hasFetched, setHasFetched] = useState(false);
-
-  const SUGGEST_URL = `${EDGE_FUNCTIONS_BASE}suggest-direction`;
   const ENRICH_URL = `${EDGE_FUNCTIONS_BASE}enrich-direction`;
-
   const hasProfile = data.profile.roles.length > 0;
-  const savedSuggestions = data.savedSuggestions ?? [];
-  const activeSuggestions = savedSuggestions.filter((_, i) => !dismissed.has(String(i)));
-
-  useEffect(() => {
-    if (hasProfile && savedSuggestions.length === 0 && !hasFetched && !loading && !suggestionError) {
-      fetchSuggestions();
-    }
-  }, [hasProfile]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Auto-enrich all unenriched directions on mount ─────────────────
-  // This handles directions loaded from DB that never had enrichment,
-  // and also re-enriches if the profile is stale.
-  useEffect(() => {
-    if (!hasProfile) return;
-    const unenriched = data.directions.filter(d => !d.enrichment && !enrichingIds.has(d.id));
-    if (unenriched.length === 0) return;
-    // Enrich each one — fire all in parallel, they update independently via prev
-    unenriched.forEach(d => enrichDirection(d.id));
-  }, [hasProfile, data.directions.length]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const fetchSuggestions = async () => {
-    setLoading(true);
-    setSuggestionError(null);
-    setHasFetched(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not signed in');
-
-      const response = await fetch(SUGGEST_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ profile: data.profile, workValues: data.preferences.workValues ?? null }),
-      });
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || `Request failed (${response.status})`);
-      }
-      const result = await response.json();
-      const newSuggestions = result.suggestions || [];
-      setData(prev => ({ ...prev, savedSuggestions: newSuggestions }));
-      setDismissed(new Set());
-      void track('suggestions_fetched', { count: newSuggestions.length });
-    } catch (err: any) {
-      setSuggestionError(err.message || 'Could not load suggestions.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // ── Enrich a single direction ──────────────────────────────────────
   const enrichDirection = async (directionId: string) => {
-    // Use a ref to get the latest data — the closure's `data` may be stale
     const direction = data.directions.find(d => d.id === directionId);
     if (!direction || !hasProfile) return;
     setEnrichingIds(prev => new Set(prev).add(directionId));
@@ -459,7 +434,6 @@ function DirectionsContent({ data, setData, saving, save, newDirection, setNewDi
             nextTest: enrichment.suggestedTest || d.nextTest,
           } : d),
         };
-        // Persist enrichment so it survives tab switches / reloads
         void save(updated);
         return updated;
       });
@@ -470,35 +444,103 @@ function DirectionsContent({ data, setData, saving, save, newDirection, setNewDi
     }
   };
 
-  const addDirection = (title?: string) => {
-    const cleaned = (title ?? newDirection).trim();
+  const addDirection = (title: string) => {
+    const cleaned = title.trim();
     if (!cleaned) return;
     if (data.directions.some(item => item.title.toLowerCase() === cleaned.toLowerCase())) return;
     const newDir = directionFromTitle(cleaned);
     const next = { ...data, directions: [...data.directions, newDir] };
     setData(next);
-    setNewDirection('');
     void track('direction_added', { title: cleaned, total_directions: next.directions.length });
-    // Persist immediately so data survives tab switches / reloads
     void save(next, 'Direction added.');
-    // Auto-enrich on add
-    if (hasProfile) {
-      // Use setTimeout to let state settle before enriching
-      setTimeout(() => enrichDirection(newDir.id), 100);
+    if (hasProfile) setTimeout(() => enrichDirection(newDir.id), 100);
+  };
+
+  // Auto-enrich any direction that has no analysis yet (covers reloads and
+  // the single-direction "jump straight to Brief" case).
+  useEffect(() => {
+    if (!hasProfile) return;
+    const unenriched = data.directions.filter(d => !d.enrichment && !enrichingIds.has(d.id));
+    if (unenriched.length === 0) return;
+    unenriched.forEach(d => enrichDirection(d.id));
+  }, [hasProfile, data.directions.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return { enrichingIds, addDirection, enrichDirection };
+}
+
+// ── Wizard Step 1: Suggested for you ────────────────────────────────────
+function SuggestedContent({ data, setData, saving, save, onContinue }: StepProps & { save: (next: CareerDirectionData, message?: string) => Promise<boolean>; onContinue: () => void }) {
+  const [loading, setLoading] = useState(false);
+  const [suggestionError, setSuggestionError] = useState<string | null>(null);
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [hasFetched, setHasFetched] = useState(false);
+  const { enrichingIds, addDirection } = useDirectionActions(data, setData, save);
+
+  const SUGGEST_URL = `${EDGE_FUNCTIONS_BASE}suggest-direction`;
+  const hasProfile = data.profile.roles.length > 0;
+  const savedSuggestions = data.savedSuggestions ?? [];
+  const activeSuggestions = savedSuggestions.filter((_, i) => !dismissed.has(String(i)));
+
+  useEffect(() => {
+    if (hasProfile && savedSuggestions.length === 0 && !hasFetched && !loading && !suggestionError) {
+      fetchSuggestions();
+    }
+  }, [hasProfile]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const fetchSuggestions = async () => {
+    setLoading(true);
+    setSuggestionError(null);
+    setHasFetched(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not signed in');
+
+      const response = await fetch(SUGGEST_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ profile: data.profile, workValues: data.preferences.workValues ?? null }),
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || `Request failed (${response.status})`);
+      }
+      const result = await response.json();
+      const incoming: Suggestion[] = result.suggestions || [];
+      // Append fresh ideas to the pool — never wipe what the user already has,
+      // and skip titles already saved or already shown.
+      setData(prev => {
+        const existing = new Set([
+          ...prev.directions.map(d => d.title.toLowerCase()),
+          ...(prev.savedSuggestions ?? []).map(s => s.title.toLowerCase()),
+        ]);
+        const fresh = incoming.filter(s => !existing.has(s.title.toLowerCase()));
+        return { ...prev, savedSuggestions: [...(prev.savedSuggestions ?? []), ...fresh] };
+      });
+      void track('suggestions_fetched', { count: incoming.length });
+    } catch (err: any) {
+      setSuggestionError(err.message || 'Could not load suggestions.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const count = directionCountForComparison(data);
+  const count = data.directions.length;
 
   return (
     <div>
+      {/* ── Saved directions (persist across reloads) ── */}
+      <SavedDirectionsList data={data} setData={setData} saving={saving} save={save} enrichingIds={enrichingIds} />
+
       {/* ── AI Suggestions ── */}
       {hasProfile && (
         <div style={{ marginBottom: '32px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <p style={{ ...ui.kicker, marginBottom: 0 }}>Suggested for you</p>
             {!loading && savedSuggestions.length > 0 && (
-              <button onClick={() => { setDismissed(new Set()); fetchSuggestions(); }} style={{ ...ui.secondary, fontSize: '9px', padding: '4px 8px' }}>
+              <button onClick={fetchSuggestions} style={{ ...ui.primary, fontSize: '10px', padding: '4px 8px' }}>
                 Reload suggestions
               </button>
             )}
@@ -513,42 +555,16 @@ function DirectionsContent({ data, setData, saving, save, newDirection, setNewDi
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {activeSuggestions.map((sug) => {
               const realIdx = savedSuggestions.indexOf(sug);
-              return <SuggestionCard key={realIdx} suggestion={sug} onAdd={() => { addDirection(sug.title); }} onDismiss={() => setDismissed(prev => new Set(prev).add(String(realIdx)))} />;
+              return <SuggestionCard key={realIdx} suggestion={sug} onAdd={() => { addDirection(sug.title); setDismissed(prev => new Set(prev).add(String(realIdx))); }} onDismiss={() => setDismissed(prev => new Set(prev).add(String(realIdx)))} />;
             })}
           </div>
           {!loading && activeSuggestions.length === 0 && !suggestionError && savedSuggestions.length > 0 && (
-            <p style={{ ...ui.quiet, fontSize: '13px', padding: '12px 0' }}>All suggestions dismissed. Add your own direction below, or reload suggestions above.</p>
+            <p style={{ ...ui.quiet, fontSize: '13px', padding: '12px 0' }}>That's every suggestion for now. Reload for fresh ideas, or continue to add your own.</p>
           )}
         </div>
       )}
 
-      {/* ── Add your own direction ── */}
-      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
-        <input value={newDirection} onChange={(event) => setNewDirection(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addDirection(); } }} placeholder="Add a direction in your own words" style={{ ...ui.input, flex: '1 1 300px' }} />
-        <button onClick={() => addDirection()} style={ui.secondary}>Add direction</button>
-      </div>
-
-      {/* ── Your directions ── */}
-      {data.directions.length > 0 && <p style={{ ...ui.kicker, marginBottom: '12px' }}>Your directions</p>}
-      <div className="career-choice-grid">
-        {data.directions.map((direction) => (
-          <DirectionChoice
-            key={direction.id}
-            direction={direction}
-            enriching={enrichingIds.has(direction.id)}
-            onToggle={() => setData(prev => ({ ...prev, directions: prev.directions.map((item) => item.id === direction.id ? { ...item, selected: !item.selected } : item) }))}
-            onDelete={() => {
-              const next = { ...data, directions: data.directions.filter(d => d.id !== direction.id) };
-              setData(next);
-              void save(next, 'Direction removed.');
-              void track('direction_deleted', { title: direction.title });
-            }}
-          />
-        ))}
-      </div>
-      {data.directions.length === 0 && <p style={{ ...ui.quiet, padding: '20px 0' }}>No directions yet. Select at least two ideas worth examining.</p>}
-
-      <Actions next={count >= 2 ? 'Compare →' : 'Select at least two directions'} disabled={count < 2} onNext={onContinue} saving={saving} />
+      <Actions next={count >= 1 ? 'Continue →' : 'Add at least one direction'} disabled={count < 1} onNext={onContinue} saving={saving} />
     </div>
   );
 }
@@ -603,48 +619,47 @@ function SuggestionCard({ suggestion, onAdd, onDismiss }: { suggestion: Suggesti
   );
 }
 
-function DirectionChoice({ direction, enriching, onToggle, onDelete }: { direction: CareerDirection; enriching?: boolean; onToggle: () => void; onDelete: () => void }) {
-  const reference = matchReference(direction.title);
-  const hasEnrichment = !!direction.enrichment;
+// ── Wizard Step 2: Add your own ─────────────────────────────────────────
+function ManualContent({ data, setData, saving, save, newDirection, setNewDirection, onBack, onContinue }: StepProps & { save: (next: CareerDirectionData, message?: string) => Promise<boolean>; newDirection: string; setNewDirection: (v: string) => void; onBack: () => void; onContinue: () => void }) {
+  const { enrichingIds, addDirection } = useDirectionActions(data, setData, save);
+  const count = data.directions.length;
+
+  const handleAdd = () => {
+    if (!newDirection.trim()) return;
+    addDirection(newDirection);
+    setNewDirection('');
+  };
+
   return (
-    <div style={{ ...ui.panel, borderColor: direction.selected ? 'var(--color-accent)' : 'var(--color-border)', position: 'relative' }}>
-      <button
-        onClick={(e) => { e.preventDefault(); onDelete(); }}
-        aria-label="Delete direction"
-        style={{
-          position: 'absolute', top: '8px', right: '8px',
-          background: 'none', border: 'none', cursor: 'pointer',
-          color: 'var(--color-text-dim)', fontSize: '16px', lineHeight: 1,
-          padding: '4px 6px', minHeight: 'auto', minWidth: 'auto',
-          opacity: 0.5, transition: 'opacity 0.15s ease, color 0.15s ease',
-          zIndex: 1,
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--color-danger)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.color = 'var(--color-text-dim)'; }}
-      >
-        ×
-      </button>
-      <label className="career-choice" style={{ cursor: 'pointer' }}>
-        <input type="checkbox" checked={direction.selected} onChange={onToggle} />
-        <div>
-          <p style={ui.kicker}>{direction.selected ? 'Included' : 'Not selected'}</p>
-          <h3 style={{ font: '400 var(--fs-h2)/1.12 var(--font-serif)', margin: '8px 0 8px', paddingRight: '20px' }}>{direction.title}</h3>
-          {enriching && <LLMLoader message="Analysing direction" loading={enriching} />}
-          {!enriching && hasEnrichment && (
-            <p style={{ ...ui.quiet, fontSize: '11px', color: 'var(--color-success)', margin: 0 }}>✓ Analysed — see in Compare</p>
-          )}
-          <p style={{ color: 'var(--color-text-dim)', font: '10px/1.55 var(--font-mono)', letterSpacing: '.04em', marginTop: hasEnrichment ? '8px' : '0' }}>{reference ? `ESCO / ISCO-08 ${reference.iscoCode}` : 'Your own direction'}</p>
-        </div>
-      </label>
+    <div>
+      {/* ── Everything saved so far (LLM + manual) ── */}
+      <SavedDirectionsList data={data} setData={setData} saving={saving} save={save} enrichingIds={enrichingIds} />
+
+      {/* ── Add your own direction ── */}
+      <p style={{ ...ui.kicker, marginBottom: '12px' }}>Add your own direction</p>
+      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
+        <input
+          value={newDirection}
+          onChange={(event) => setNewDirection(event.target.value)}
+          onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); handleAdd(); } }}
+          placeholder="A direction in your own words"
+          style={{ ...ui.input, flex: '1 1 300px' }}
+        />
+        <button onClick={handleAdd} style={ui.secondary}>Add direction</button>
+      </div>
+      {count === 0 && <p style={{ ...ui.quiet, padding: '4px 0 8px' }}>Nothing saved yet — add at least one direction (here or from Suggested).</p>}
+
+      <Actions back="← Suggested" onBack={onBack} next={count >= 1 ? 'Compare →' : 'Add at least one direction'} disabled={count < 1} onNext={onContinue} saving={saving} />
     </div>
   );
 }
 
-// ── Wizard Screen 2: Compare & Decide ──────────────────────────────────
+// ── Wizard Step 3: Compare & Decide ─────────────────────────────────────
 
 function CompareContent({ data, saving, onChoose, onBack }: StepProps & { onChoose: (directionId: string) => Promise<void>; onBack: () => void }) {
   const wv = data.preferences.workValues;
-  const directions = getActiveDirections(data);
+  // Show every saved direction — the user picks one to take forward.
+  const directions = data.directions.filter(d => d.status === 'active');
 
   return (
     <div>
@@ -660,16 +675,18 @@ function CompareContent({ data, saving, onChoose, onBack }: StepProps & { onChoo
       </div>
 
       {directions.length > 0 ? (
-        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+        <div className="career-comparison">
           {directions.map(d => (
             <ComparisonCard key={d.id} direction={d} onTakeForward={() => onChoose(d.id)} saving={saving} />
           ))}
         </div>
       ) : (
-        <p style={{ ...ui.quiet, padding: '30px 0' }}>Return to Directions and select at least two hypotheses.</p>
+        <p style={{ ...ui.quiet, padding: '30px 0' }}>Nothing to compare yet — go back and add at least one direction.</p>
       )}
 
-      <Actions back="← Directions" onBack={onBack} next="Back to directions" onNext={onBack} saving={saving} />
+      <div style={{ display: 'flex', marginTop: '32px' }}>
+        <button onClick={onBack} style={ui.secondary}>← Add your own</button>
+      </div>
     </div>
   );
 }
@@ -899,18 +916,18 @@ function Tags({ tags, variant }: { tags: string[]; variant?: 'warning' }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// STEP 03 — BRIEF (persistent home base)
+// EXPLORER OUTCOME — BRIEF (the chosen direction, end of the wizard)
 // ═══════════════════════════════════════════════════════════════════════
 
-function BriefStep({ data, setData, saving, move }: PageProps) {
+function BriefStep({ data, setData, saving, onRerun }: Omit<PageProps, 'move'> & { onRerun: () => void }) {
   const [showNote, setShowNote] = useState(!!getChosenDirection(data)?.evidence);
   const direction = getChosenDirection(data);
   const briefStale = isExplorerStale(data);
 
   if (!direction) {
     return <section>
-      <Title kicker="03 / Direction brief" title="Choose a direction first">A direction brief needs one active direction from your Explorer. Run the Explorer to select one.</Title>
-      <Actions next="Open Explorer" onNext={() => setData(stage(data, 'explorer'))} saving={saving} />
+      <Title kicker="02 / Explorer" title="Choose a direction first">A direction brief needs one direction. Run the Explorer to pick one.</Title>
+      <Actions next="Open Explorer" onNext={onRerun} saving={saving} />
     </section>;
   }
 
@@ -918,12 +935,12 @@ function BriefStep({ data, setData, saving, move }: PageProps) {
 
   return (
     <section>
-      <DirectionHero direction={direction} label="03 / Direction brief" state="A working hypothesis" />
+      <DirectionHero direction={direction} label="02 / Explorer · Brief" state="A working hypothesis" />
 
       {briefStale && (
         <StaleBanner
           message="Your profile changed since this brief was created. Re-run the Explorer to refresh."
-          onAction={() => setData(stage(data, 'explorer'))}
+          onAction={onRerun}
           actionLabel="Re-run Explorer"
         />
       )}
@@ -993,13 +1010,17 @@ function BriefStep({ data, setData, saving, move }: PageProps) {
       ) : (
         <div style={{ marginTop: '32px', maxWidth: '760px' }}>
           <div style={{ ...ui.panel, borderLeft: '3px solid var(--color-warning)' }}>
-            <p style={{ ...ui.quiet, fontSize: '14px', margin: '0 0 12px' }}>This direction hasn't been analysed yet. Go back to the Explorer and click "Analyse this direction" to generate the full brief.</p>
-            <button onClick={() => setData(stage(data, 'explorer'))} style={{ ...ui.secondary, fontSize: '10px', padding: '6px 12px' }}>← Back to Explorer</button>
+            <p style={{ ...ui.quiet, fontSize: '14px', margin: '0 0 12px' }}>This direction hasn't been analysed yet. Atlas analyses it automatically once it's added — re-run the Explorer to generate the full brief.</p>
+            <button onClick={onRerun} style={{ ...ui.secondary, fontSize: '10px', padding: '6px 12px' }}>← Re-run Explorer</button>
           </div>
         </div>
       )}
 
-      <Actions back="← Re-run Explorer" onBack={() => setData(stage(data, 'explorer'))} next="Continue to market & action →" onNext={() => move(data, '')} saving={saving} />
+      {/* Finished state: only "Do it again" — no Market & Action button.
+          Market & Action is reached via the top 03 tab. */}
+      <div style={{ display: 'flex', marginTop: '32px' }}>
+        <button onClick={onRerun} style={ui.secondary}>↺ Do it again</button>
+      </div>
     </section>
   );
 }
@@ -1048,9 +1069,9 @@ function MarketActionStep({ data, setData, saving, save }: StepProps & { save: (
   }, [hasFetched, hasMarket, hasActions, direction]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!direction) return <section>
-      <Title kicker="04 / Market & Action" title="Choose a direction first">Market insight needs an active direction from your Brief.</Title>
-      <Actions next="Open Brief" onNext={() => setData(stage(data, 'brief'))} saving={saving} />
-    </section>;
+    <Title kicker="03 / Market & Action" title="Choose a direction first">Market insight needs a chosen direction from your Explorer.</Title>
+    <Actions next="Open Explorer" onNext={() => setData(stage(data, 'explorer'))} saving={saving} />
+  </section>;
 
   const fetchBoth = async () => {
     setError(null);
@@ -1140,7 +1161,7 @@ function MarketActionStep({ data, setData, saving, save }: StepProps & { save: (
 
   return (
     <section>
-      <DirectionHero direction={direction} label="04 / Market & Action" state="What's happening and what to do" />
+      <DirectionHero direction={direction} label="03 / Market & Action" state="What's happening and what to do" />
 
       {marketStale && insight && (
         <StaleBanner
@@ -1298,7 +1319,7 @@ function MarketActionStep({ data, setData, saving, save }: StepProps & { save: (
       </div>
 
       <div style={{ display: 'flex', marginTop: '32px' }}>
-        <button onClick={() => setData(stage(data, 'brief'))} style={ui.secondary}>← Back to Brief</button>
+        <button onClick={() => setData({ ...stage(data, 'explorer'), explorerStep: 'brief' })} style={ui.secondary}>← Back to Brief</button>
       </div>
     </section>
   );
@@ -1311,7 +1332,7 @@ function DirectionHero({ direction, label, state: stateLabel }: { direction?: Ca
     <header className="career-direction-hero">
       <div>
         <p style={ui.kicker}>{label}</p>
-        <h2 style={ui.h1}>{direction ? <>Explore <em style={{ color: 'var(--color-accent)', fontWeight: 300 }}>{direction.title}</em></> : fallback}</h2>
+        <h2 style={ui.h1}>{direction ? <>Explore <em>{direction.title}</em></> : fallback}</h2>
         <p style={{ ...ui.quiet, maxWidth: '650px' }}>{direction?.summary ?? description}</p>
       </div>
       <div className="career-state">

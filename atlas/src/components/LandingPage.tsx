@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthModal, type AuthMode } from './AuthModal';
+import monogramUrl from '../assets/atlas-monogram.svg';
 import '../landing.css';
 
 interface Props {
@@ -388,6 +389,7 @@ export function LandingPage({ authOpen, onOpenAuth, onCloseAuth }: Props) {
 
       <nav className="l-nav" aria-label="Main">
         <button className="brand" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label="The Atlas Path — back to top">
+          <img src={monogramUrl} alt="" width="24" height="21" className="brand-mark" />
           <span>The Atlas <em>Path</em></span>
         </button>
         <div className="nav-cta">

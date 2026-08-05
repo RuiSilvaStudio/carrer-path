@@ -10,6 +10,7 @@ import { ChapterRail } from '../components/ui/ChapterRail';
 import { CopyButton } from '../components/ui/CopyButton';
 import { FeedbackPrompt } from '../components/ui/FeedbackPrompt';
 import { ScrollToTopButton } from '../components/ui/ScrollToTopButton';
+import monogramUrl from '../assets/atlas-monogram.svg';
 
 // ── Section metadata for table of contents ──────────────────────
 interface Section {
@@ -459,8 +460,20 @@ export function DocsPage() {
             letterSpacing: '-0.02em',
             lineHeight: 1.2,
             marginBottom: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '14px',
           }}
         >
+          <img
+            src={monogramUrl}
+            alt=""
+            aria-hidden="true"
+            width="48"
+            height="42"
+            className="docs-title-mark"
+            style={{ flexShrink: 0 }}
+          />
           The Atlas Path
         </h1>
         <p

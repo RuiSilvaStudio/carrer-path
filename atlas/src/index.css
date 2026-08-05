@@ -179,6 +179,39 @@ svg, img { max-width: 100%; height: auto; }
   background: var(--color-bg);
 }
 
+/* ── Standardized tab buttons (Dashboard / Career / Cockpit) ─────────
+   One pattern everywhere: `number + label`, single line, accent underline
+   when active. Hover on inactive tabs = surface-elevated wash + label
+   brightens (NN/g "clickable" affordance that doesn't compete with the
+   active underline). Colors come from tokens so both themes work. */
+.atlas-tab-btn {
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  padding: 10px 14px;
+  min-height: var(--tap);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text-dim);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.atlas-tab-btn:hover:not(.active):not(:disabled) {
+  background: var(--color-surface-elevated);
+  color: var(--color-text);
+}
+.atlas-tab-btn.active {
+  border-bottom-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.atlas-tab-btn:disabled { cursor: not-allowed; opacity: 0.45; }
+
 /* Save-status pill fade animation */
 @keyframes savePillFade {
   from { opacity: 0; transform: translateY(-2px); }
@@ -211,19 +244,19 @@ svg, img { max-width: 100%; height: auto; }
     padding-bottom: 44px !important;
   }
 
-  /* ── View tabs: condensed SINGLE ROW (NN/g — never stack a tab list) ──
+  /* ── Tab bars: condensed SINGLE ROW on mobile (NN/g — never stack tabs).
      Inactive tabs collapse to just their number; the active tab expands to
-     show its full label. Single row keeps the underline indicator unambiguous. */
-  .atlas-tabs {
+     show its full label. Applies to Dashboard (.atlas-tabs), Cockpit
+     (.atlas-tabs), and Career (.career-progress) via the shared .atlas-tab-btn. */
+  .atlas-tabs,
+  .career-progress {
     display: flex !important;
-    grid-template-columns: none !important;
     gap: 0 !important;
     overflow-x: visible !important;
   }
-  .atlas-tabs button {
+  .atlas-tab-btn {
     min-height: var(--tap);
     white-space: nowrap !important;
-    margin-right: 0 !important;
     padding: 12px 10px !important;
     min-width: 0 !important;
     overflow: hidden !important;
@@ -231,18 +264,19 @@ svg, img { max-width: 100%; height: auto; }
     letter-spacing: 0.08em !important;
     justify-content: center !important;
     flex: 0 0 auto !important;
-    transition: flex 0.25s ease, padding 0.25s ease !important;
+    transition: flex 0.25s ease, padding 0.25s ease, background-color 0.18s ease, color 0.18s ease !important;
   }
-  /* hide the label/hint column on INACTIVE tabs (keep the number) */
-  .atlas-tabs button[data-active="false"] > span:last-child { display: none !important; }
+  /* hide the label on INACTIVE tabs (keep the number) */
+  .atlas-tab-btn[data-active="false"] .atlas-tab-label { display: none !important; }
   /* active tab expands to reveal its label */
-  .atlas-tabs button[data-active="true"] {
+  .atlas-tab-btn[data-active="true"] {
     flex: 1 1 auto !important;
     justify-content: flex-start !important;
   }
-  .atlas-tabs button[data-active="true"] > span:last-child { display: flex !important; }
-  /* fallback for tab buttons without data-active (e.g. cockpit) — keep both spans */
-  .atlas-tabs button:not([data-active]) > span:last-child { display: flex !important; }
+  .atlas-tab-btn[data-active="true"] .atlas-tab-label { display: inline !important; }
+  /* disabled (locked) Career stages stay collapsed and never grow */
+  .atlas-tab-btn:disabled { flex: 0 0 auto !important; }
+  .atlas-tab-btn:disabled .atlas-tab-label { display: none !important; }
 
   /* ── Score grids: 5 cols → 2 cols ── */
   .atlas-score-grid { grid-template-columns: 1fr 1fr !important; }
@@ -270,12 +304,19 @@ svg, img { max-width: 100%; height: auto; }
   .career-progress button { padding-left: 10px !important; padding-right: 10px !important; }
 }
 
+/* Monogram in the Docs page title — recolored to the theme accent via filter
+   (img-loaded SVGs ignore currentColor, so filters do the recoloring). */
+/* dark: --color-accent #c87a5a */
+.docs-title-mark { filter: brightness(0) invert(0.52) sepia(0.88) saturate(2.5) hue-rotate(-27.5deg) brightness(0.87); }
+/* light: --color-accent #a8552e */
+[data-theme="light"] .docs-title-mark { filter: brightness(0) invert(0.55) sepia(0.73) saturate(6.81) hue-rotate(-31.2deg) brightness(0.66); }
+
 /* Career Direction V1: editorial decision-work surfaces, mirroring approved mockups. */
 .career-direction-page em { font-style: normal; }
 .career-split { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 52px; align-items: start; }
 .career-aside { border-left: 1px solid var(--color-border); padding: 3px 0 3px 18px; }
 .career-reference-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 24px; }
-.career-choice-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
+.career-choice-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; }
 .career-choice { display: grid; grid-template-columns: 16px 1fr; gap: 11px; align-items: start; }
 .career-choice input, .career-decision input { accent-color: var(--color-accent); margin-top: 4px; }
 .career-compare-head { display: flex; justify-content: space-between; gap: 32px; align-items: end; margin-bottom: 30px; }
