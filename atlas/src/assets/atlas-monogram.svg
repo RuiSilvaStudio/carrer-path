@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112.17376 98.400352" fill="#c87a5a">
-  <!-- Atlas monogram favicon - copper #c87a5a (accent dark) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112.17376 98.400352" fill="currentColor" aria-hidden="true">
+  <!-- Atlas monogram - geometry from monogram_final.svg; color via CSS (currentColor) -->
   <g transform="translate(-43.16509,-93.253484)">
     <g transform="matrix(1.0392551,0,0,-1.0392551,-282.61909,319.04641)">
       <path d="m 355.80376,150.37957 -19.88888,-19.62455 h 5.47353 l 24.49351,15.03759 z" />

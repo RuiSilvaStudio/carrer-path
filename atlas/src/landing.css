@@ -42,7 +42,10 @@
 .landing .l-nav::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(8,17,15,.75),transparent);pointer-events:none;opacity:0;transition:opacity .4s}
 .landing .l-nav.scrolled::before{opacity:1}
 .landing .l-nav>*{position:relative}
-.landing .brand{display:flex;align-items:center;text-decoration:none;background:none;border:none;cursor:pointer;padding:0}
+.landing .brand{display:flex;align-items:center;gap:10px;text-decoration:none;background:none;border:none;cursor:pointer;padding:0}
+.landing .brand .brand-mark{display:block;filter:brightness(0) invert(0.94) sepia(0.08);transition:filter .25s}
+/* hover: recolor the mark to --copper-hi (#e8a678) to match the wordmark */
+.landing .brand:hover .brand-mark{filter:brightness(0) invert(0.58) sepia(0.67) saturate(2.45) hue-rotate(-17deg) brightness(1.05)}
 .landing .brand span{font-family:var(--serif);font-size:17px;font-weight:400;color:var(--ink);letter-spacing:-.01em;white-space:nowrap;transition:color .25s}
 .landing .brand:hover span{color:var(--copper-hi)}
 .landing .brand span em{font-style:normal;color:var(--muted)}

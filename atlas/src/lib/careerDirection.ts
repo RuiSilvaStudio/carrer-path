@@ -1,15 +1,16 @@
 import type { WorkValuesResult } from './work-values-data';
 import { createEmptyProfile, type StructuredProfile } from './profile-data';
 
-// ── 4-step flow (V2): Profile → Explorer → Brief → MarketAction ──────────
-// Explorer is a re-runnable wizard that absorbs the old Directions + Compare tabs.
-// Brief is the persistent result of the most recent Explorer run.
-export type CareerStage = 'profile' | 'explorer' | 'brief' | 'marketAction';
+// ── 3-step flow (V2): Profile → Explorer → MarketAction ─────────────────
+// Explorer is a re-runnable wizard (Suggested → Manual → Compare) whose outcome
+// is the Brief — the chosen direction, shown as the Explorer's end screen.
+export type CareerStage = 'profile' | 'explorer' | 'marketAction';
 export type DirectionStatus = 'active' | 'paused' | 'deprioritised';
 export type ReassessmentChoice = 'continue' | 'adjust' | 'pause' | 'deprioritise';
 
 // Wizard-internal step state (lives inside the Explorer stage).
-export type WizardStep = 'directions' | 'compare';
+// 'brief' = the finished outcome screen after picking a direction in Compare.
+export type WizardStep = 'suggested' | 'manual' | 'compare' | 'brief';
 
 export interface WorkPreferences {
   contribution: string;
@@ -101,17 +102,18 @@ export interface CareerDirectionData {
   profileUpdatedAt: string | null;     // timestamp of last profile/values edit
   preferences: WorkPreferences;
 
-  // Step 02 — Explorer (wizard, re-runnable)
+  // Step 02 — Explorer (wizard; outcome = the Brief, the chosen direction)
   directions: CareerDirection[];
   savedSuggestions: SavedSuggestion[];
-  chosenDirectionId: string | null;   // set when user picks in Compare
+  chosenDirectionId: string | null;   // set when user picks in Compare → Brief
   explorerCompletedAt: string | null; // timestamp of last Explorer completion
+  explorerStep?: WizardStep;          // remembered wizard position (suggested/manual/compare/brief)
 
-  // Step 03 — Brief (persistent output of Explorer)
+  // Brief notes live on the chosen direction itself (evidence field)
   workspaceEvidence: string;
   workspaceAssumption: string;
 
-  // Step 04 — Market & Action
+  // Step 03 — Market & Action
   marketInsight?: MarketInsight | null;
   actionItems?: ActionItem[];
 }
@@ -119,7 +121,6 @@ export interface CareerDirectionData {
 export const CAREER_STAGES: Array<{ id: CareerStage; label: string }> = [
   { id: 'profile', label: 'Profile' },
   { id: 'explorer', label: 'Explorer' },
-  { id: 'brief', label: 'Brief' },
   { id: 'marketAction', label: 'Market & Action' },
 ];
 
@@ -142,18 +143,21 @@ export function createEmptyCareerDirection(): CareerDirectionData {
   };
 }
 
-// ── Migration from V1 (6-stage) to V2 (4-stage) ──────────────────────────
+// ── Migration from V1 (6-stage) / V2 (4-stage) to current 3-stage ────────
 const STAGE_MIGRATION: Record<string, CareerStage> = {
-  // V1 direct
+  // Current
   'profile': 'profile',
+  'explorer': 'explorer',
+  'marketAction': 'marketAction',
+  // V2 4-stage — Brief is now the Explorer's outcome screen
+  'brief': 'explorer',
+  // V1 direct
   'preferences': 'profile',        // merged into Profile
   'shortlist': 'explorer',         // absorbed by Explorer wizard
   'compare': 'explorer',           // absorbed by Explorer wizard
-  'brief': 'brief',
-  'marketAction': 'marketAction',
   // Legacy names from older versions
   'pulse': 'marketAction',
-  'workspace': 'brief',
+  'workspace': 'explorer',
   'marketContext': 'marketAction',
   'reassess': 'marketAction',
 };
@@ -176,6 +180,12 @@ export function normaliseCareerDirection(input: Partial<CareerDirectionData> | n
   const chosenDirectionId = input.chosenDirectionId
     ?? (directions.find(d => d.selected && d.status === 'active')?.id ?? null);
 
+  // Remember the wizard position inside the Explorer. If none was stored but a
+  // direction was already chosen (e.g. migrating from the old separate Brief
+  // stage), land them on the Brief outcome screen.
+  const explorerStep: WizardStep = (input.explorerStep as WizardStep)
+    ?? (chosenDirectionId ? 'brief' : 'suggested');
+
   return {
     ...empty,
     ...input,
@@ -187,6 +197,7 @@ export function normaliseCareerDirection(input: Partial<CareerDirectionData> | n
     directions,
     chosenDirectionId,
     explorerCompletedAt: input.explorerCompletedAt ?? null,
+    explorerStep,
   };
 }
 
@@ -275,12 +286,6 @@ export function getStageStatus(data: CareerDirectionData, stageId: CareerStage):
       if (isExplorerStale(data)) return 'stale';
       if (data.chosenDirectionId) return 'complete';
       return 'in_progress';
-    }
-    case 'brief': {
-      const chosen = getChosenDirection(data);
-      if (!chosen) return 'empty';
-      if (isBriefStale(data)) return 'stale';
-      return 'complete';
     }
     case 'marketAction': {
       if (!data.marketInsight && !(data.actionItems ?? []).length) return 'empty';

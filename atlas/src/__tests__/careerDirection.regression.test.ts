@@ -73,16 +73,17 @@ describe('career direction data integrity', () => {
     expect(normalised.preferences.contribution).toBe('c');
   });
 
-  it('migrates V1 currentStage names to V2 stages', () => {
-    const cases: Record<string, 'profile' | 'explorer' | 'brief' | 'marketAction'> = {
+  it('migrates legacy currentStage names to the 3-stage model', () => {
+    const cases: Record<string, 'profile' | 'explorer' | 'marketAction'> = {
       profile: 'profile',
       preferences: 'profile',
       shortlist: 'explorer',
       compare: 'explorer',
-      brief: 'brief',
+      explorer: 'explorer',
+      brief: 'explorer', // Brief is now the Explorer's outcome screen
+      workspace: 'explorer',
       marketAction: 'marketAction',
       pulse: 'marketAction',
-      workspace: 'brief',
       marketContext: 'marketAction',
       reassess: 'marketAction',
     };
@@ -91,6 +92,16 @@ describe('career direction data integrity', () => {
       const result = normaliseCareerDirection({ currentStage: input } as any);
       expect(result.currentStage).toBe(expected);
     }
+  });
+
+  it('lands a user with a chosen direction on the Brief outcome screen', () => {
+    const direction = directionFromTitle('Ops Director');
+    const data = normaliseCareerDirection({
+      currentStage: 'explorer',
+      directions: [{ ...direction, selected: true, status: 'active' }],
+      chosenDirectionId: direction.id,
+    });
+    expect(data.explorerStep).toBe('brief');
   });
 
   it('preserves legacy selected direction when chosenDirectionId is missing', () => {
@@ -106,8 +117,7 @@ describe('career direction data integrity', () => {
 
   it('advances stages in order and stops at marketAction', () => {
     expect(advanceStage('profile')).toBe('explorer');
-    expect(advanceStage('explorer')).toBe('brief');
-    expect(advanceStage('brief')).toBe('marketAction');
+    expect(advanceStage('explorer')).toBe('marketAction');
     expect(advanceStage('marketAction')).toBe('marketAction');
   });
 

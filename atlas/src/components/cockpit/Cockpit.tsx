@@ -199,28 +199,10 @@ export function Cockpit() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               data-active={active ? 'true' : 'false'}
-              style={{
-                background: 'none',
-                border: 'none',
-                borderBottom: active ? '2px solid var(--color-accent)' : '2px solid transparent',
-                cursor: 'pointer',
-                padding: '10px 20px 10px 0',
-                marginRight: '24px',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '11px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.12em',
-                color: active ? 'var(--color-accent)' : 'var(--color-text-dim)',
-                transition: 'color 0.2s ease, border-color 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
+              className={`atlas-tab-btn${active ? ' active' : ''}`}
             >
-              <span style={{ color: active ? 'var(--color-accent)' : 'var(--color-text-dim)' }}>
-                {tab.num}
-              </span>
-              <span>{tab.label}</span>
+              <span>{tab.num}</span>
+              <span className="atlas-tab-label">{tab.label}</span>
             </button>
           );
         })}
