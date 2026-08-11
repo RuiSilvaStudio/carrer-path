@@ -42,10 +42,6 @@ use `var(--*)` tokens from `atlas/src/index.css`.
 
 ## Deployment
 
-- **Production:** Vercel (auto-deploys from GitHub `main` branch)
-- **Domain:** atlaspath.eu
-- **Repo on Gitea:** `rui/career-kb` at 192.168.1.98:3000 (push here for Atlas validation)
-- **Do NOT deploy to .229** — this project stays on Vercel
 
 ## graphify
 
