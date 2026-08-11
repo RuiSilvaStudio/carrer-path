@@ -60,7 +60,10 @@ export function useWorkValues() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        // Table may not exist yet — treat as no data and check legacy
+        throw fetchError;
+      }
 
       const rows = (data || []) as unknown as WorkValuesRow[];
       const latestCompleted = rows.find(r => r.status === 'completed') ?? null;
@@ -118,8 +121,28 @@ export function useWorkValues() {
         setPhase('intro');
       }
     } catch (e: any) {
-      setError(formatConnectionError(e?.message || 'Could not load work values.'));
-      setPhase('intro');
+      const msg = e?.message ?? '';
+      const TABLE_MISSING = ['does not exist', 'relation', 'schema cache', 'not find the table'];
+      const isTableMissing = TABLE_MISSING.some(pat => msg.toLowerCase().includes(pat.toLowerCase()));
+
+      if (isTableMissing) {
+        // Table doesn't exist yet — check legacy career_direction_profiles directly
+        const { data: cdRow } = await supabase
+          .from('career_direction_profiles')
+          .select('data')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        const legacyResult = (cdRow?.data as any)?.preferences?.workValues as WorkValuesResult | undefined;
+        if (legacyResult) {
+          setActiveResult(legacyResult);
+          setPhase('review');
+        } else {
+          setPhase('intro');
+        }
+      } else {
+        setError(formatConnectionError(msg));
+        setPhase('intro');
+      }
     }
     setLoading(false);
   }, [user]);

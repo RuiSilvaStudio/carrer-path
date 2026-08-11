@@ -15,6 +15,7 @@ import { ProfilePage } from './pages/ProfilePage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { SigilLabPage } from './pages/SigilLabPage';
 import { CareerDirectionPage } from './pages/CareerDirectionPage';
+import { WorkValuesPage } from './pages/WorkValuesPage';
 import { PulseReminder } from './components/PulseReminder';
 import { CommandPalette } from './components/ui/CommandPalette';
 import { FirstChartTour } from './components/ui/FirstChartTour';
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/cockpit" element={<CockpitPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/values" element={<WorkValuesPage />} />
           <Route path="/sigil-lab" element={<SigilLabPage />} />
         </Route>
       </Route>

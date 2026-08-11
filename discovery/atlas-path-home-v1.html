@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Atlas Path — Career direction you can actually trust</title>
+<meta name="description" content="Research-grade assessment, real EU labor-market evidence, and a testable next step. Free, no upsell ladder. Your data stays yours." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   ATLAS DESIGN TOKENS — Deep Teal / Copper
+   ============================================================ */
+:root,
+[data-theme="dark"] {
+  --color-bg: #0c1a1a;
+  --color-surface: #142424;
+  --color-surface-elevated: #1a2e2e;
+  --color-border: #243838;
+  --color-text: #e8e4df;
+  --color-text-muted: #b9c7c5;
+  --color-text-dim: #9aabaa; /* ≥4.5:1 on bg+surface+surface-elevated */
+  --color-accent: #c87a5a;
+  --color-accent-bright: #d88a6a;
+  --color-success: #6ba890;
+  --color-openness: #5b9bc8;
+  --color-conscientiousness: #5aad6a;
+  --color-extraversion: #e87a7a;
+  --color-agreeableness: #d4b85e;
+  --color-stability: #7dc5e0;
+  --font-serif: "Fraunces", Georgia, serif;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+  --radius-card: 12px;
+  --radius-button: 8px;
+  --radius-input: 6px;
+  --radius-element: 4px;
+  --radius-pill: 999px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { overflow-x: hidden; scroll-behavior: smooth; }
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+}
+::selection { background: var(--color-accent); color: var(--color-bg); }
+
+.mono { font-family: var(--font-mono); }
+
+/* ---------- layout shell ---------- */
+.wrap { max-width: 1160px; margin: 0 auto; padding: 0 40px; }
+section { padding: 96px 0; }
+@media (max-width: 720px) {
+  .wrap { padding: 0 20px; }
+  section { padding: 64px 0; }
+}
+
+/* ---------- eyebrow / section headers ---------- */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.eyebrow::before { content: ""; width: 28px; height: 1px; background: var(--color-accent); }
+
+/* ---------- NAV ---------- */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: color-mix(in srgb, var(--color-bg) 82%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
+}
+.nav-inner {
+  max-width: 1160px; margin: 0 auto; padding: 0 40px;
+  height: 64px; display: flex; align-items: center; justify-content: space-between;
+}
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.brand-mark { width: 30px; height: 30px; flex: none; }
+.brand-name { font-family: var(--font-serif); font-size: 19px; font-weight: 500; color: var(--color-text); letter-spacing: -0.01em; white-space: nowrap; }
+.brand-name em { font-style: normal; color: var(--color-text-muted); }
+.nav-actions { display: flex; align-items: center; gap: 12px; }
+@media (max-width: 720px) {
+  .nav-inner { padding: 0 16px; }
+  .nav-actions { gap: 8px; }
+  .nav-actions .btn { padding: 0 12px; font-size: 11px; height: 40px; min-height: 40px; }
+  .brand-name { font-size: 16px; }
+  .brand-mark { width: 26px; height: 26px; }
+}
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 0 22px; height: 44px; min-height: 44px;
+  border-radius: var(--radius-button); border: 1px solid transparent;
+  cursor: pointer; text-decoration: none; transition: all .18s ease; white-space: nowrap;
+}
+.btn-primary { background: var(--color-accent); color: var(--color-bg); font-weight: 500; }
+.btn-primary:hover { background: var(--color-accent-bright); transform: translateY(-1px); }
+.btn-ghost { background: transparent; color: var(--color-text); border-color: var(--color-border); }
+.btn-ghost:hover { border-color: var(--color-accent); color: var(--color-accent-bright); }
+.btn-lg { height: 52px; min-height: 52px; padding: 0 32px; font-size: 14px; }
+
+/* ---------- HERO ---------- */
+.hero { padding: 180px 0 120px; position: relative; overflow: hidden; }
+@media (max-width: 720px) { .hero { padding: 132px 0 72px; } }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 64px; align-items: center; }
+@media (max-width: 940px) { .hero-grid { grid-template-columns: 1fr; gap: 56px; } }
+
+.hero h1 {
+  font-family: var(--font-serif); font-weight: 500;
+  font-size: clamp(40px, 5.6vw, 68px);
+  line-height: 1.04; letter-spacing: -0.028em;
+  color: var(--color-text); text-wrap: balance;
+}
+.hero h1 .accent { color: var(--color-accent-bright); font-style: italic; }
+.hero-sub {
+  margin-top: 28px; max-width: 54ch;
+  font-size: 18px; line-height: 1.6; color: #c3d0cd; text-wrap: pretty;
+}
+.hero-cta { margin-top: 40px; display: flex; flex-wrap: wrap; gap: 14px; }
+.hero-trust { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 8px 22px; }
+.hero-trust span { font-family: var(--font-mono); font-size: 12px; color: #a2b3b1; letter-spacing: 0.04em; display: flex; align-items: center; gap: 8px; }
+.hero-trust svg { width: 13px; height: 13px; }
+
+/* hero visual — sigil bloom */
+.hero-visual { position: relative; display: flex; justify-content: center; }
+.sigil-frame {
+  position: relative; width: min(420px, 100%); aspect-ratio: 1;
+  border: 1px solid var(--color-border); border-radius: var(--radius-card);
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--color-accent) 9%, transparent), transparent 62%),
+    var(--color-surface);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.sigil-frame svg { width: 78%; height: 78%; }
+.sigil-caption {
+  position: absolute; left: 20px; bottom: 16px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--color-text-dim);
+}
+.orbit-tag {
+  position: absolute; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em;
+  color: var(--color-text-muted); background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border); border-radius: var(--radius-pill);
+  padding: 6px 13px; white-space: nowrap;
+}
+.tag1 { top: 8%; left: -4%; } .tag2 { top: 30%; right: -6%; } .tag3 { bottom: 24%; left: -8%; } .tag4 { bottom: 7%; right: -2%; }
+@media (max-width: 940px) { .tag1,.tag2,.tag3,.tag4 { display: none; } }
+
+/* ---------- trust strip ---------- */
+.strip { border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); padding: 22px 0; }
+.strip-inner { display: flex; flex-wrap: wrap; gap: 16px 48px; justify-content: center; }
+.strip-inner div { display: flex; align-items: center; gap: 11px; font-size: 14px; color: var(--color-text-muted); }
+.strip-inner svg { width: 17px; height: 17px; flex: none; }
+.strip-inner strong { color: var(--color-text); font-weight: 600; }
+
+/* ---------- generic section head ---------- */
+.sec-head { max-width: 64ch; margin-bottom: 56px; }
+.sec-head h2 { font-family: var(--font-serif); font-weight: 500; font-size: clamp(30px, 3.6vw, 42px); line-height: 1.1; letter-spacing: -0.024em; color: var(--color-text); text-wrap: balance; }
+.sec-head p { margin-top: 18px; font-size: 17px; color: var(--color-text-muted); text-wrap: pretty; }
+
+/* ---------- PROBLEM (the racket) ---------- */
+.problem { background: var(--color-surface); border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
+.problem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+@media (max-width: 860px) { .problem-grid { grid-template-columns: 1fr; } }
+.problem-card { padding: 28px; border: 1px solid var(--color-border); border-radius: var(--radius-card); background: var(--color-bg); }
+.problem-card .n { font-family: var(--font-mono); font-size: 12px; color: var(--color-accent); letter-spacing: 0.14em; }
+.problem-card h3 { font-family: var(--font-serif); font-weight: 500; font-size: 21px; margin: 14px 0 12px; color: var(--color-text); letter-spacing: -0.01em; }
+.problem-card p { font-size: 15px; color: var(--color-text-muted); line-height: 1.6; }
+
+/* ---------- METHOD / how it works ---------- */
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; counter-reset: step; }
+@media (max-width: 1024px) { .steps { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .steps { grid-template-columns: 1fr; } }
+.step { position: relative; padding: 28px 24px; border-top: 2px solid var(--color-border); }
+.step::before {
+  counter-increment: step; content: "0" counter(step);
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.2em; color: var(--color-text-dim);
+  display: block; margin-bottom: 20px;
+}
+.step h3 { font-family: var(--font-serif); font-weight: 500; font-size: 20px; margin-bottom: 12px; color: var(--color-text); letter-spacing: -0.01em; }
+.step p { font-size: 14.5px; color: var(--color-text-muted); line-height: 1.62; }
+.step .tag { display: inline-block; margin-top: 16px; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-accent-bright); border: 1px solid var(--color-border); padding: 4px 10px; border-radius: var(--radius-pill); }
+
+/* ---------- PROOF / instruments ---------- */
+.proof { background: var(--color-surface); border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
+.proof-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 56px; align-items: center; }
+@media (max-width: 900px) { .proof-grid { grid-template-columns: 1fr; gap: 40px; } }
+.spec-list { display: flex; flex-direction: column; }
+.spec-row { display: grid; grid-template-columns: 200px 1fr; gap: 20px; padding: 18px 0; border-top: 1px solid var(--color-border); }
+.spec-row:last-child { border-bottom: 1px solid var(--color-border); }
+.spec-row dt { font-family: var(--font-mono); font-size: 12.5px; letter-spacing: 0.06em; color: var(--color-text); text-transform: uppercase; padding-top: 2px; }
+.spec-row dd { font-size: 14.5px; color: var(--color-text-muted); line-height: 1.55; }
+@media (max-width: 560px) { .spec-row { grid-template-columns: 1fr; gap: 6px; } }
+
+.radar-card { border: 1px solid var(--color-border); border-radius: var(--color-card); border-radius: var(--radius-card); background: var(--color-bg); padding: 28px; }
+.radar-card .rc-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.radar-card .rc-head h4 { font-family: var(--font-serif); font-size: 19px; font-weight: 500; }
+.radar-card .rc-head span { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-dim); letter-spacing: 0.1em; }
+.radar-card svg { width: 100%; height: auto; display: block; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 8px; }
+.legend span { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); display: flex; align-items: center; gap: 7px; }
+.legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+/* ---------- PRINCIPLES (free + privacy) ---------- */
+.principles { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 860px) { .principles { grid-template-columns: 1fr; } }
+.principle { padding: 36px; border: 1px solid var(--color-border); border-radius: var(--radius-card); background: var(--color-surface); position: relative; }
+.principle .icon { width: 34px; height: 34px; margin-bottom: 22px; }
+.principle h3 { font-family: var(--font-serif); font-weight: 500; font-size: 24px; margin-bottom: 14px; color: var(--color-text); letter-spacing: -0.015em; }
+.principle p { font-size: 15.5px; color: var(--color-text-muted); line-height: 1.65; margin-bottom: 12px; }
+.principle .fine { font-family: var(--font-mono); font-size: 12px; color: var(--color-text-dim); letter-spacing: 0.03em; border-top: 1px solid var(--color-border); padding-top: 16px; margin-top: 20px; }
+
+/* ---------- FINAL CTA ---------- */
+.final { text-align: center; padding: 130px 0; position: relative; overflow: hidden; }
+.final::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 60%, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 70%);
+  pointer-events: none;
+}
+.final h2 { font-family: var(--font-serif); font-weight: 500; font-size: clamp(34px, 5vw, 56px); line-height: 1.06; letter-spacing: -0.026em; color: var(--color-text); text-wrap: balance; position: relative; }
+.final p { margin: 24px auto 0; max-width: 52ch; font-size: 17px; color: var(--color-text-muted); position: relative; }
+.final .hero-cta { justify-content: center; margin-top: 44px; position: relative; }
+.final .micro { margin-top: 26px; font-family: var(--font-mono); font-size: 12px; color: var(--color-text-dim); letter-spacing: 0.05em; position: relative; }
+
+/* ---------- FOOTER ---------- */
+footer { border-top: 1px solid var(--color-border); padding: 40px 0; }
+.foot-inner { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 18px; }
+.foot-inner p { font-family: var(--font-mono); font-size: 12px; color: var(--color-text-dim); letter-spacing: 0.05em; }
+.foot-links { display: flex; gap: 24px; }
+.foot-links a { font-family: var(--font-mono); font-size: 12px; color: var(--color-text-muted); text-decoration: none; letter-spacing: 0.05em; }
+.foot-links a:hover { color: var(--color-accent-bright); }
+
+/* ---------- reveal animation ---------- */
+.reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s cubic-bezier(.2,.6,.2,1), transform .7s cubic-bezier(.2,.6,.2,1); }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .sigil-frame svg * { animation: none !important; }
+}
+
+:focus-visible { outline: 2px solid var(--color-accent) !important; outline-offset: 2px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<nav>
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <svg class="brand-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <circle cx="20" cy="20" r="18.5" stroke="#c87a5a" stroke-width="1.4"/>
+        <path d="M20 4 C 26 12, 26 28, 20 36 C 14 28, 14 12, 20 4 Z" stroke="#c87a5a" stroke-width="1.2" fill="none"/>
+        <circle cx="20" cy="20" r="4.5" stroke="#e8e4df" stroke-width="1.2"/>
+        <circle cx="20" cy="20" r="1.3" fill="#c87a5a"/>
+      </svg>
+      <span class="brand-name">The Atlas <em>Path</em></span>
+    </a>
+    <div class="nav-actions">
+      <a class="btn btn-ghost" href="https://atlaspath.eu">Log in</a>
+      <a class="btn btn-primary" href="https://atlaspath.eu">Register — free</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow">A career research engine, not a quiz</div>
+        <h1>Career direction you can actually <span class="accent">trust.</span></h1>
+        <p class="hero-sub">
+          Research-grade assessment, live European labor-market evidence, and one testable next step.
+          Free — no upsell ladder, no drip-sell, no hidden tiers. And your data stays yours.
+        </p>
+        <div class="hero-cta">
+          <a class="btn btn-primary btn-lg" href="https://atlaspath.eu">Create free account</a>
+          <a class="btn btn-ghost btn-lg" href="https://atlaspath.eu">Log in</a>
+        </div>
+        <div class="hero-trust">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="#6ba890" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>100% free</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="#6ba890" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>No subscription, ever</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="#6ba890" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>EU-hosted · GDPR erasure</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="#6ba890" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>Export everything</span>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="sigil-frame">
+          <svg viewBox="0 0 200 200" fill="none" aria-hidden="true">
+            <circle cx="100" cy="100" r="92" stroke="#243838" stroke-width="1"/>
+            <circle cx="100" cy="100" r="92" stroke="#c87a5a" stroke-width="1" stroke-dasharray="3 7" opacity="0.5"/>
+            <g id="bloom" stroke-width="1.1" fill="none">
+              <path d="M100 22 C 132 52, 132 148, 100 178 C 68 148, 68 52, 100 22 Z" stroke="#5b9bc8" opacity="0.9">
+                <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="60s" repeatCount="indefinite"/>
+              </path>
+              <path d="M100 34 C 146 62, 146 138, 100 166 C 54 138, 54 62, 100 34 Z" stroke="#5aad6a" opacity="0.8">
+                <animateTransform attributeName="transform" type="rotate" from="60 100 100" to="420 100 100" dur="75s" repeatCount="indefinite"/>
+              </path>
+              <path d="M100 46 C 158 74, 158 126, 100 154 C 42 126, 42 74, 100 46 Z" stroke="#e87a7a" opacity="0.75">
+                <animateTransform attributeName="transform" type="rotate" from="120 100 100" to="480 100 100" dur="90s" repeatCount="indefinite"/>
+              </path>
+              <path d="M100 58 C 168 84, 168 116, 100 142 C 32 116, 32 84, 100 58 Z" stroke="#d4b85e" opacity="0.7">
+                <animateTransform attributeName="transform" type="rotate" from="180 100 100" to="540 100 100" dur="105s" repeatCount="indefinite"/>
+              </path>
+              <path d="M100 70 C 176 92, 176 108, 100 130 C 24 108, 24 92, 100 70 Z" stroke="#7dc5e0" opacity="0.7">
+                <animateTransform attributeName="transform" type="rotate" from="240 100 100" to="600 100 100" dur="120s" repeatCount="indefinite"/>
+              </path>
+            </g>
+            <circle cx="100" cy="100" r="16" stroke="#e8e4df" stroke-width="1.2"/>
+            <circle cx="100" cy="100" r="4" fill="#c87a5a"/>
+          </svg>
+          <span class="sigil-caption">Your sigil — grown from your data</span>
+        </div>
+        <span class="orbit-tag tag1">Big Five · IPIP-NEO-120</span>
+        <span class="orbit-tag tag2">Work Values · Minnesota</span>
+        <span class="orbit-tag tag3">Skill proximity · ESCO</span>
+        <span class="orbit-tag tag4">Live demand · EURES</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= TRUST STRIP ================= -->
+<div class="strip">
+  <div class="wrap strip-inner">
+    <div><svg viewBox="0 0 24 24" fill="none" stroke="#c87a5a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span><strong>Free means free.</strong> No card, no trial clock, no premium tier.</span></div>
+    <div><svg viewBox="0 0 24 24" fill="none" stroke="#c87a5a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span><strong>You own your data.</strong> Export or permanently erase it anytime.</span></div>
+    <div><svg viewBox="0 0 24 24" fill="none" stroke="#c87a5a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg><span><strong>European by design.</strong> EU market data, EU law, EU jobs.</span></div>
+  </div>
+</div>
+
+<!-- ================= PROBLEM ================= -->
+<section class="problem">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">The problem</div>
+      <h2>Most career tools are a racket.</h2>
+      <p>You already suspect it. A five-minute quiz declares you a "Visionary Architect," then a paywall appears before anything useful does. You're left with a label, not a direction.</p>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-card reveal">
+        <div class="n">/ 01</div>
+        <h3>The quiz tells you what you already said</h3>
+        <p>Most assessments just mirror your answers back with a flattering label. No outside evidence, no labor market, no test of whether the suggestion survives contact with reality.</p>
+      </div>
+      <div class="problem-card reveal">
+        <div class="n">/ 02</div>
+        <h3>The upsell starts before the value does</h3>
+        <p>The "free report" is a teaser. The real reading, the real careers, the real plan — each sits behind the next payment. You're being sold certainty, one drip at a time.</p>
+      </div>
+      <div class="problem-card reveal">
+        <div class="n">/ 03</div>
+        <h3>Your data becomes the product</h3>
+        <p>Your answers about hopes, fears, and work history are valuable. Many tools monetize exactly that. You get a horoscope; they get a profile they can sell.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= METHOD ================= -->
+<section>
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">The method</div>
+      <h2>Direction built like research, not a horoscope.</h2>
+      <p>Four steps. Each one produces evidence you can check, not vibes you're asked to believe.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <h3>Build your profile</h3>
+        <p>Established instruments — the Big Five and your work values — scored against normative samples. This is psychometrics, not a personality quiz.</p>
+        <span class="tag">IPIP-NEO-120</span>
+      </div>
+      <div class="step reveal">
+        <h3>Explore directions</h3>
+        <p>Get candidate directions and add your own. Each is analyzed against your profile across skills, values, practical fit, and evidence — with honest Strong / Good / Stretch ratings.</p>
+        <span class="tag">Re-runnable</span>
+      </div>
+      <div class="step reveal">
+        <h3>See the market</h3>
+        <p>Every direction is checked against the real European labor market — live demand, required skills, and salary ranges, not a static occupation list from a decade ago.</p>
+        <span class="tag">ESCO · EURES</span>
+      </div>
+      <div class="step reveal">
+        <h3>Run an experiment</h3>
+        <p>Choosing a direction commits you to testing it, not to changing careers. Leave with a 90-day, reversible experiment and a way to measure what you learn.</p>
+        <span class="tag">Testable</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PROOF ================= -->
+<section class="proof">
+  <div class="wrap">
+    <div class="proof-grid">
+      <div class="reveal">
+        <div class="eyebrow">Why it's different</div>
+        <h2 style="font-family:var(--font-serif);font-weight:500;font-size:clamp(28px,3.4vw,40px);line-height:1.1;letter-spacing:-0.024em;">Named instruments. Real data. No black box.</h2>
+        <p style="margin-top:18px;font-size:17px;color:var(--color-text-muted);max-width:52ch;">
+          You shouldn't have to take a career tool on faith. Every score names its source, and every market claim names its dataset.
+        </p>
+        <dl class="spec-list" style="margin-top:32px;">
+          <div class="spec-row"><dt>Big Five</dt><dd>IPIP-NEO-120 — 120-item public-domain inventory, trait + 30 facet scores on a 0–100 scale against normative samples.</dd></div>
+          <div class="spec-row"><dt>Work values</dt><dd>Minnesota Theory of Work Adjustment — 21 needs mapped to 6 values, with dual ranking + rating scoring.</dd></div>
+          <div class="spec-row"><dt>Skill proximity</dt><dd>ESCO / O*NET skill taxonomy — a 0–100 proximity score plus the specific missing skills, ranked.</dd></div>
+          <div class="spec-row"><dt>Live demand</dt><dd>EURES labor-market signal — current postings and salary ranges in your country, not a static list.</dd></div>
+        </dl>
+      </div>
+      <div class="radar-card reveal">
+        <div class="rc-head"><h4>A profile with structure</h4><span>EXAMPLE</span></div>
+        <svg viewBox="0 0 320 300" fill="none" aria-hidden="true">
+          <g stroke="#243838" stroke-width="1">
+            <polygon points="160,30 283,120 236,258 84,258 37,120" fill="none"/>
+            <polygon points="160,62 253,125 219,227 101,227 67,125" fill="none"/>
+            <polygon points="160,95 222,130 200,196 120,196 98,130" fill="none"/>
+            <line x1="160" y1="30" x2="160" y2="270"/><line x1="37" y1="120" x2="283" y2="120"/><line x1="84" y1="258" x2="236" y2="58"/><line x1="236" y1="258" x2="84" y2="58"/>
+          </g>
+          <polygon points="160,52 268,118 228,240 100,232 56,124"
+                   fill="color-mix(in srgb, #c87a5a 22%, transparent)" stroke="#c87a5a" stroke-width="1.6"/>
+          <g font-family="IBM Plex Mono, monospace" font-size="10" fill="#9ba8a8" letter-spacing="0.04em">
+            <text x="160" y="18" text-anchor="middle">OPENNESS</text>
+            <text x="290" y="114" text-anchor="start">CONSC.</text>
+            <text x="246" y="276" text-anchor="middle">EXTRAV.</text>
+            <text x="74" y="276" text-anchor="middle">AGREE.</text>
+            <text x="30" y="114" text-anchor="end">STABILITY</text>
+          </g>
+          <circle cx="160" cy="52" r="3.4" fill="#c87a5a"/><circle cx="268" cy="118" r="3.4" fill="#c87a5a"/>
+          <circle cx="228" cy="240" r="3.4" fill="#c87a5a"/><circle cx="100" cy="232" r="3.4" fill="#c87a5a"/>
+          <circle cx="56" cy="124" r="3.4" fill="#c87a5a"/>
+        </svg>
+        <div class="legend">
+          <span><i style="background:#5b9bc8"></i>Openness</span>
+          <span><i style="background:#5aad6a"></i>Conscientiousness</span>
+          <span><i style="background:#e87a7a"></i>Extraversion</span>
+          <span><i style="background:#d4b85e"></i>Agreeableness</span>
+          <span><i style="background:#7dc5e0"></i>Stability</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRINCIPLES ================= -->
+<section>
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="eyebrow">What we refuse to do</div>
+      <h2>Two promises, in writing.</h2>
+    </div>
+    <div class="principles">
+      <div class="principle reveal">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#c87a5a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M15 9.5a3.5 3.5 0 0 0-6 0C7.5 12 12 16 12 16s4.5-4 3-6.5z"/></svg>
+        <h3>Free is not a funnel.</h3>
+        <p>There is no premium tier waiting behind your results. No credit card to "verify" you. No trial that expires into a subscription you didn't choose. The whole product is free because the business model is not built on extracting from people who are stuck.</p>
+        <p>When a paid feature ever exists, it will be a clearly-labeled, one-time professional deliverable — never a lock on your own direction.</p>
+        <div class="fine">NO CARD · NO SUBSCRIPTION · NO DRIP-SELL · NO "PREMIUM REPORT"</div>
+      </div>
+      <div class="principle reveal">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#c87a5a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><path d="M12 15v3"/></svg>
+        <h3>Your data is yours, full stop.</h3>
+        <p>Your answers are the most honest data you'll ever give a piece of software. You can download all of it — assessments as CSV, career data as JSON — whenever you want. And you can permanently erase it, with GDPR-grade hard deletion, whenever you want.</p>
+        <p>It's hosted under EU law, built for the European labor market, and never sold. There is no advertiser in this room.</p>
+        <div class="fine">CSV / JSON EXPORT · GDPR ERASURE · EU-HOSTED · NEVER SOLD</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FINAL CTA ================= -->
+<section class="final">
+  <div class="wrap">
+    <h2 class="reveal">Stop guessing.<br/>Start testing.</h2>
+    <p class="reveal">Build your profile, see real directions against real EU market data, and leave with one experiment you can actually run. It costs nothing, and it stays yours.</p>
+    <div class="hero-cta reveal">
+      <a class="btn btn-primary btn-lg" href="https://atlaspath.eu">Create free account</a>
+      <a class="btn btn-ghost btn-lg" href="https://atlaspath.eu">Log in</a>
+    </div>
+    <p class="micro reveal">FREE · NO SUBSCRIPTION · YOUR DATA, YOURS · EU</p>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="wrap foot-inner">
+    <p>THE ATLAS PATH · CAREER DIRECTION YOU CAN TRUST</p>
+    <div class="foot-links">
+      <a href="https://atlaspath.eu">Log in</a>
+      <a href="https://atlaspath.eu">Register</a>
+      <a href="#top">Top</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Scroll-reveal
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

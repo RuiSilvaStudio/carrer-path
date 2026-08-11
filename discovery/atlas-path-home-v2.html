@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Atlas Path — Career direction you can actually trust</title>
+<meta name="description" content="A career research engine. Free, no upsell ladder. Your data stays yours." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=IBM+Plex+Mono:wght@300;400&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg:#08110f; --surface:#122120; --line:#1e3331;
+  --ink:#eef0ec; --muted:#b6c6c3; --dim:#7d918f;
+  --copper:#d08a63; --copper-hi:#e8a678;
+  --teal:#5fb3a6; --blue:#5b9bc8; --green:#5aad6a; --red:#e87a7a; --gold:#d4b85e;
+  --serif:"Fraunces",Georgia,serif; --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:auto}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden;font-weight:300;letter-spacing:.005em}
+::selection{background:var(--copper);color:var(--bg)}
+
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0}
+#vignette{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse 90% 90% at 50% 45%, transparent 55%, rgba(4,9,8,.55) 100%)}
+#grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;mix-blend-mode:overlay}
+
+#scroll{position:relative;z-index:2}
+section{min-height:100vh;display:flex;align-items:center;pointer-events:none}
+section .panel{pointer-events:auto}
+.wrap{width:min(1200px,100%);margin:0 auto;padding:0 6vw}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;justify-content:space-between;align-items:center;padding:26px 6vw}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none}
+.brand svg{width:26px;height:26px}
+.brand span{font-family:var(--serif);font-size:17px;font-weight:400;color:var(--ink);letter-spacing:-.01em;white-space:nowrap}
+.brand span em{font-style:normal;color:var(--muted)}
+.nav-cta{display:flex;gap:10px}
+
+.btn{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:12px 20px;border-radius:999px;text-decoration:none;transition:all .25s cubic-bezier(.2,.7,.3,1);border:1px solid transparent;display:inline-flex;align-items:center;gap:8px;cursor:pointer;white-space:nowrap}
+.btn-solid{background:var(--copper);color:#0b1512;font-weight:500}
+.btn-solid:hover{background:var(--copper-hi);transform:translateY(-1px);box-shadow:0 8px 30px rgba(208,138,99,.25)}
+.btn-ghost{background:rgba(18,33,32,.4);color:var(--ink);border-color:var(--line);backdrop-filter:blur(8px)}
+.btn-ghost:hover{border-color:var(--copper);color:var(--copper-hi)}
+.btn-big{padding:18px 34px;font-size:12px}
+
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--copper);display:flex;align-items:center;gap:14px;margin-bottom:3.2vh;text-shadow:0 1px 10px rgba(6,12,10,.8)}
+.kicker::before{content:"";width:34px;height:1px;background:var(--copper)}
+h1{font-family:var(--serif);font-weight:300;font-size:clamp(44px,7.4vw,104px);line-height:.98;letter-spacing:-.03em;text-wrap:balance;max-width:12ch;text-shadow:0 2px 30px rgba(4,10,8,.9)}
+h1 .it{font-style:italic;color:var(--copper-hi);font-weight:400}
+
+/* CONTRAST FIX: bright ink + strong shadow + local scrim behind the lede */
+.lede{margin-top:3vh;font-size:clamp(15px,1.5vw,19px);color:var(--muted);max-width:44ch;line-height:1.6;font-weight:400;
+  text-shadow:0 1px 2px rgba(4,10,8,.95), 0 2px 18px rgba(4,10,8,.9);
+  background:linear-gradient(90deg, rgba(8,17,15,.55), rgba(8,17,15,0) 75%);
+  padding:10px 18px 10px 0;border-radius:6px}
+.hero-cta{margin-top:4.4vh;display:flex;gap:14px;flex-wrap:wrap}
+.micro{margin-top:2.6vh;font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--dim);display:flex;gap:22px;flex-wrap:wrap;text-shadow:0 1px 8px rgba(4,10,8,.8)}
+.micro b{color:var(--muted);font-weight:400}
+
+.cue{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:10px;font-family:var(--mono);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim)}
+.cue .line{width:1px;height:44px;background:linear-gradient(var(--copper),transparent);animation:cue 2.2s ease-in-out infinite}
+@keyframes cue{0%,100%{transform:scaleY(.4);transform-origin:top;opacity:.4}50%{transform:scaleY(1);opacity:1}}
+
+.center{justify-content:center;text-align:center}
+.center .panel{max-width:820px}
+.big-state{font-family:var(--serif);font-weight:300;font-size:clamp(30px,4.6vw,64px);line-height:1.06;letter-spacing:-.025em;text-wrap:balance;text-shadow:0 2px 30px rgba(4,10,8,.9)}
+.big-state .it{font-style:italic;color:var(--copper-hi)}
+.big-state .teal{color:#8fd0c5}
+/* CONTRAST FIX on section sub-text too */
+.sub{margin-top:2.4vh;font-size:clamp(14px,1.4vw,18px);color:var(--muted);line-height:1.65;font-weight:400;max-width:56ch;margin-left:auto;margin-right:auto;text-shadow:0 1px 2px rgba(4,10,8,.9),0 2px 16px rgba(4,10,8,.85)}
+
+.w{display:inline-block;opacity:.12;transform:translateY(.35em);transition:opacity .5s ease,transform .5s ease;white-space:pre}
+.w.on{opacity:1;transform:none}
+
+.chips{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:3.4vh}
+.chip{font-family:var(--mono);font-size:11px;letter-spacing:.12em;padding:9px 16px;border-radius:999px;border:1px solid var(--line);background:rgba(18,33,32,.5);backdrop-filter:blur(6px);color:var(--muted)}
+.chip i{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:8px}
+
+.final .panel{text-align:center;max-width:900px}
+.final h2{font-family:var(--serif);font-weight:300;font-size:clamp(40px,6.4vw,92px);line-height:.98;letter-spacing:-.03em;text-wrap:balance;text-shadow:0 2px 30px rgba(4,10,8,.9)}
+.final h2 .it{font-style:italic;color:var(--copper-hi)}
+.final .hero-cta{justify-content:center;margin-top:5vh}
+.final .micro{justify-content:center;margin-top:3.4vh}
+
+footer{position:relative;z-index:2;padding:40px 6vw;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
+footer a{color:var(--muted);text-decoration:none;margin-left:22px}
+footer a:hover{color:var(--copper-hi)}
+
+.dots{position:fixed;right:3vw;top:50%;transform:translateY(-50%);z-index:40;display:flex;flex-direction:column;gap:16px}
+.dots a{width:6px;height:6px;border-radius:50%;background:var(--line);transition:all .3s}
+.dots a.on{background:var(--copper);transform:scale(1.5)}
+
+@media (max-width:760px){
+  .wrap{padding:0 7vw}
+  .dots{display:none}
+  h1{font-size:clamp(40px,11vw,64px)}
+  .nav-cta .btn-ghost{display:none}
+  .cue{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<canvas id="gl"></canvas>
+<div id="vignette"></div>
+
+<nav>
+  <a class="brand" href="#top">
+    <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18.5" stroke="#d08a63" stroke-width="1.3"/><path d="M20 5 C25.5 12.5,25.5 27.5,20 35 C14.5 27.5,14.5 12.5,20 5Z" stroke="#d08a63" stroke-width="1.1"/><circle cx="20" cy="20" r="4" stroke="#e9e5df" stroke-width="1.1"/><circle cx="20" cy="20" r="1.2" fill="#d08a63"/></svg>
+    <span>The Atlas <em>Path</em></span>
+  </a>
+  <div class="nav-cta">
+    <a class="btn btn-ghost" href="https://atlaspath.eu">Log in</a>
+    <a class="btn btn-solid" href="https://atlaspath.eu">Register — free</a>
+  </div>
+</nav>
+
+<div class="dots" id="dots"></div>
+
+<div id="scroll">
+
+  <section id="s0" data-step="0">
+    <div class="wrap">
+      <div class="panel">
+        <div class="kicker">A career research engine</div>
+        <h1>Career direction you can <span class="it">actually trust.</span></h1>
+        <p class="lede">Real instruments. Real European labor-market data. One testable next step — grown from your data into a mark that's yours alone.</p>
+        <div class="hero-cta">
+          <a class="btn btn-solid btn-big" href="https://atlaspath.eu">Create free account</a>
+          <a class="btn btn-ghost btn-big" href="https://atlaspath.eu">Log in</a>
+        </div>
+        <div class="micro"><span><b>Free</b> · no upsell</span><span><b>EU</b> · GDPR</span><span><b>Yours</b> · export + erase</span></div>
+      </div>
+    </div>
+    <div class="cue"><span>Scroll</span><div class="line"></div></div>
+  </section>
+
+  <section id="s1" data-step="1" class="center">
+    <div class="wrap"><div class="panel">
+      <div class="kicker" style="justify-content:center">The problem</div>
+      <p class="big-state" data-words>Most career tools are a <span class="it">racket</span> — a flattering label, then a paywall, then your data sold.</p>
+      <p class="sub">A five-minute quiz declares you a "Visionary Architect," then charges you to find out what it means. You're left with a horoscope, not a direction.</p>
+    </div></div>
+  </section>
+
+  <section id="s2" data-step="2" class="center">
+    <div class="wrap"><div class="panel">
+      <div class="kicker" style="justify-content:center">The method</div>
+      <p class="big-state" data-words>Direction built like <span class="teal">research</span>, not a horoscope.</p>
+      <p class="sub">Four steps — profile, directions, live market, one experiment. Each produces evidence you can check, not vibes you're asked to believe.</p>
+      <div class="chips">
+        <span class="chip"><i style="background:#5b9bc8"></i>IPIP-NEO-120</span>
+        <span class="chip"><i style="background:#5fb3a6"></i>Work Values</span>
+        <span class="chip"><i style="background:#5aad6a"></i>ESCO</span>
+        <span class="chip"><i style="background:#d4b85e"></i>EURES</span>
+      </div>
+    </div></div>
+  </section>
+
+  <section id="s3" data-step="3" class="center">
+    <div class="wrap"><div class="panel">
+      <div class="kicker" style="justify-content:center">Why it's different</div>
+      <p class="big-state" data-words>Named instruments. <span class="it">Live data.</span> No black box.</p>
+      <p class="sub">Every score names its source. Every market claim names its dataset. Nothing asks to be taken on faith.</p>
+    </div></div>
+  </section>
+
+  <section id="s4" data-step="4" class="center">
+    <div class="wrap"><div class="panel">
+      <div class="kicker" style="justify-content:center">Two promises</div>
+      <p class="big-state" data-words><span class="it">Free</span> is not a funnel. Your data is <span class="teal">yours</span>, full stop.</p>
+      <p class="sub">No card, no trial clock, no premium tier. Export everything as CSV or JSON, or permanently erase it, whenever you want. EU-hosted, never sold.</p>
+    </div></div>
+  </section>
+
+  <section id="s5" data-step="5" class="center final">
+    <div class="wrap"><div class="panel">
+      <h2>Stop guessing.<br/><span class="it">Start testing.</span></h2>
+      <p class="sub">Build your profile, see real directions against real EU market data, leave with one experiment you can run. It costs nothing. It stays yours.</p>
+      <div class="hero-cta">
+        <a class="btn btn-solid btn-big" href="https://atlaspath.eu">Create free account</a>
+        <a class="btn btn-ghost btn-big" href="https://atlaspath.eu">Log in</a>
+      </div>
+      <div class="micro"><span>FREE</span><span>·</span><span>NO SUBSCRIPTION</span><span>·</span><span>YOUR DATA, YOURS</span><span>·</span><span>EU</span></div>
+    </div></div>
+  </section>
+
+</div>
+
+<footer>
+  <span>The Atlas Path — career direction you can trust</span>
+  <span><a href="https://atlaspath.eu">Log in</a><a href="https://atlaspath.eu">Register</a></span>
+</footer>
+
+<svg id="grain" xmlns="http://www.w3.org/2000/svg"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#n)"/></svg>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+/* ============================================================
+   THE HERO OBJECT — a living identity mark (v2 original look)
+   Copper core, five trait-colored bloom rings, orbiting data
+   particles, breathing wireframe shell.
+   ============================================================ */
+const TRAIT = [0x5b9bc8, 0x5aad6a, 0xe87a7a, 0xd4b85e, 0x5fb3a6];
+const COPPER = 0xd08a63;
+
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x08110f, 0.06);
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 100);
+camera.position.set(2.4, 0.4, 9);
+
+const sigil = new THREE.Group();
+sigil.position.set(2.2, 0, 0); // right-of-center, clear of left text
+scene.add(sigil);
+
+const core = new THREE.Mesh(
+  new THREE.IcosahedronGeometry(0.9, 0),
+  new THREE.MeshStandardMaterial({ color:COPPER, metalness:0.9, roughness:0.18, flatShading:true, emissive:0x2a1608, emissiveIntensity:0.5 })
+);
+sigil.add(core);
+const glow = new THREE.Mesh(new THREE.SphereGeometry(0.62, 32, 32), new THREE.MeshBasicMaterial({ color:0xf0a878, transparent:true, opacity:0.0 }));
+sigil.add(glow);
+
+const rings = [];
+for (let i=0;i<5;i++){
+  const r = 1.55 + i*0.34;
+  const torus = new THREE.Mesh(
+    new THREE.TorusGeometry(r, 0.008 + i*0.002, 8, 220),
+    new THREE.MeshBasicMaterial({ color:TRAIT[i], transparent:true, opacity:0.65 - i*0.07 })
+  );
+  torus.rotation.x = Math.PI/2 + (i-2)*0.22;
+  torus.rotation.y = i*0.5;
+  torus.userData = { r, speed: 0.10 + i*0.05 };
+  sigil.add(torus); rings.push(torus);
+}
+
+const shell = new THREE.Mesh(
+  new THREE.IcosahedronGeometry(3.4, 1),
+  new THREE.MeshBasicMaterial({ color:0x1e3331, wireframe:true, transparent:true, opacity:0.35 })
+);
+sigil.add(shell);
+
+/* orbit particles — dimmed + pushed to periphery so text reads (CONTRAST FIX) */
+const COUNT = 1500;
+const pos = new Float32Array(COUNT*3), col = new Float32Array(COUNT*3), seedArr = new Float32Array(COUNT);
+const cTmp = new THREE.Color();
+for (let i=0;i<COUNT;i++){
+  const r = 2.6 + Math.pow(Math.random(), 0.6) * 3.4;
+  const th = Math.random()*Math.PI*2, ph = Math.acos(2*Math.random()-1);
+  pos[i*3]=r*Math.sin(ph)*Math.cos(th); pos[i*3+1]=r*Math.cos(ph)*0.7; pos[i*3+2]=r*Math.sin(ph)*Math.sin(th);
+  cTmp.set(TRAIT[Math.floor(Math.random()*5)]).lerp(new THREE.Color(0xe9e5df), Math.random()*0.35);
+  col[i*3]=cTmp.r; col[i*3+1]=cTmp.g; col[i*3+2]=cTmp.b; seedArr[i]=Math.random()*100;
+}
+const pGeo = new THREE.BufferGeometry();
+pGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(col,3));
+const pMat = new THREE.PointsMaterial({ size:0.032, vertexColors:true, transparent:true, opacity:0.5, depthWrite:false, blending:THREE.AdditiveBlending });
+const points = new THREE.Points(pGeo, pMat);
+sigil.add(points);
+
+scene.add(new THREE.AmbientLight(0x28403c, 1.2));
+const key = new THREE.PointLight(0xd08a63, 60, 40); key.position.set(4,4,6); scene.add(key);
+const rim = new THREE.PointLight(0x5fb3a6, 40, 40); rim.position.set(-6,-3,-4); scene.add(rim);
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.7, 0.85, 0.2);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+/* ============================================================
+   SCROLL CHOREOGRAPHY
+   ============================================================ */
+const STEPS = [
+  { cam:[2.4,0.4,9],   sigilX:2.2,  scale:1.00, bloom:0.70, spread:1.00, pOp:0.50, em:0.50 },
+  { cam:[-1.0,0.6,7],  sigilX:-2.6, scale:0.92, bloom:0.55, spread:1.10, pOp:0.32, em:0.35 }, // problem — move left, cool
+  { cam:[3.2,1.2,6.4], sigilX:2.4,  scale:1.06, bloom:0.85, spread:1.20, pOp:0.55, em:0.70 }, // method
+  { cam:[0,3.4,5.4],   sigilX:0,    scale:1.10, bloom:1.00, spread:1.32, pOp:0.60, em:0.90 }, // data — overhead
+  { cam:[0,0.3,5.0],   sigilX:-2.2, scale:1.04, bloom:0.80, spread:0.92, pOp:0.42, em:0.65 }, // promises
+  { cam:[0,0.1,6.6],   sigilX:0,    scale:1.22, bloom:1.15, spread:1.05, pOp:0.62, em:1.20 }, // final — ignite
+];
+let curStep = 0;
+const S0 = STEPS[0];
+const smooth = { cam:new THREE.Vector3(...S0.cam), sigilX:S0.sigilX, scale:S0.scale, bloom:S0.bloom, spread:S0.spread, pOp:S0.pOp, em:S0.em };
+const tgt = { cam:new THREE.Vector3(...S0.cam), sigilX:S0.sigilX, scale:S0.scale, bloom:S0.bloom, spread:S0.spread, pOp:S0.pOp, em:S0.em };
+
+const mouse = { x:0, y:0, tx:0, ty:0 };
+addEventListener('pointermove', e => { mouse.tx = (e.clientX/innerWidth - 0.5) * 2; mouse.ty = (e.clientY/innerHeight - 0.5) * 2; });
+
+const sections = [...document.querySelectorAll('section[data-step]')];
+const dotsBox = document.getElementById('dots');
+sections.forEach((s,i)=>{ const a=document.createElement('a'); a.href='#'+s.id; a.addEventListener('click',ev=>{ev.preventDefault();s.scrollIntoView({behavior:'smooth'})}); dotsBox.appendChild(a); });
+const dotEls=[...dotsBox.children];
+
+function onScroll(){
+  const mid = scrollY + innerHeight/2;
+  let active = 0;
+  sections.forEach((s,i)=>{ if (mid >= s.offsetTop) active = i; });
+  curStep = active;
+  const S = STEPS[curStep];
+  tgt.cam.set(...S.cam); tgt.sigilX=S.sigilX; tgt.scale=S.scale; tgt.bloom=S.bloom; tgt.spread=S.spread; tgt.pOp=S.pOp; tgt.em=S.em;
+  dotEls.forEach((d,i)=>d.classList.toggle('on', i===active));
+}
+addEventListener('scroll', onScroll, { passive:true });
+onScroll();
+
+/* word-by-word reveal */
+document.querySelectorAll('[data-words]').forEach(el=>{
+  const walk=(node)=>{[...node.childNodes].forEach(n=>{
+    if(n.nodeType===3){const frag=document.createDocumentFragment();n.textContent.split(/(\s+)/).forEach(part=>{if(!part)return;if(/^\s+$/.test(part)){frag.appendChild(document.createTextNode(part));}else{const sp=document.createElement('span');sp.className='w';sp.textContent=part;frag.appendChild(sp);}});node.replaceChild(frag,n);}
+    else if(n.nodeType===1) walk(n);});};
+  walk(el);
+});
+function revealWords(){
+  const vh=innerHeight;
+  sections.forEach(s=>{
+    const r=s.getBoundingClientRect();
+    if(r.top<vh*0.75&&r.bottom>vh*0.25){
+      const words=s.querySelectorAll('.w');
+      const prog=Math.min(1,Math.max(0,(vh*0.75-r.top)/(vh*0.5)));
+      const n=Math.floor(prog*words.length*1.2);
+      words.forEach((w,i)=>w.classList.toggle('on',i<=n));
+    }
+  });
+}
+addEventListener('scroll', revealWords, { passive:true });
+revealWords();
+
+/* ============================================================
+   RENDER LOOP
+   ============================================================ */
+const clock = new THREE.Clock();
+const ease = 0.06;
+let exploded = 0, explodeTgt = 0;
+canvas.addEventListener('pointerdown', ()=>{ explodeTgt = 1; setTimeout(()=>explodeTgt=0, 420); });
+
+function animate(){
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+
+  smooth.cam.lerp(tgt.cam, ease);
+  smooth.sigilX += (tgt.sigilX - smooth.sigilX)*ease;
+  smooth.scale += (tgt.scale - smooth.scale)*ease;
+  smooth.bloom += (tgt.bloom - smooth.bloom)*ease;
+  smooth.spread += (tgt.spread - smooth.spread)*ease;
+  smooth.pOp += (tgt.pOp - smooth.pOp)*ease;
+  smooth.em += (tgt.em - smooth.em)*ease;
+  exploded += (explodeTgt - exploded)*0.12;
+  mouse.x += (mouse.tx - mouse.x)*0.05;
+  mouse.y += (mouse.ty - mouse.y)*0.05;
+
+  camera.position.set(smooth.cam.x + mouse.x*0.6, smooth.cam.y - mouse.y*0.4, smooth.cam.z);
+  camera.lookAt(0,0,0);
+
+  sigil.position.x = smooth.sigilX + mouse.x*0.3;
+  const pulse = 1 + Math.sin(t*1.4)*0.02 + exploded*0.18;
+  sigil.scale.setScalar(smooth.scale * pulse);
+  sigil.rotation.y = t*0.12 + mouse.x*0.2;
+  sigil.rotation.x = Math.sin(t*0.2)*0.08 + mouse.y*0.12;
+
+  core.rotation.y = t*0.3; core.rotation.x = t*0.18;
+  core.material.emissiveIntensity = smooth.em + exploded*1.4;
+  glow.material.opacity = 0.12 + Math.sin(t*2)*0.05 + exploded*0.4;
+  glow.scale.setScalar(1 + exploded*0.6);
+
+  rings.forEach((r,i)=>{
+    r.rotation.z = t * r.userData.speed * (1 + exploded*1.5);
+    const base = 1.55 + i*0.34;
+    const s = (base * smooth.spread * (1 + exploded*0.5)) / base;
+    r.scale.setScalar(s);
+    r.material.opacity = (0.65 - i*0.07) * (0.7 + smooth.pOp*0.3) + exploded*0.3;
+  });
+
+  const sh = 1 + Math.sin(t*0.8)*0.05 + exploded*0.3;
+  shell.scale.setScalar(sh);
+  shell.rotation.y = -t*0.06;
+  shell.material.opacity = 0.20 + smooth.pOp*0.16;
+
+  points.rotation.y = t*0.03;
+  pMat.opacity = smooth.pOp * (0.7 + Math.sin(t*1.2)*0.1) + exploded*0.3;
+  pMat.size = 0.032 + exploded*0.05;
+
+  bloom.strength = smooth.bloom + exploded*0.6;
+  composer.render();
+}
+animate();
+
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+});
+window._ready = true;
+</script>
+</body>
+</html>

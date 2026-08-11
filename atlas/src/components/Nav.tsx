@@ -66,6 +66,7 @@ const NAV_LINKS = [
   { path: '/', label: 'Dashboard' },
   { path: '/baseline', label: 'Baseline' },
   { path: '/pulse', label: 'Pulse' },
+  { path: '/values', label: 'What matters' },
   { path: '/career-direction', label: 'Career' },
   { path: '/docs', label: 'Docs' },
 ];

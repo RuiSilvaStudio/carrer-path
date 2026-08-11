@@ -17,13 +17,10 @@ import {
 } from '../lib/careerDirection';
 import { track } from '../lib/analytics';
 import { supabase, EDGE_FUNCTIONS_BASE } from '../lib/supabase';
-import { WorkValuesAssessment } from '../components/career/WorkValuesAssessment';
-import { ProfileBuilder } from '../components/career/ProfileBuilder';
 import { LLMLoader } from '../components/ui/LLMLoader';
 import { Spinner } from '../components/ui/Spinner';
 import { FeedbackPrompt } from '../components/ui/FeedbackPrompt';
-import { VALUE_LABELS, type WorkValuesResult } from '../lib/work-values-data';
-import { type StructuredProfile } from '../lib/profile-data';
+import { VALUE_LABELS } from '../lib/work-values-data';
 
 const ui = {
   page: { maxWidth: '1120px', margin: '0 auto', padding: '52px var(--space-page) 100px' },
@@ -185,30 +182,11 @@ function Actions({ back, onBack, next, onNext, disabled, saving }: { back?: stri
 // STEP 01 — PROFILE (merged: career history + work values)
 // ═══════════════════════════════════════════════════════════════════════
 
-function ProfileStep({ data, setData, saving, move, touchProfile }: PageProps & { touchProfile: (next: CareerDirectionData) => CareerDirectionData }) {
+function ProfileStep({ data, saving, move }: PageProps & { touchProfile: (next: CareerDirectionData) => CareerDirectionData }) {
   const hasProfile = data.profile.roles.length > 0 || data.profile.careerSummary;
-  const hasValues = !!data.preferences.workValues;
   const profileStatus = hasProfile ? '✓' : '○';
-  const valuesStatus = hasValues ? '✓' : '○';
 
-  const handleProfileChange = (profile: StructuredProfile) => {
-    setData(touchProfile({ ...data, profile }));
-  };
-
-  const handleValuesComplete = (result: WorkValuesResult) => {
-    const updated = touchProfile({
-      ...data,
-      preferences: { ...data.preferences, workValues: result },
-    });
-    setData(updated);
-    void track('profile_saved', {
-      has_roles: data.profile.roles.length > 0,
-      has_summary: !!data.profile.careerSummary,
-      has_work_values: !!data.preferences.workValues,
-    });
-  };
-
-  // Continue to Explorer — auto-save has already persisted everything.
+  // Continue to Explorer — career history is edited on the Profile page
   const handleContinue = () => {
     void move(data, '');
   };
@@ -216,43 +194,53 @@ function ProfileStep({ data, setData, saving, move, touchProfile }: PageProps & 
   return (
     <section>
       <Title kicker="01 / Your profile" title="Build your career foundation.">
-        Atlas needs your career history and what matters to you. Both sections below are editable — fill them in any order. Your changes save automatically.
+        Your career history is managed on your Profile page. Fill it in there, then come back here to explore directions.
       </Title>
       <hr style={ui.rule} />
 
       {/* ── Progress indicator ── */}
       <div style={{ display: 'flex', gap: '24px', marginBottom: '32px', font: '11px var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.1em', color: 'var(--color-text-dim)' }}>
         <span style={{ color: hasProfile ? 'var(--color-success)' : 'var(--color-text-dim)' }}>{profileStatus} Career history</span>
-        <span style={{ color: hasValues ? 'var(--color-success)' : 'var(--color-text-dim)' }}>{valuesStatus} Work values</span>
       </div>
 
-      {/* ── Section A: Career history ── */}
-      <div style={{ marginBottom: '48px' }}>
-        <p style={{ ...ui.kicker, marginBottom: '16px' }}>Career history</p>
-        <ProfileBuilder
-          profile={data.profile}
-          onChange={handleProfileChange}
-        />
-      </div>
+      {!hasProfile && (
+        <div style={{ ...ui.panel, borderLeft: '3px solid var(--color-accent)', marginBottom: '24px', textAlign: 'center' }}>
+          <p style={{ ...ui.quiet, fontSize: '14px', margin: '0 0 16px' }}>
+            Add your career history to unlock Explorer and Market & Action.
+          </p>
+          <a
+            href="/profile"
+            style={{ ...ui.primary, display: 'inline-block', textDecoration: 'none' }}
+            onClick={(e) => { e.preventDefault(); window.location.href = '/profile'; }}
+          >
+            Go to Profile →
+          </a>
+        </div>
+      )}
 
-      <hr style={ui.rule} />
+      {hasProfile && (
+        <div style={{ ...ui.panel, borderLeft: '3px solid var(--color-success)', marginBottom: '24px' }}>
+          <p style={{ ...ui.quiet, fontSize: '14px', margin: '0 0 12px', color: 'var(--color-success)' }}>
+            ✓ Your career history is complete.
+          </p>
+          <a
+            href="/profile"
+            style={{ ...ui.secondary, display: 'inline-block', textDecoration: 'none', fontSize: '10px', padding: '6px 12px' }}
+            onClick={(e) => { e.preventDefault(); window.location.href = '/profile'; }}
+          >
+            Edit on Profile page
+          </a>
+        </div>
+      )}
 
-      {/* ── Section B: Work values ── */}
-      <div>
-        <p style={{ ...ui.kicker, marginBottom: '16px' }}>What matters to you</p>
-        <WorkValuesAssessment
-          onComplete={handleValuesComplete}
-        />
-      </div>
-
-      {/* ── Continue — saves are automatic, this just advances ── */}
+      {/* ── Continue — advances to Explorer ── */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '32px' }}>
         <button
           onClick={handleContinue}
-          disabled={saving}
-          style={{ ...ui.primary, opacity: saving ? 0.5 : 1 }}
+          disabled={saving || !hasProfile}
+          style={{ ...ui.primary, opacity: (saving || !hasProfile) ? 0.5 : 1 }}
         >
-          Continue →
+          {!hasProfile ? 'Add career history first' : 'Continue →'}
         </button>
       </div>
     </section>

@@ -1,27 +1,82 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useAssessments } from '../hooks/useAssessments';
-import { Spinner } from '../components/ui/Spinner';
 import { supabase, EDGE_FUNCTIONS_BASE } from '../lib/supabase';
 import { Sigil } from '../components/sigil/Sigil';
 import { FeedbackPrompt } from '../components/ui/FeedbackPrompt';
-import { sigilInputFromData, dominantTraitIndex, TRAIT_CSS_VARS, EMPTY_SIGIL_INPUT } from '../lib/sigil';
+import { ProfileBuilder } from '../components/career/ProfileBuilder';
+import { Spinner } from '../components/ui/Spinner';
+import { sigilInputFromData, EMPTY_SIGIL_INPUT } from '../lib/sigil';
 import { exportAllData } from '../lib/exportAllData';
-import type { AssessmentScores, BigFiveScores } from '../types';
+import {
+  createEmptyProfile,
+  type StructuredProfile,
+  type CurrentSituation,
+  type ChangeDriver,
+  type WorkArrangement,
+  type Mobility,
+  type TravelTolerance,
+  type Availability,
+  type IncomeExpectation,
+  SITUATION_OPTIONS,
+  DRIVER_OPTIONS,
+  ARRANGEMENT_OPTIONS,
+  MOBILITY_OPTIONS,
+  TRAVEL_OPTIONS,
+  AVAILABILITY_OPTIONS,
+  INCOME_OPTIONS,
+} from '../lib/profile-data';
+import type { AssessmentScores } from '../types';
 
-const TRAIT_LABELS = ['Openness', 'Conscientiousness', 'Extraversion', 'Agreeableness', 'Emotional Stability'];
+type ProfileTab = 'identity' | 'career' | 'situation' | 'feedback' | 'account';
+
+// ── Helpers to read/write career direction profile data ─────────────
+async function loadCareerProfile(userId: string): Promise<StructuredProfile> {
+  const { data: row } = await supabase
+    .from('career_direction_profiles')
+    .select('data')
+    .eq('user_id', userId)
+    .maybeSingle();
+  const profile = (row?.data as any)?.profile as StructuredProfile | undefined;
+  return profile ?? createEmptyProfile();
+}
+
+async function saveProfile(userId: string, profile: StructuredProfile): Promise<void> {
+  // Fetch current record to preserve non-profile fields
+  const { data: row } = await supabase
+    .from('career_direction_profiles')
+    .select('data')
+    .eq('user_id', userId)
+    .maybeSingle();
+  const existing = (row?.data as Record<string, unknown>) ?? {};
+  const updated = {
+    ...existing,
+    profile,
+    profileUpdatedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  await supabase
+    .from('career_direction_profiles')
+    .upsert({ user_id: userId, data: updated }, { onConflict: 'user_id' });
+}
 
 export function ProfilePage() {
   const { user, updateDisplayName, updatePassword, signOut } = useAuth();
-  const { baseline, pulses, loading } = useAssessments(user?.id ?? null);
+  const { baseline, pulses, loading: assessLoading } = useAssessments(user?.id ?? null);
   const navigate = useNavigate();
+
+  // Active tab
+  const [tab, setTab] = useState<ProfileTab>('identity');
+
+  // Profile data (from career_direction_profiles)
+  const [profile, setProfile] = useState<StructuredProfile>(createEmptyProfile());
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileSaveMsg, setProfileSaveMsg] = useState<string | null>(null);
 
   const sigilInput = baseline
     ? sigilInputFromData(baseline.scores as AssessmentScores, pulses.length, pulses)
     : null;
-  const dominant = sigilInput ? TRAIT_LABELS[dominantTraitIndex(sigilInput.bigFive as BigFiveScores)] : null;
-  const dominantVar = sigilInput ? TRAIT_CSS_VARS[dominantTraitIndex(sigilInput.bigFive as BigFiveScores)] : null;
 
   const [name, setName] = useState(user?.displayName ?? '');
   const [nameMsg, setNameMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
@@ -32,15 +87,28 @@ export function ProfilePage() {
   const [pwMsg, setPwMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
   const [pwBusy, setPwBusy] = useState(false);
 
-  // ── Delete account state ──
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
-  // ── Export all data state ──
   const [exportBusy, setExportBusy] = useState(false);
   const [exportMsg, setExportMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
+
+  // ── Load profile on mount ──
+  useEffect(() => {
+    if (!user) return;
+    setProfileLoading(true);
+    loadCareerProfile(user.id).then(p => {
+      setProfile(p);
+      setProfileLoading(false);
+    });
+  }, [user]);
+
+  // Sync display name
+  useEffect(() => {
+    if (user?.displayName) setName(user.displayName);
+  }, [user?.displayName]);
 
   if (!user) return null;
 
@@ -60,20 +128,13 @@ export function ProfilePage() {
 
   const savePassword = async () => {
     setPwMsg(null);
-    if (pw1.length < 8) {
-      setPwMsg({ kind: 'err', text: 'Password must be at least 8 characters.' });
-      return;
-    }
-    if (pw1 !== pw2) {
-      setPwMsg({ kind: 'err', text: 'Passwords do not match.' });
-      return;
-    }
+    if (pw1.length < 8) { setPwMsg({ kind: 'err', text: 'Password must be at least 8 characters.' }); return; }
+    if (pw1 !== pw2) { setPwMsg({ kind: 'err', text: 'Passwords do not match.' }); return; }
     setPwBusy(true);
     try {
       await updatePassword(pw1);
       setPwMsg({ kind: 'ok', text: 'Password updated. You stay signed in on this device.' });
-      setPw1('');
-      setPw2('');
+      setPw1(''); setPw2('');
     } catch (e) {
       setPwMsg({ kind: 'err', text: e instanceof Error ? e.message : 'Failed to update password.' });
     } finally {
@@ -83,8 +144,7 @@ export function ProfilePage() {
 
   const handleExportAll = async () => {
     if (!user?.id) return;
-    setExportBusy(true);
-    setExportMsg(null);
+    setExportBusy(true); setExportMsg(null);
     try {
       const { exported, skipped } = await exportAllData(user.id);
       if (exported.length > 0) {
@@ -104,26 +164,18 @@ export function ProfilePage() {
 
   const handleDeleteAccount = async () => {
     if (deleteConfirm !== 'DELETE') return;
-    setDeleteBusy(true);
-    setDeleteError('');
+    setDeleteBusy(true); setDeleteError('');
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) throw new Error('No active session.');
-
       const res = await fetch(`${EDGE_FUNCTIONS_BASE}delete-account`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
       });
-
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || `Request failed (${res.status})`);
       }
-
-      // Account deleted — sign out locally and redirect
       await signOut();
       navigate('/');
     } catch (e) {
@@ -133,349 +185,352 @@ export function ProfilePage() {
     }
   };
 
+  // ── Career history save ──
+  const handleProfileChange = useCallback(async (p: StructuredProfile) => {
+    setProfile(p);
+    setProfileSaveMsg(null);
+    try {
+      await saveProfile(user.id, p);
+      setProfileSaveMsg('Saved.');
+    } catch {
+      setProfileSaveMsg('Could not save.');
+    }
+  }, [user]);
+
+  // ── Tabs ──
+  const TABS: Array<{ id: ProfileTab; label: string; num: string }> = [
+    { id: 'identity', label: 'Identity', num: '01' },
+    { id: 'career', label: 'Career History', num: '02' },
+    { id: 'situation', label: 'Situation', num: '03' },
+    { id: 'feedback', label: 'Feedback', num: '04' },
+    { id: 'account', label: 'Account', num: '05' },
+  ];
+
   return (
-    <div className="atlas-page" style={{ padding: '60px 40px', maxWidth: '640px', margin: '0 auto' }}>
-      <h1 style={{
-        fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h1)', fontWeight: 500,
-        color: 'var(--color-text)', marginBottom: '8px',
-      }}>
-        Profile
-      </h1>
-      <p style={{
-        fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6,
-        marginBottom: '40px',
-      }}>
-        Signed in as <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px' }}>{user.email}</span>
-      </p>
-
-      {/* ── Identity sigil ── */}
-      <section style={cardStyle}>
-        <h2 style={sectionTitleStyle}>Your sigil</h2>
-        <p style={sectionDescStyle}>
-          A deterministic mark generated only from your assessment data — same scores, same mark, every time. It grows as you add pulses: bloom outline (baseline) → woven texture → milestone pips → a dominant-trait ring at 25 pulses.
-        </p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '28px', flexWrap: 'wrap' }}>
-          {loading ? (
-            <Spinner message="Loading…" />
-          ) : sigilInput ? (
-            <>
-              <Sigil input={sigilInput} size={132} showInsignia />
-              <div style={{ flex: '1 1 220px', minWidth: 0 }}>
-                <p style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: 1.6, marginBottom: '10px' }}>
-                  {pulses.length === 0
-                    ? 'Baseline complete. Your first pulse begins the woven texture and earns the first milestone pip.'
-                    : `${pulses.length} ${pulses.length === 1 ? 'pulse' : 'pulses'} logged · ${Math.min(4, pulses.length >= 1 ? (pulses.length >= 25 ? 4 : pulses.length >= 12 ? 3 : pulses.length >= 5 ? 2 : 1) : 0)} of 4 milestones earned.`}
-                </p>
-                {pulses.length >= 25 && dominant && dominantVar && (
-                  <p style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-                    Ring: <span style={{ color: `var(${dominantVar})`, fontWeight: 600 }}>{dominant}</span> — your dominant trait.
-                  </p>
-                )}
-              </div>
-            </>
-          ) : (
-            <>
-              <Sigil input={EMPTY_SIGIL_INPUT} size={132} empty animate={false} />
-              <p style={{ flex: '1 1 220px', minWidth: 0, fontFamily: 'var(--font-sans)', fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
-                Your sigil forms after your baseline. The frame is waiting.
-              </p>
-            </>
-          )}
-        </div>
-      </section>
-
-      {/* ── Display name ── */}
-      <section style={cardStyle}>
-        <h2 style={sectionTitleStyle}>Display name</h2>
-        <p style={sectionDescStyle}>
-          Shown in the navigation bar. Falls back to your email if empty.
-        </p>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
-          <div style={{ flex: 1 }}>
-            <label style={labelStyle}>Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => { setName(e.target.value); setNameMsg(null); }}
-              placeholder="e.g. Rui Silva"
-              style={inputStyle}
-            />
-          </div>
+    <div className="atlas-page" style={{ padding: '40px var(--space-page) 100px', maxWidth: '960px', margin: '0 auto' }}>
+      {/* ── Horizontal tabs ── */}
+      <nav className="atlas-sticky-tabs" style={{ display: 'flex', gap: '28px', borderBottom: '1px solid var(--color-border)', marginBottom: '32px', overflowX: 'auto' }} aria-label="Profile sections">
+        {TABS.map(t => (
           <button
-            onClick={saveName}
-            disabled={nameBusy || !name.trim() || name.trim() === user.displayName}
-            style={{ ...primaryBtnStyle, opacity: (nameBusy || !name.trim() || name.trim() === user.displayName) ? 0.5 : 1 }}
-          >
-            Save
-          </button>
-        </div>
-        {nameMsg && <div style={msgStyle(nameMsg.kind)}>{nameMsg.text}</div>}
-      </section>
-
-      {/* ── Change password ── */}
-      <section style={cardStyle}>
-        <h2 style={sectionTitleStyle}>Change password</h2>
-        <p style={sectionDescStyle}>
-          Takes effect immediately. Other devices stay signed in until their sessions expire.
-        </p>
-        <div style={{ marginBottom: '16px' }}>
-          <label style={labelStyle}>New password</label>
-          <input
-            type="password"
-            value={pw1}
-            onChange={(e) => { setPw1(e.target.value); setPwMsg(null); }}
-            placeholder="At least 8 characters"
-            style={inputStyle}
-            autoComplete="new-password"
-          />
-        </div>
-        <div style={{ marginBottom: '20px' }}>
-          <label style={labelStyle}>Confirm new password</label>
-          <input
-            type="password"
-            value={pw2}
-            onChange={(e) => { setPw2(e.target.value); setPwMsg(null); }}
-            placeholder="Repeat it"
-            style={inputStyle}
-            autoComplete="new-password"
-          />
-        </div>
-        <button
-          onClick={savePassword}
-          disabled={pwBusy || !pw1 || !pw2}
-          style={{ ...primaryBtnStyle, opacity: (pwBusy || !pw1 || !pw2) ? 0.5 : 1 }}
-        >
-          Update Password
-        </button>
-        {pwMsg && <div style={msgStyle(pwMsg.kind)}>{pwMsg.text}</div>}
-      </section>
-
-      {/* Feedback: the one account-level NPS ask. Once ever, user-initiated context. */}
-      <section style={cardStyle}>
-        <h2 style={sectionTitleStyle}>Help shape Atlas Path</h2>
-        <p style={sectionDescStyle}>
-          One question, asked once. Your answer sets our direction.
-        </p>
-        <FeedbackPrompt surface="nps" itemId={`nps-${user.id}`} />
-      </section>
-
-      {/* ── GDPR: Export all my data ── */}
-      <section style={cardStyle}>
-        <h2 style={sectionTitleStyle}>Export my data</h2>
-        <p style={sectionDescStyle}>
-          Downloads all your data as CSV files — assessments, pulses, contacts, contact log, job listings, career profile, and feedback. Your right under GDPR data portability.
-        </p>
-        <button
-          onClick={handleExportAll}
-          disabled={exportBusy}
-          style={{ ...primaryBtnStyle, opacity: exportBusy ? 0.5 : 1, cursor: exportBusy ? 'not-allowed' : 'pointer' }}
-        >
-          {exportBusy ? 'Exporting…' : 'Download all my data'}
-        </button>
-        {exportMsg && <div style={msgStyle(exportMsg.kind)}>{exportMsg.text}</div>}
-      </section>
-
-      {/* ── Danger zone: delete account ── */}
-      <section style={{ ...cardStyle, borderColor: 'var(--color-danger)' }}>
-        <h2 style={{ ...sectionTitleStyle, color: 'var(--color-danger)' }}>Delete account</h2>
-        <p style={sectionDescStyle}>
-          Permanently deletes your account and all associated data — assessments, pulses, contacts, job listings, career profile, and feedback. This action cannot be undone and is done to comply with GDPR data-erasure rights.
-        </p>
-        <button
-          onClick={() => { setDeleteOpen(true); setDeleteConfirm(''); setDeleteError(''); }}
-          style={{
-            padding: '10px 20px',
-            background: 'transparent',
-            color: 'var(--color-danger)',
-            border: '1px solid var(--color-danger)',
-            borderRadius: 'var(--radius-button)',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '12px',
-            fontWeight: 500,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            cursor: 'pointer',
-          }}
-        >
-          Delete my account
-        </button>
-      </section>
-
-      {/* ── Delete confirmation modal (typed) ── */}
-      {deleteOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.55)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-          onClick={() => !deleteBusy && setDeleteOpen(false)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`atlas-tab-btn${tab === t.id ? ' active' : ''}`}
+            data-active={tab === t.id ? 'true' : 'false'}
             style={{
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-card)',
-              padding: '32px',
-              maxWidth: '420px',
-              width: '90%',
+              background: 'none', border: 'none', cursor: 'pointer',
+              padding: '10px 0 8px',
+              font: '12px var(--font-mono)', letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: tab === t.id ? 'var(--color-accent)' : 'var(--color-text-dim)',
+              borderBottom: tab === t.id ? '1px solid var(--color-accent)' : '1px solid transparent',
+              marginBottom: '-1px', whiteSpace: 'nowrap',
+              display: 'flex', alignItems: 'center', gap: '8px',
             }}
           >
-            <h3 style={{
-              fontFamily: 'var(--font-serif)',
-              fontSize: 'var(--fs-h3)',
-              fontWeight: 400,
-              color: 'var(--color-text)',
-              marginBottom: '12px',
-              marginTop: 0,
-              letterSpacing: '-0.01em',
-            }}>
-              Delete your account?
-            </h3>
-            <p style={{
-              fontSize: '14px',
-              color: 'var(--color-text-muted)',
-              lineHeight: 1.6,
-              marginBottom: '20px',
-            }}>
-              This permanently erases everything — your baseline, pulses, contacts, job listings, career profile, and feedback. <strong style={{ color: 'var(--color-text)' }}>This cannot be undone.</strong>
-            </p>
-            <p style={{
-              fontSize: '13px',
-              color: 'var(--color-text-muted)',
-              marginBottom: '8px',
-            }}>
-              Type <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-danger)', fontWeight: 600 }}>DELETE</span> to confirm:
-            </p>
-            <input
-              type="text"
-              value={deleteConfirm}
-              onChange={(e) => setDeleteConfirm(e.target.value)}
-              placeholder="DELETE"
-              disabled={deleteBusy}
-              autoFocus
-              style={{
-                ...inputStyle,
-                marginBottom: '20px',
-                borderColor: deleteConfirm === 'DELETE' ? 'var(--color-danger)' : 'var(--color-border)',
-              }}
-            />
-            {deleteError && (
-              <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginBottom: '16px' }}>
-                {deleteError}
-              </p>
-            )}
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setDeleteOpen(false)}
-                disabled={deleteBusy}
-                style={{
-                  padding: '10px 20px',
-                  background: 'transparent',
-                  color: 'var(--color-text-muted)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 'var(--radius-button)',
-                  fontSize: '13px',
-                  fontFamily: 'var(--font-sans)',
-                  cursor: deleteBusy ? 'not-allowed' : 'pointer',
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteAccount}
-                disabled={deleteBusy || deleteConfirm !== 'DELETE'}
-                style={{
-                  padding: '10px 20px',
-                  background: 'var(--color-danger)',
-                  color: 'var(--color-bg)',
-                  border: 'none',
-                  borderRadius: 'var(--radius-button)',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  fontFamily: 'var(--font-sans)',
-                  cursor: (deleteBusy || deleteConfirm !== 'DELETE') ? 'not-allowed' : 'pointer',
-                  opacity: deleteConfirm !== 'DELETE' ? 0.5 : 1,
-                }}
-              >
-                {deleteBusy ? 'Deleting…' : 'Delete permanently'}
-              </button>
+            <span>{t.num}</span>
+            <span>{t.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      {/* ═══════════════ 01 — IDENTITY ═══════════════ */}
+      {tab === 'identity' && (
+        <section>
+          <h2 style={{ font: '400 var(--fs-h2)/1.2 var(--font-serif)', marginBottom: '6px' }}>Identity</h2>
+          <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6, marginBottom: '24px' }}>
+            Who you are on Atlas Path — your name, your account, your mark.
+          </p>
+
+          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-card)', padding: 'var(--space-card)', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '2px solid var(--color-accent)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {assessLoading ? null : sigilInput ? (
+                  <Sigil input={sigilInput} size={48} minimal animate={false} />
+                ) : (
+                  <Sigil input={EMPTY_SIGIL_INPUT} size={48} empty animate={false} />
+                )}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <div style={{ font: '400 var(--fs-h3-sm)/1.2 var(--font-serif)' }}>{user.displayName || 'You'}</div>
+                    <div style={{ font: '12px var(--font-mono)', color: 'var(--color-text-dim)' }}>{user.email}</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '20px', marginTop: '8px', flexWrap: 'wrap' }}>
+                  <div>
+                    <span style={{ font: '10px var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-dim)' }}>Baseline</span>
+                    <br />
+                    <span style={{ fontSize: '13px', color: baseline ? 'var(--color-success)' : 'var(--color-text-dim)' }}>{baseline ? 'Complete' : 'Not done'}</span>
+                  </div>
+                  <div>
+                    <span style={{ font: '10px var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-dim)' }}>Pulses</span>
+                    <br />
+                    <span style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>{pulses.length} logged</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+
+          {/* Display name */}
+          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-card)', padding: 'var(--space-card)', marginBottom: '20px' }}>
+            <h3 style={{ font: '400 var(--fs-h3)/1.2 var(--font-serif)', marginBottom: '8px' }}>Display name</h3>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-dim)', lineHeight: 1.5, marginBottom: '16px' }}>
+              Shown in the navigation bar. Falls back to your email if empty.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', font: '10px var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-dim)', marginBottom: '6px' }}>Name</label>
+                <input
+                  type="text" value={name}
+                  onChange={(e) => { setName(e.target.value); setNameMsg(null); }}
+                  placeholder="e.g. Rui Silva"
+                  style={{ width: '100%', padding: '10px 14px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-input)', color: 'var(--color-text)', fontSize: '14px', fontFamily: 'var(--font-sans)', outline: 'none' }}
+                />
+              </div>
+              <button
+                onClick={saveName}
+                disabled={nameBusy || !name.trim() || name.trim() === user.displayName}
+                style={{ padding: '10px 20px', background: 'var(--color-accent)', color: 'var(--color-bg)', border: 'none', borderRadius: 'var(--radius-button)', font: '12px var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', opacity: (nameBusy || !name.trim() || name.trim() === user.displayName) ? 0.5 : 1 }}
+              >
+                Save
+              </button>
+            </div>
+            {nameMsg && <div style={{ marginTop: '14px', fontSize: '13px', color: nameMsg.kind === 'ok' ? 'var(--color-success)' : 'var(--color-danger)' }}>{nameMsg.text}</div>}
+          </div>
+        </section>
       )}
+
+      {/* ═══════════════ 02 — CAREER HISTORY ═══════════════ */}
+      {tab === 'career' && (
+        <section>
+          <h2 style={{ font: '400 var(--fs-h2)/1.2 var(--font-serif)', marginBottom: '6px' }}>Career History</h2>
+          <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6, marginBottom: '24px' }}>
+            Your roles, skills, education — what you've done. This data enables Explorer and Market & Action in the Career tab.
+          </p>
+
+          {profileLoading ? (
+            <Spinner message="Loading your profile…" />
+          ) : (
+            <ProfileBuilder
+              profile={profile}
+              onChange={handleProfileChange}
+            />
+          )}
+
+          {profileSaveMsg && (
+            <p style={{ marginTop: '12px', fontSize: '13px', color: profileSaveMsg === 'Could not save.' ? 'var(--color-danger)' : 'var(--color-success)' }}>
+              {profileSaveMsg}
+            </p>
+          )}
+        </section>
+      )}
+
+      {/* ═══════════════ 03 — SITUATION ═══════════════ */}
+      {tab === 'situation' && (
+        <section>
+          <h2 style={{ font: '400 var(--fs-h2)/1.2 var(--font-serif)', marginBottom: '6px' }}>Your Situation</h2>
+          <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6, marginBottom: '24px' }}>
+            Your current context — what's happening, what you're looking for, and your practical constraints.
+          </p>
+
+          {profileLoading ? (
+            <Spinner message="Loading…" />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {/* Current situation */}
+              <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-card)', padding: 'var(--space-card)' }}>
+                <h3 style={{ font: '400 var(--fs-h3)/1.2 var(--font-serif)', marginBottom: '16px' }}>Current situation</h3>
+                <SituationField
+                  label="What's happening right now?"
+                  value={profile.currentSituation}
+                  options={SITUATION_OPTIONS}
+                  onChange={(v) => handleProfileChange({ ...profile, currentSituation: v as CurrentSituation })}
+                />
+                <div style={{ height: '12px' }} />
+                <SituationField
+                  label="What's driving the change?"
+                  value={profile.changeDriver}
+                  options={DRIVER_OPTIONS}
+                  onChange={(v) => handleProfileChange({ ...profile, changeDriver: v as ChangeDriver })}
+                />
+                <div style={{ height: '12px' }} />
+                <label style={{ display: 'block', font: '10px var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-dim)', marginBottom: '6px' }}>Note</label>
+                <input
+                  type="text" value={profile.situationNote ?? ''}
+                  onChange={(e) => handleProfileChange({ ...profile, situationNote: e.target.value || null })}
+                  placeholder="Add a note about your situation"
+                  style={{ width: '100%', padding: '10px 14px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-input)', color: 'var(--color-text)', fontSize: '14px', fontFamily: 'var(--font-sans)', outline: 'none' }}
+                />
+              </div>
+
+              {/* Practical conditions */}
+              <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-card)', padding: 'var(--space-card)' }}>
+                <h3 style={{ font: '400 var(--fs-h3)/1.2 var(--font-serif)', marginBottom: '16px' }}>Practical conditions</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                  <TextField label="Location" value={profile.location} onChange={(v) => handleProfileChange({ ...profile, location: v })} placeholder="e.g. Porto, Portugal" />
+                  <SelectField label="Work arrangement" value={profile.workArrangement} options={ARRANGEMENT_OPTIONS} onChange={(v) => handleProfileChange({ ...profile, workArrangement: v as WorkArrangement })} />
+                  <SelectField label="Mobility" value={profile.mobility} options={MOBILITY_OPTIONS} onChange={(v) => handleProfileChange({ ...profile, mobility: v as Mobility })} />
+                  <SelectField label="Travel tolerance" value={profile.travelTolerance} options={TRAVEL_OPTIONS} onChange={(v) => handleProfileChange({ ...profile, travelTolerance: v as TravelTolerance })} />
+                  <SelectField label="Availability" value={profile.availability} options={AVAILABILITY_OPTIONS} onChange={(v) => handleProfileChange({ ...profile, availability: v as Availability })} />
+                  <SelectField label="Income expectation" value={profile.incomeExpectation} options={INCOME_OPTIONS} onChange={(v) => handleProfileChange({ ...profile, incomeExpectation: v as IncomeExpectation })} />
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* ═══════════════ 04 — FEEDBACK ═══════════════ */}
+      {tab === 'feedback' && (
+        <section>
+          <h2 style={{ font: '400 var(--fs-h2)/1.2 var(--font-serif)', marginBottom: '6px' }}>Feedback</h2>
+          <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6, marginBottom: '24px' }}>
+            Help shape Atlas Path. One question, asked once. Your answer sets our direction.
+          </p>
+
+          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-card)', padding: 'var(--space-card)' }}>
+            <h3 style={{ font: '400 var(--fs-h3)/1.2 var(--font-serif)', marginBottom: '16px' }}>NPS Score</h3>
+            <FeedbackPrompt surface="nps" itemId={`nps-${user.id}`} />
+          </div>
+        </section>
+      )}
+
+      {/* ═══════════════ 05 — ACCOUNT ═══════════════ */}
+      {tab === 'account' && (
+        <section>
+          <h2 style={{ font: '400 var(--fs-h2)/1.2 var(--font-serif)', marginBottom: '6px' }}>Account & Data</h2>
+          <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6, marginBottom: '24px' }}>
+            Manage your account settings and your data under GDPR.
+          </p>
+
+          {/* Change password */}
+          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-card)', padding: 'var(--space-card)', marginBottom: '20px' }}>
+            <h3 style={{ font: '400 var(--fs-h3)/1.2 var(--font-serif)', marginBottom: '8px' }}>Change password</h3>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-dim)', lineHeight: 1.5, marginBottom: '16px' }}>
+              Takes effect immediately. Other devices stay signed in until their sessions expire.
+            </p>
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ display: 'block', font: '10px var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-dim)', marginBottom: '6px' }}>New password</label>
+              <input type="password" value={pw1} onChange={(e) => { setPw1(e.target.value); setPwMsg(null); }} placeholder="At least 8 characters"
+                style={{ width: '100%', padding: '10px 14px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-input)', color: 'var(--color-text)', fontSize: '14px', fontFamily: 'var(--font-sans)', outline: 'none' }} />
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', font: '10px var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-dim)', marginBottom: '6px' }}>Confirm new password</label>
+              <input type="password" value={pw2} onChange={(e) => { setPw2(e.target.value); setPwMsg(null); }} placeholder="Repeat it"
+                style={{ width: '100%', padding: '10px 14px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-input)', color: 'var(--color-text)', fontSize: '14px', fontFamily: 'var(--font-sans)', outline: 'none' }} />
+            </div>
+            <button onClick={savePassword} disabled={pwBusy || !pw1 || !pw2}
+              style={{ padding: '10px 20px', background: 'var(--color-accent)', color: 'var(--color-bg)', border: 'none', borderRadius: 'var(--radius-button)', font: '12px var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', opacity: (pwBusy || !pw1 || !pw2) ? 0.5 : 1 }}>
+              Update Password
+            </button>
+            {pwMsg && <div style={{ marginTop: '14px', fontSize: '13px', color: pwMsg.kind === 'ok' ? 'var(--color-success)' : 'var(--color-danger)' }}>{pwMsg.text}</div>}
+          </div>
+
+          {/* Export */}
+          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-card)', padding: 'var(--space-card)', marginBottom: '20px' }}>
+            <h3 style={{ font: '400 var(--fs-h3)/1.2 var(--font-serif)', marginBottom: '8px' }}>Export my data</h3>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-dim)', lineHeight: 1.5, marginBottom: '16px' }}>
+              Downloads all your data as CSV files — assessments, pulses, contacts, contact log, job listings, career profile, and feedback. Your right under GDPR data portability.
+            </p>
+            <button onClick={handleExportAll} disabled={exportBusy}
+              style={{ padding: '10px 20px', background: 'var(--color-accent)', color: 'var(--color-bg)', border: 'none', borderRadius: 'var(--radius-button)', font: '12px var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              {exportBusy ? 'Exporting…' : 'Download all my data'}
+            </button>
+            {exportMsg && <div style={{ marginTop: '14px', fontSize: '13px', color: exportMsg.kind === 'ok' ? 'var(--color-success)' : 'var(--color-danger)' }}>{exportMsg.text}</div>}
+          </div>
+
+          {/* Delete account */}
+          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-danger)', borderRadius: 'var(--radius-card)', padding: 'var(--space-card)' }}>
+            <h3 style={{ font: '400 var(--fs-h3)/1.2 var(--font-serif)', color: 'var(--color-danger)', marginBottom: '8px' }}>Delete account</h3>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-dim)', lineHeight: 1.5, marginBottom: '16px' }}>
+              Permanently deletes your account and all associated data — assessments, pulses, contacts, job listings, career profile, and feedback. This action cannot be undone and complies with GDPR data-erasure rights.
+            </p>
+            <button onClick={() => { setDeleteOpen(true); setDeleteConfirm(''); setDeleteError(''); }}
+              style={{ padding: '10px 20px', background: 'transparent', color: 'var(--color-danger)', border: '1px solid var(--color-danger)', borderRadius: 'var(--radius-button)', font: '12px var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              Delete my account
+            </button>
+          </div>
+
+          {/* Delete confirmation modal */}
+          {deleteOpen && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}
+              onClick={() => !deleteBusy && setDeleteOpen(false)}>
+              <div onClick={(e) => e.stopPropagation()}
+                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-card)', padding: '32px', maxWidth: '420px', width: '90%' }}>
+                <h3 style={{ font: '400 var(--fs-h3)/1.2 var(--font-serif)', marginBottom: '12px', marginTop: 0 }}>Delete your account?</h3>
+                <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', lineHeight: 1.6, marginBottom: '20px' }}>
+                  This permanently erases everything — your baseline, pulses, contacts, job listings, career profile, and feedback. <strong style={{ color: 'var(--color-text)' }}>This cannot be undone.</strong>
+                </p>
+                <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '8px' }}>
+                  Type <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-danger)', fontWeight: 600 }}>DELETE</span> to confirm:
+                </p>
+                <input type="text" value={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.value)} placeholder="DELETE" disabled={deleteBusy} autoFocus
+                  style={{ width: '100%', padding: '10px 14px', background: 'var(--color-bg)', border: `1px solid ${deleteConfirm === 'DELETE' ? 'var(--color-danger)' : 'var(--color-border)'}`, borderRadius: 'var(--radius-input)', color: 'var(--color-text)', fontSize: '14px', fontFamily: 'var(--font-sans)', outline: 'none', marginBottom: '20px' }} />
+                {deleteError && <p style={{ color: 'var(--color-danger)', fontSize: '13px', marginBottom: '16px' }}>{deleteError}</p>}
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                  <button onClick={() => setDeleteOpen(false)} disabled={deleteBusy}
+                    style={{ padding: '10px 20px', background: 'transparent', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-button)', fontSize: '13px', cursor: deleteBusy ? 'not-allowed' : 'pointer' }}>
+                    Cancel
+                  </button>
+                  <button onClick={handleDeleteAccount} disabled={deleteBusy || deleteConfirm !== 'DELETE'}
+                    style={{ padding: '10px 20px', background: 'var(--color-danger)', color: 'var(--color-bg)', border: 'none', borderRadius: 'var(--radius-button)', fontSize: '13px', fontWeight: 600, cursor: (deleteBusy || deleteConfirm !== 'DELETE') ? 'not-allowed' : 'pointer', opacity: deleteConfirm !== 'DELETE' ? 0.5 : 1 }}>
+                    {deleteBusy ? 'Deleting…' : 'Delete permanently'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
     </div>
   );
 }
 
-// ── Styles (Atlas conventions) ──────────────────────────────────
-const cardStyle: React.CSSProperties = {
-  background: 'var(--color-surface)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-card)',
-  padding: '24px',
-  marginBottom: '24px',
-};
+// ── Inline helper components ──────────────────────────────────────
 
-const sectionTitleStyle: React.CSSProperties = {
-  fontFamily: 'var(--font-serif)',
-  fontSize: 'var(--fs-h3)',
-  fontWeight: 500,
-  color: 'var(--color-text)',
-  marginBottom: '8px',
-};
+function SituationField<T extends string>({ label, value, options, onChange }: {
+  label: string; value: T | null; options: Array<{ value: T; label: string }>; onChange: (v: T) => void;
+}) {
+  return (
+    <div>
+      <label style={{ display: 'block', font: '10px var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-dim)', marginBottom: '6px' }}>{label}</label>
+      <select
+        value={value ?? ''}
+        onChange={(e) => onChange(e.target.value as T)}
+        style={{ width: '100%', padding: '10px 14px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-input)', color: 'var(--color-text)', fontSize: '14px', fontFamily: 'var(--font-sans)', outline: 'none' }}
+      >
+        <option value="" disabled>Select one</option>
+        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </div>
+  );
+}
 
-const sectionDescStyle: React.CSSProperties = {
-  fontSize: '13px',
-  color: 'var(--color-text-dim)',
-  lineHeight: 1.5,
-  marginBottom: '20px',
-};
+function TextField({ label, value, placeholder, onChange }: {
+  label: string; value: string | null; placeholder: string; onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <label style={{ display: 'block', font: '10px var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-dim)', marginBottom: '6px' }}>{label}</label>
+      <input type="text" value={value ?? ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
+        style={{ width: '100%', padding: '10px 14px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-input)', color: 'var(--color-text)', fontSize: '14px', fontFamily: 'var(--font-sans)', outline: 'none' }} />
+    </div>
+  );
+}
 
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontFamily: 'var(--font-mono)',
-  fontSize: '10px',
-  fontWeight: 500,
-  letterSpacing: '0.1em',
-  textTransform: 'uppercase',
-  color: 'var(--color-text-dim)',
-  marginBottom: '6px',
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '10px 14px',
-  background: 'var(--color-bg)',
-  border: '1px solid var(--color-border)',
-  borderRadius: 'var(--radius-input)',
-  color: 'var(--color-text)',
-  fontSize: '14px',
-  fontFamily: 'var(--font-sans)',
-  outline: 'none',
-};
-
-const primaryBtnStyle: React.CSSProperties = {
-  padding: '10px 20px',
-  background: 'var(--color-accent)',
-  color: 'var(--color-bg)',
-  border: 'none',
-  borderRadius: 'var(--radius-button)',
-  fontFamily: 'var(--font-mono)',
-  fontSize: '12px',
-  fontWeight: 500,
-  letterSpacing: '0.08em',
-  textTransform: 'uppercase',
-  cursor: 'pointer',
-};
-
-const msgStyle = (kind: 'ok' | 'err'): React.CSSProperties => ({
-  marginTop: '14px',
-  fontSize: '13px',
-  color: kind === 'ok' ? 'var(--color-success, #6ec48a)' : 'var(--color-danger, #c46e6e)',
-});
+function SelectField<T extends string>({ label, value, options, onChange }: {
+  label: string; value: T | null; options: Array<{ value: T; label: string }>; onChange: (v: T) => void;
+}) {
+  return (
+    <div>
+      <label style={{ display: 'block', font: '10px var(--font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-text-dim)', marginBottom: '6px' }}>{label}</label>
+      <select value={value ?? ''} onChange={(e) => onChange(e.target.value as T)}
+        style={{ width: '100%', padding: '10px 14px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-input)', color: 'var(--color-text)', fontSize: '14px', fontFamily: 'var(--font-sans)', outline: 'none' }}>
+        <option value="" disabled>Select one</option>
+        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </div>
+  );
+}
