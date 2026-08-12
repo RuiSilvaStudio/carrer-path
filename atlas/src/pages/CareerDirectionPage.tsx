@@ -146,7 +146,11 @@ export function CareerDirectionPage() {
           {visibleStages.map((item, index) => {
             const status = currentStageStatus(item.id);
             const isActive = item.id === effectiveStage;
-            const isAccessible = index <= visibleStages.findIndex(s => s.id === effectiveStage) || status === 'complete';
+            // Accessible if: it's the current/left-of-current tab, OR status is complete,
+            // OR it's the next logical step (marketAction when explorer is complete)
+            const explorerDone = !!data.chosenDirectionId;
+            const isNextStep = item.id === 'marketAction' && explorerDone;
+            const isAccessible = index <= visibleStages.findIndex(s => s.id === effectiveStage) || status === 'complete' || isNextStep;
             return (
               <button
                 key={item.id}
@@ -874,7 +878,7 @@ function BriefStep({ data, setData, saving, onRerun }: Omit<PageProps, 'move'> &
 
   return (
     <section>
-      <DirectionHero direction={direction} label="02 / Explorer · Brief" state="A working hypothesis" />
+      <DirectionHero direction={direction} label="Brief" state="A working hypothesis" />
 
       {briefStale && (
         <StaleBanner
