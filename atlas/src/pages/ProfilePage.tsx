@@ -315,6 +315,7 @@ export function ProfilePage() {
             <ProfileBuilder
               profile={profile}
               onChange={handleProfileChange}
+              showSections={['career']}
             />
           )}
 

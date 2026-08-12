@@ -36,6 +36,8 @@ interface ProfileBuilderProps {
   profile: StructuredProfile;
   onChange: (profile: StructuredProfile) => void;
   authToken?: string | null;
+  /** Which sections to show in review mode. Defaults to all three. */
+  showSections?: Array<'situation' | 'career' | 'conditions'>;
 }
 
 type IntakeMode = 'choose' | 'upload' | 'paste' | 'manual' | 'review';
@@ -339,10 +341,11 @@ function SkillTags({ skills, onChange }: { skills: string[]; onChange: (skills: 
 }
 
 // ── Main component ──────────────────────────────────────────────
-export function ProfileBuilder({ profile, onChange, authToken }: ProfileBuilderProps) {
+export function ProfileBuilder({ profile, onChange, authToken, showSections }: ProfileBuilderProps) {
   const [mode, setMode] = useState<IntakeMode>(
     profile.roles.length > 0 || profile.careerSummary ? 'review' : 'choose',
   );
+  const show = new Set(showSections ?? ['situation', 'career', 'conditions']);
   const [extracting, setExtracting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pasteText, setPasteText] = useState('');
@@ -560,7 +563,7 @@ export function ProfileBuilder({ profile, onChange, authToken }: ProfileBuilderP
         {error && <div style={{ ...ui.panel, borderLeft: '3px solid var(--color-danger)', marginBottom: '16px', color: 'var(--color-danger)', fontSize: '14px' }}>{error}</div>}
 
         {/* ── Current situation ──────────────────────────────── */}
-        <div style={{ ...ui.panel, marginBottom: '20px' }}>
+        {show.has('situation') && <div style={{ ...ui.panel, marginBottom: '20px' }}>
           <p style={{ ...ui.kicker, marginBottom: '16px' }}>Current situation</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <Select<CurrentSituation>
@@ -581,10 +584,9 @@ export function ProfileBuilder({ profile, onChange, authToken }: ProfileBuilderP
             value={profile.situationNote}
             onChange={(v) => update({ situationNote: v })}
           />
-        </div>
-
+        </div>}
         {/* ── Career evidence ────────────────────────────────── */}
-        <div style={{ ...ui.panel, marginBottom: '20px' }}>
+        {show.has('career') && <div style={{ ...ui.panel, marginBottom: '20px' }}>
           <p style={{ ...ui.kicker, marginBottom: '16px' }}>Demonstrated career evidence</p>
 
           {profile.careerSummary && (
@@ -631,10 +633,10 @@ export function ProfileBuilder({ profile, onChange, authToken }: ProfileBuilderP
             value={profile.evidenceNote}
             onChange={(v) => update({ evidenceNote: v })}
           />
-        </div>
+        </div>}
 
         {/* ── Practical conditions ───────────────────────────── */}
-        <div style={{ ...ui.panel, marginBottom: '20px' }}>
+        {show.has('conditions') && <div style={{ ...ui.panel, marginBottom: '20px' }}>
           <p style={{ ...ui.kicker, marginBottom: '16px' }}>Practical conditions</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <label>
@@ -682,7 +684,7 @@ export function ProfileBuilder({ profile, onChange, authToken }: ProfileBuilderP
             value={profile.conditionsNote}
             onChange={(v) => update({ conditionsNote: v })}
           />
-        </div>
+        </div>}
 
         {/* Re-extract option */}
         <button onClick={() => setMode('choose')} style={{ ...ui.secondary, fontSize: '10px' }}>
