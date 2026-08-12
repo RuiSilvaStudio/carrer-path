@@ -124,9 +124,9 @@ export function CareerDirectionPage() {
             Add your career history on your Profile page to unlock career direction exploration.
           </p>
           <a
-            href="/profile"
+            href="/profile?tab=career"
             style={{ ...ui.primary, display: 'inline-block', textDecoration: 'none' }}
-            onClick={(e) => { e.preventDefault(); window.location.href = '/profile'; }}
+            onClick={(e) => { e.preventDefault(); window.location.href = '/profile?tab=career'; }}
           >
             Go to Profile →
           </a>

@@ -66,8 +66,19 @@ export function ProfilePage() {
   const { baseline, pulses, loading: assessLoading } = useAssessments(user?.id ?? null);
   const navigate = useNavigate();
 
-  // Active tab
-  const [tab, setTab] = useState<ProfileTab>('identity');
+  // Active tab — from query param or default
+  const getInitialTab = (): ProfileTab => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam === 'career') return 'career';
+      if (tabParam === 'situation') return 'situation';
+      if (tabParam === 'feedback') return 'feedback';
+      if (tabParam === 'account') return 'account';
+    }
+    return 'identity';
+  };
+  const [tab, setTab] = useState<ProfileTab>(getInitialTab);
 
   // Profile data (from career_direction_profiles)
   const [profile, setProfile] = useState<StructuredProfile>(createEmptyProfile());
