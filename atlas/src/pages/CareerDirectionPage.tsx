@@ -878,7 +878,7 @@ function BriefStep({ data, setData, saving, onRerun }: Omit<PageProps, 'move'> &
 
   return (
     <section>
-      <DirectionHero direction={direction} label="Brief" state="A working hypothesis" />
+      <DirectionHero direction={direction} label="" state="A working hypothesis" />
 
       {briefStale && (
         <StaleBanner
@@ -1105,7 +1105,7 @@ function MarketActionStep({ data, setData, saving, save }: StepProps & { save: (
 
   return (
     <section>
-      <DirectionHero direction={direction} label="03 / Market & Action" state="What's happening and what to do" />
+      <DirectionHero direction={direction} label="" state="What's happening and what to do" />
 
       {marketStale && insight && (
         <StaleBanner
@@ -1275,7 +1275,7 @@ function DirectionHero({ direction, label, state: stateLabel }: { direction?: Ca
   return (
     <header className="career-direction-hero">
       <div>
-        <p style={ui.kicker}>{label}</p>
+        {label && <p style={ui.kicker}>{label}</p>}
         <h2 style={ui.h1}>{direction ? <>Explore <em>{direction.title}</em></> : fallback}</h2>
         <p style={{ ...ui.quiet, maxWidth: '650px' }}>{direction?.summary ?? description}</p>
       </div>
