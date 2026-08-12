@@ -106,6 +106,11 @@ export function CareerDirectionPage() {
   // Only show explorer + marketAction tabs; skip 'profile' in the tab bar
   const visibleStages = CAREER_STAGES.filter(s => s.id !== 'profile');
 
+  // If currentStage is 'profile' (not in visible tabs), treat explorer as the effective stage
+  const effectiveStage = visibleStages.some(s => s.id === data.currentStage)
+    ? data.currentStage
+    : visibleStages[0]?.id ?? 'explorer';
+
   return (
     <main id="atlas-main" className="atlas-page career-direction-page" tabIndex={-1} style={ui.page}>
       {/* ── Header (always shown) ── */}
@@ -114,7 +119,9 @@ export function CareerDirectionPage() {
         Build your career foundation.
       </h2>
       <p style={{ ...ui.quiet, maxWidth: '680px', fontSize: '14px', marginBottom: '32px' }}>
-        Your career history is managed on your Profile page. Fill it in there, then come back here to explore directions.
+        {hasProfile
+          ? 'Your profile is ready. Start exploring career directions that match your experience, then check the market and take action.'
+          : 'Your career history is managed on your Profile page. Fill it in there, then come back here to explore directions.'}
       </p>
 
       {/* ── Gating: no career history → prompt to go to Profile ── */}
@@ -138,8 +145,8 @@ export function CareerDirectionPage() {
         <nav className="career-progress atlas-sticky-tabs" aria-label="Career direction stages" style={{ borderBottom: '1px solid var(--color-border)', marginBottom: '40px', display: 'flex', alignItems: 'center', overflowX: 'auto' }}>
           {visibleStages.map((item, index) => {
             const status = currentStageStatus(item.id);
-            const isActive = item.id === data.currentStage;
-            const isAccessible = index <= visibleStages.findIndex(s => s.id === data.currentStage) || status === 'complete';
+            const isActive = item.id === effectiveStage;
+            const isAccessible = index <= visibleStages.findIndex(s => s.id === effectiveStage) || status === 'complete';
             return (
               <button
                 key={item.id}
@@ -162,8 +169,8 @@ export function CareerDirectionPage() {
       {error && <p role="alert" style={{ color: 'var(--color-danger)', marginBottom: '20px' }}>{error}</p>}
       {notice && <p role="status" style={{ color: 'var(--color-success)', marginBottom: '20px' }}>{notice}</p>}
 
-      {hasProfile && data.currentStage === 'explorer' && <ExplorerStep data={data} setData={setData} saving={saving} save={save} newDirection={newDirection} setNewDirection={setNewDirection} />}
-      {hasProfile && data.currentStage === 'marketAction' && <MarketActionStep data={data} setData={setData} saving={saving} save={save} />}
+      {hasProfile && effectiveStage === 'explorer' && <ExplorerStep data={data} setData={setData} saving={saving} save={save} newDirection={newDirection} setNewDirection={setNewDirection} />}
+      {hasProfile && effectiveStage === 'marketAction' && <MarketActionStep data={data} setData={setData} saving={saving} save={save} />}
 
       <section style={{ ...ui.rule, paddingTop: '20px', borderTop: '1px solid var(--color-border)' }} aria-label="Career direction data controls">
         <p style={{ ...ui.quiet, fontSize: '12px', marginBottom: '12px' }}>Exporting or deleting here applies only to the information on this page.</p>
