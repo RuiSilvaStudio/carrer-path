@@ -19,6 +19,7 @@ const USER_TABLES: ExportTable[] = [
   { name: 'job_listings', label: 'job-listings' },
   { name: 'feedback_events', label: 'feedback' },
   { name: 'analytics_events', label: 'analytics' },
+  { name: 'work_values_assessments', label: 'work-values' },
 ];
 
 /**

@@ -516,7 +516,11 @@ export function WorkValuesAssessment({ onComplete }: WorkValuesAssessmentProps) 
     return (
       <div style={ui.page}>
         <p style={ui.kicker}>Your work values profile</p>
-        <h1 style={ui.h1}>What matters most to you.</h1>
+        <h1 style={{
+            fontFamily: 'var(--font-serif)', fontSize: 'var(--fs-h1)', fontWeight: 400,
+            color: 'var(--color-text)', letterSpacing: '-0.02em',
+            lineHeight: 1.1, marginBottom: '12px',
+          }}>What matters most to you.</h1>
         <p style={ui.quiet}>
           This profile emerged from both your rankings and your ratings. It's a starting point —
           editable, not a verdict. Your top values will appear in role comparisons so you can see

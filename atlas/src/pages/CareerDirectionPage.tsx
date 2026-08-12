@@ -115,7 +115,7 @@ export function CareerDirectionPage() {
     <main id="atlas-main" className="atlas-page career-direction-page" tabIndex={-1} style={ui.page}>
       {/* ── Header (always shown) ── */}
       <p style={ui.kicker}>Your Career</p>
-      <h2 style={{ font: `400 var(--fs-display)/1.04 var(--font-serif)`, letterSpacing: '-.035em', margin: '12px 0 12px' }}>
+      <h2 style={{ font: '400 var(--fs-h2)/1.2 var(--font-serif)', letterSpacing: '-.025em', margin: '8px 0 12px' }}>
         Build your career foundation.
       </h2>
       <p style={{ ...ui.quiet, maxWidth: '680px', fontSize: '14px', marginBottom: '32px' }}>
@@ -241,7 +241,7 @@ function ExplorerStep({ data, setData, saving, save, newDirection, setNewDirecti
     <section>
       {meta && (
         <>
-          <h3 style={{ font: '400 var(--fs-h2)/1.2 var(--font-serif)', margin: '0 0 6px' }}>{meta.title}</h3>
+          <h3 style={{ font: '400 var(--fs-h3)/1.2 var(--font-serif)', margin: '0 0 6px' }}>{meta.title}</h3>
           <p style={{ ...ui.quiet, maxWidth: '620px', fontSize: '14px', margin: '0 0 20px' }}>{meta.sub}</p>
           <hr style={ui.rule} />
           {/* ── Slim progress line (not a tab row — display only) ── */}
