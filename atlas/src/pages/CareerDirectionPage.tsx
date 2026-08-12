@@ -192,10 +192,6 @@ type PageProps = {
 
 type StepProps = Omit<PageProps, 'move'>;
 
-function Title({ kicker, title, children }: { kicker: string; title: string; children: React.ReactNode }) {
-  return <><p style={ui.kicker}>{kicker}</p><h2 style={{ font: `400 var(--fs-display)/1.1 var(--font-serif)`, letterSpacing: '-.03em', margin: '8px 0' }}>{title}</h2><p style={{ ...ui.quiet, maxWidth: '680px', fontSize: '14px' }}>{children}</p></>;
-}
-
 function Actions({ back, onBack, next, onNext, disabled, saving }: { back?: string; onBack?: () => void; next: string; onNext: () => void; disabled?: boolean; saving: boolean }) {
   return <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginTop: '32px' }}>{back && <button onClick={onBack} style={ui.secondary}>{back}</button>}<button disabled={disabled || saving} onClick={onNext} style={{ ...ui.primary, opacity: disabled || saving ? .45 : 1, marginLeft: 'auto' }}>{saving ? 'Saving…' : next}</button></div>;
 }
@@ -241,7 +237,8 @@ function ExplorerStep({ data, setData, saving, save, newDirection, setNewDirecti
     <section>
       {meta && (
         <>
-          <Title kicker="02 / Explorer" title={meta.title}>{meta.sub}</Title>
+          <h3 style={{ font: '400 var(--fs-h2)/1.2 var(--font-serif)', margin: '0 0 6px' }}>{meta.title}</h3>
+          <p style={{ ...ui.quiet, maxWidth: '620px', fontSize: '14px', margin: '0 0 20px' }}>{meta.sub}</p>
           <hr style={ui.rule} />
           {/* ── Slim progress line (not a tab row — display only) ── */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', font: '10px var(--font-mono)', letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--color-text-dim)', margin: '6px 0 26px' }}>
@@ -867,7 +864,8 @@ function BriefStep({ data, setData, saving, onRerun }: Omit<PageProps, 'move'> &
 
   if (!direction) {
     return <section>
-      <Title kicker="02 / Explorer" title="Choose a direction first">A direction brief needs one direction. Run the Explorer to pick one.</Title>
+      <h3 style={{ font: '400 var(--fs-h2)/1.2 var(--font-serif)', marginBottom: '6px' }}>Choose a direction first</h3>
+      <p style={{ ...ui.quiet, maxWidth: '620px', fontSize: '14px', marginBottom: '24px' }}>A direction brief needs one direction. Run the Explorer to pick one.</p>
       <Actions next="Open Explorer" onNext={onRerun} saving={saving} />
     </section>;
   }
@@ -1010,7 +1008,8 @@ function MarketActionStep({ data, setData, saving, save }: StepProps & { save: (
   }, [hasFetched, hasMarket, hasActions, direction]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!direction) return <section>
-    <Title kicker="03 / Market & Action" title="Choose a direction first">Market insight needs a chosen direction from your Explorer.</Title>
+    <h3 style={{ font: '400 var(--fs-h2)/1.2 var(--font-serif)', marginBottom: '6px' }}>Choose a direction first</h3>
+    <p style={{ ...ui.quiet, maxWidth: '620px', fontSize: '14px', marginBottom: '24px' }}>Market insight needs a chosen direction from your Explorer.</p>
     <Actions next="Open Explorer" onNext={() => setData(stage(data, 'explorer'))} saving={saving} />
   </section>;
 
