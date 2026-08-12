@@ -4,7 +4,6 @@ import type { SaveStatus } from '../hooks/useCareerDirection';
 import { matchReference } from '../lib/careerRoleReference';
 import {
   CAREER_STAGES,
-  advanceStage,
   directionFromTitle,
   getChosenDirection,
   getStageStatus,
@@ -96,69 +95,75 @@ function StaleBanner({ message, onAction, actionLabel, onDismiss }: { message: s
 }
 
 export function CareerDirectionPage() {
-  const { data, setData, loading, saving, error, notice, save, saveStatus, deleteCareerData, flushPendingSave } = useCareerDirection();
+  const { data, setData, loading, saving, error, notice, save, saveStatus, deleteCareerData } = useCareerDirection();
   const [newDirection, setNewDirection] = useState('');
-
-  // Advance to next stage — flush any pending debounced auto-save first,
-  // then save the stage change immediately.
-  const move = async (next: CareerDirectionData, message: string) => {
-    await flushPendingSave();
-    return save(stage(next, advanceStage(next.currentStage)), message);
-  };
-
-  // Touch profile to mark downstream as stale
-  const touchProfile = (next: CareerDirectionData): CareerDirectionData => ({
-    ...next,
-    profileUpdatedAt: new Date().toISOString(),
-  });
 
   if (loading) return <main className="atlas-page" style={ui.page}><Spinner message="Opening your direction work…" /></main>;
 
   const currentStageStatus = (s: CareerStage) => getStageStatus(data, s);
+  const hasProfile = data.profile.roles.length > 0 || data.profile.careerSummary;
+
+  // Only show explorer + marketAction tabs; skip 'profile' in the tab bar
+  const visibleStages = CAREER_STAGES.filter(s => s.id !== 'profile');
 
   return (
     <main id="atlas-main" className="atlas-page career-direction-page" tabIndex={-1} style={ui.page}>
-      {/* ── Stage tabs (Profile / Explorer / Market & Action) + save pill ── */}
-      <nav className="career-progress atlas-sticky-tabs" aria-label="Career direction stages" style={{ borderBottom: '1px solid var(--color-border)', marginBottom: '40px', display: 'flex', alignItems: 'center', overflowX: 'auto' }}>
-        {CAREER_STAGES.map((item, index) => {
-          const status = currentStageStatus(item.id);
-          const isActive = item.id === data.currentStage;
-          const isAccessible = index <= CAREER_STAGES.findIndex(s => s.id === data.currentStage) || status === 'complete';
-          const hasProfile = data.profile.roles.length > 0 || data.profile.careerSummary;
-          const isLocked = item.id === 'profile' && !hasProfile && status !== 'complete';
-          const tooltip = isLocked
-            ? 'Add your career history on your Profile page to unlock career direction exploration.'
-            : '';
-          return (
-            <button
-              key={item.id}
-              onClick={() => isAccessible && setData(stage(data, item.id))}
-              disabled={!isAccessible}
-              title={tooltip}
-              data-active={isActive ? 'true' : 'false'}
-              className={`atlas-tab-btn${isActive ? ' active' : ''}`}
-              style={{
-                opacity: isLocked ? 0.45 : 1,
-                cursor: isLocked ? 'not-allowed' : 'pointer',
-              }}
-            >
-              <span>{String(index + 1).padStart(2, '0')}</span>
-              <span className="atlas-tab-label">{item.label}</span>
-            </button>
-          );
-        })}
-        {/* Auto-save status pill — sits in the sticky bar, always visible */}
-        <div style={{ marginLeft: 'auto', paddingLeft: '12px', flexShrink: 0 }}>
-          <SaveStatusPill status={saveStatus} />
+      {/* ── Header (always shown) ── */}
+      <p style={ui.kicker}>Your Career</p>
+      <h2 style={{ font: `400 var(--fs-display)/1.04 var(--font-serif)`, letterSpacing: '-.035em', margin: '12px 0 12px' }}>
+        Build your career foundation.
+      </h2>
+      <p style={{ ...ui.quiet, maxWidth: '680px', fontSize: '14px', marginBottom: '32px' }}>
+        Your career history is managed on your Profile page. Fill it in there, then come back here to explore directions.
+      </p>
+
+      {/* ── Gating: no career history → prompt to go to Profile ── */}
+      {!hasProfile && (
+        <div style={{ ...ui.panel, borderLeft: '3px solid var(--color-accent)', marginBottom: '24px', textAlign: 'center', padding: '40px 24px' }}>
+          <p style={{ ...ui.quiet, fontSize: '15px', margin: '0 0 20px' }}>
+            Add your career history on your Profile page to unlock career direction exploration.
+          </p>
+          <a
+            href="/profile"
+            style={{ ...ui.primary, display: 'inline-block', textDecoration: 'none' }}
+            onClick={(e) => { e.preventDefault(); window.location.href = '/profile'; }}
+          >
+            Go to Profile →
+          </a>
         </div>
-      </nav>
+      )}
+
+      {/* ── Stage tabs (Explorer / Market & Action) + save pill ── */}
+      {hasProfile && (
+        <nav className="career-progress atlas-sticky-tabs" aria-label="Career direction stages" style={{ borderBottom: '1px solid var(--color-border)', marginBottom: '40px', display: 'flex', alignItems: 'center', overflowX: 'auto' }}>
+          {visibleStages.map((item, index) => {
+            const status = currentStageStatus(item.id);
+            const isActive = item.id === data.currentStage;
+            const isAccessible = index <= visibleStages.findIndex(s => s.id === data.currentStage) || status === 'complete';
+            return (
+              <button
+                key={item.id}
+                onClick={() => isAccessible && setData(stage(data, item.id))}
+                disabled={!isAccessible}
+                data-active={isActive ? 'true' : 'false'}
+                className={`atlas-tab-btn${isActive ? ' active' : ''}`}
+              >
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <span className="atlas-tab-label">{item.label}</span>
+              </button>
+            );
+          })}
+          <div style={{ marginLeft: 'auto', paddingLeft: '12px', flexShrink: 0 }}>
+            <SaveStatusPill status={saveStatus} />
+          </div>
+        </nav>
+      )}
 
       {error && <p role="alert" style={{ color: 'var(--color-danger)', marginBottom: '20px' }}>{error}</p>}
       {notice && <p role="status" style={{ color: 'var(--color-success)', marginBottom: '20px' }}>{notice}</p>}
 
-      {data.currentStage === 'profile' && <ProfileStep data={data} setData={setData} saving={saving} move={move} touchProfile={touchProfile} />}
-      {data.currentStage === 'explorer' && <ExplorerStep data={data} setData={setData} saving={saving} save={save} newDirection={newDirection} setNewDirection={setNewDirection} />}
-      {data.currentStage === 'marketAction' && <MarketActionStep data={data} setData={setData} saving={saving} save={save} />}
+      {hasProfile && data.currentStage === 'explorer' && <ExplorerStep data={data} setData={setData} saving={saving} save={save} newDirection={newDirection} setNewDirection={setNewDirection} />}
+      {hasProfile && data.currentStage === 'marketAction' && <MarketActionStep data={data} setData={setData} saving={saving} save={save} />}
 
       <section style={{ ...ui.rule, paddingTop: '20px', borderTop: '1px solid var(--color-border)' }} aria-label="Career direction data controls">
         <p style={{ ...ui.quiet, fontSize: '12px', marginBottom: '12px' }}>Exporting or deleting here applies only to the information on this page.</p>
@@ -186,75 +191,6 @@ function Title({ kicker, title, children }: { kicker: string; title: string; chi
 
 function Actions({ back, onBack, next, onNext, disabled, saving }: { back?: string; onBack?: () => void; next: string; onNext: () => void; disabled?: boolean; saving: boolean }) {
   return <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginTop: '32px' }}>{back && <button onClick={onBack} style={ui.secondary}>{back}</button>}<button disabled={disabled || saving} onClick={onNext} style={{ ...ui.primary, opacity: disabled || saving ? .45 : 1, marginLeft: 'auto' }}>{saving ? 'Saving…' : next}</button></div>;
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// STEP 01 — PROFILE (merged: career history + work values)
-// ═══════════════════════════════════════════════════════════════════════
-
-function ProfileStep({ data, saving, move }: PageProps & { touchProfile: (next: CareerDirectionData) => CareerDirectionData }) {
-  const hasProfile = data.profile.roles.length > 0 || data.profile.careerSummary;
-  const profileStatus = hasProfile ? '✓' : '○';
-
-  // Continue to Explorer — career history is edited on the Profile page
-  const handleContinue = () => {
-    void move(data, '');
-  };
-
-  return (
-    <section>
-      <Title kicker="01 / Your profile" title="Build your career foundation.">
-        Your career history is managed on your Profile page. Fill it in there, then come back here to explore directions.
-      </Title>
-      <hr style={ui.rule} />
-
-      {/* ── Progress indicator ── */}
-      <div style={{ display: 'flex', gap: '24px', marginBottom: '32px', font: '11px var(--font-mono)', textTransform: 'uppercase', letterSpacing: '.1em', color: 'var(--color-text-dim)' }}>
-        <span style={{ color: hasProfile ? 'var(--color-success)' : 'var(--color-text-dim)' }}>{profileStatus} Career history</span>
-      </div>
-
-      {!hasProfile && (
-        <div style={{ ...ui.panel, borderLeft: '3px solid var(--color-accent)', marginBottom: '24px', textAlign: 'center' }}>
-          <p style={{ ...ui.quiet, fontSize: '14px', margin: '0 0 16px' }}>
-            Add your career history to unlock Explorer and Market & Action.
-          </p>
-          <a
-            href="/profile"
-            style={{ ...ui.primary, display: 'inline-block', textDecoration: 'none' }}
-            onClick={(e) => { e.preventDefault(); window.location.href = '/profile'; }}
-          >
-            Go to Profile →
-          </a>
-        </div>
-      )}
-
-      {hasProfile && (
-        <div style={{ ...ui.panel, borderLeft: '3px solid var(--color-success)', marginBottom: '24px' }}>
-          <p style={{ ...ui.quiet, fontSize: '14px', margin: '0 0 12px', color: 'var(--color-success)' }}>
-            ✓ Your career history is complete.
-          </p>
-          <a
-            href="/profile"
-            style={{ ...ui.secondary, display: 'inline-block', textDecoration: 'none', fontSize: '10px', padding: '6px 12px' }}
-            onClick={(e) => { e.preventDefault(); window.location.href = '/profile'; }}
-          >
-            Edit on Profile page
-          </a>
-        </div>
-      )}
-
-      {/* ── Continue — advances to Explorer ── */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '32px' }}>
-        <button
-          onClick={handleContinue}
-          disabled={saving || !hasProfile}
-          style={{ ...ui.primary, opacity: (saving || !hasProfile) ? 0.5 : 1 }}
-        >
-          {!hasProfile ? 'Add career history first' : 'Continue →'}
-        </button>
-      </div>
-    </section>
-  );
 }
 
 // ═══════════════════════════════════════════════════════════════════════

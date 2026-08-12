@@ -553,7 +553,6 @@ export function ProfileBuilder({ profile, onChange, authToken, showSections }: P
   if (mode === 'review') {
     return (
       <div style={ui.page}>
-        <p style={ui.kicker}>01 / Your starting point</p>
         <h1 style={ui.h1}>Review your profile.</h1>
         <p style={ui.quiet}>
           Everything below is editable. Add, remove, or correct anything Atlas
