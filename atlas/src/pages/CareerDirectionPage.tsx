@@ -124,13 +124,23 @@ export function CareerDirectionPage() {
           const status = currentStageStatus(item.id);
           const isActive = item.id === data.currentStage;
           const isAccessible = index <= CAREER_STAGES.findIndex(s => s.id === data.currentStage) || status === 'complete';
+          const hasProfile = data.profile.roles.length > 0 || data.profile.careerSummary;
+          const isLocked = item.id === 'profile' && !hasProfile && status !== 'complete';
+          const tooltip = isLocked
+            ? 'Add your career history on your Profile page to unlock career direction exploration.'
+            : '';
           return (
             <button
               key={item.id}
               onClick={() => isAccessible && setData(stage(data, item.id))}
               disabled={!isAccessible}
+              title={tooltip}
               data-active={isActive ? 'true' : 'false'}
               className={`atlas-tab-btn${isActive ? ' active' : ''}`}
+              style={{
+                opacity: isLocked ? 0.45 : 1,
+                cursor: isLocked ? 'not-allowed' : 'pointer',
+              }}
             >
               <span>{String(index + 1).padStart(2, '0')}</span>
               <span className="atlas-tab-label">{item.label}</span>

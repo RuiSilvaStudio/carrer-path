@@ -110,6 +110,18 @@ export function ProfilePage() {
     if (user?.displayName) setName(user.displayName);
   }, [user?.displayName]);
 
+  // ── Career history save (defined before early return so hooks stay consistent) ──
+  const handleProfileChange = useCallback(async (p: StructuredProfile) => {
+    setProfile(p);
+    setProfileSaveMsg(null);
+    try {
+      if (user) await saveProfile(user.id, p);
+      setProfileSaveMsg('Saved.');
+    } catch {
+      setProfileSaveMsg('Could not save.');
+    }
+  }, [user]);
+
   if (!user) return null;
 
   const saveName = async () => {
@@ -184,18 +196,6 @@ export function ProfilePage() {
       setDeleteBusy(false);
     }
   };
-
-  // ── Career history save ──
-  const handleProfileChange = useCallback(async (p: StructuredProfile) => {
-    setProfile(p);
-    setProfileSaveMsg(null);
-    try {
-      await saveProfile(user.id, p);
-      setProfileSaveMsg('Saved.');
-    } catch {
-      setProfileSaveMsg('Could not save.');
-    }
-  }, [user]);
 
   // ── Tabs ──
   const TABS: Array<{ id: ProfileTab; label: string; num: string }> = [
