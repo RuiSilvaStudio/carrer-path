@@ -59,7 +59,7 @@ export function PrivacyPage() {
             over time, and explore career paths that fit your profile.
           </p>
           <p>
-            For any privacy-related questions, contact: <code style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-accent)' }}>rui.fc.silva@proton.me</code>
+            For any privacy-related questions, contact: <code style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-accent)' }}>privacy@atlaspath.eu</code>
           </p>
         </Section>
 
@@ -133,7 +133,7 @@ export function PrivacyPage() {
           </ul>
           <p>
             To exercise any of these rights, use the in-app tools (Profile → Export / Delete) or
-            contact <code style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-accent)' }}>rui.fc.silva@proton.me</code>.
+            contact <code style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-accent)' }}>privacy@atlaspath.eu</code>.
             We respond within 30 days.
           </p>
         </Section>
@@ -209,7 +209,7 @@ export function PrivacyPage() {
           </p>
           <p>
             <strong style={{ color: 'var(--color-text)' }}>Rui Silva</strong><br />
-            <code style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-accent)' }}>rui.fc.silva@proton.me</code><br />
+            <code style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-accent)' }}>privacy@atlaspath.eu</code><br />
             Portugal
           </p>
         </Section>
