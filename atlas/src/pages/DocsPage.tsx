@@ -1823,7 +1823,7 @@ Based on these scores:
           </h3>
           <p style={{ marginBottom: '0' }}>
             If something is hard to use with your assistive tech, please{' '}
-            <a href="mailto:rui.fc.silva@proton.me?subject=Atlas accessibility" style={{ color: 'var(--color-accent)', borderBottom: '1px solid var(--color-accent)' }}>email us</a>.
+            <a href="mailto:support@atlaspath.eu?subject=Atlas accessibility" style={{ color: 'var(--color-accent)', borderBottom: '1px solid var(--color-accent)' }}>email us</a>.
             We treat accessibility bugs as P1.
           </p>
         </DocCard>
