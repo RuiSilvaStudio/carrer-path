@@ -69,10 +69,9 @@ export function PrivacyPage() {
           </p>
           <p>Atlas Path runs on a fully sovereign European infrastructure:</p>
           <ul>
-            <li><strong style={{ color: 'var(--color-text)' }}>Database & Authentication:</strong> Self-hosted Supabase (PostgreSQL) on a private server in Portugal, accessible via an encrypted tunnel through a French relay server.</li>
+            <li><strong style={{ color: 'var(--color-text)' }}>Database & Authentication:</strong> Self-hosted Supabase (PostgreSQL) on a private server in Portugal.</li>
             <li><strong style={{ color: 'var(--color-text)' }}>AI processing:</strong> A self-hosted language model (Qwen 2.5) running on the same private server. No data is sent to OpenAI, Google, or any US-based AI provider.</li>
             <li><strong style={{ color: 'var(--color-text)' }}>Frontend hosting:</strong> Vercel serves the static website files. Vercel does not have access to your personal data — it only delivers HTML, CSS, and JavaScript to your browser.</li>
-            <li><strong style={{ color: 'var(--color-text)' }}>DNS resolution:</strong> Cloudflare resolves the domain name. Cloudflare does not proxy or route user data — it only translates the domain name to an IP address.</li>
           </ul>
           <p>
             No US company has access to your personal data at any point. There is no US cloud
@@ -154,7 +153,7 @@ export function PrivacyPage() {
             <li><strong style={{ color: 'var(--color-text)' }}>Encryption in transit:</strong> All data is transmitted over HTTPS (TLS 1.2+).</li>
             <li><strong style={{ color: 'var(--color-text)' }}>Encryption at rest:</strong> The database encrypts stored data at the file system level.</li>
             <li><strong style={{ color: 'var(--color-text)' }}>Row-level security:</strong> PostgreSQL RLS policies enforce that only your authenticated user ID can access your records. No user can read another user's data.</li>
-            <li><strong style={{ color: 'var(--color-text)' }}>Network isolation:</strong> The database is not directly exposed to the internet. It is accessible only through an encrypted WireGuard tunnel from a French relay server.</li>
+            <li><strong style={{ color: 'var(--color-text)' }}>Network isolation:</strong> The database is not directly exposed to the internet. All access is authenticated and encrypted.</li>
             <li><strong style={{ color: 'var(--color-text)' }}>API key authentication:</strong> The AI model endpoint requires a secret API key. It is not publicly accessible.</li>
             <li><strong style={{ color: 'var(--color-text)' }}>No third-party access:</strong> No external company, service, or contractor has access to the database or server.</li>
           </ul>
@@ -164,14 +163,15 @@ export function PrivacyPage() {
           <p>
             <strong style={{ color: 'var(--color-text)' }}>There are no international data transfers.</strong>
             All personal data is processed and stored on servers located within the European Union
-            (Portugal and France). No data is transferred to the United States or any other
+            (Portugal). No data is transferred to the United States or any other
             non-EU country.
           </p>
           <p>
-            Vercel (frontend hosting) and Cloudflare (DNS) are US-incorporated companies, but they
-            do not process, store, or route user personal data. Vercel only serves static website
-            files (HTML/CSS/JS). Cloudflare only resolves domain names to IP addresses. Neither
-            has access to the database, authentication system, or any user data.
+            Vercel (frontend hosting) and Cloudflare (infrastructure provider) are US-incorporated
+            companies that help deliver the website, but they have no access to your personal data.
+            Vercel only serves static website files (HTML, CSS, JavaScript). Cloudflare provides
+            network infrastructure. Neither has access to the database, authentication system,
+            or any user data.
           </p>
         </Section>
 

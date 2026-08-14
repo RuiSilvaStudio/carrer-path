@@ -56,3 +56,13 @@ Rules:
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH\_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current \(AST-only, no API cost\).
+
+
+## Naming Conventions
+
+Canonical server, project, and service naming is defined in `~/.hermes.md` § Naming Conventions — that is the single source of truth for all agents and profiles. Key points:
+
+- **Servers**: Prod (192.168.1.229), Ops (192.168.1.98), Dev (Mint desktop), Pi (192.168.1.166), NAS (192.168.1.242)
+- **Service naming**: Dedicated services use `Project-Service` (e.g. `studio-api`); shared services use generic names (e.g. `supabase-db`); resources within shared services are prefixed with the project name (e.g. `database atlaspath`)
+- **One Listmonk per project**
+- **Cross-contamination rule**: Dev owns code, Ops owns deploy — neither crosses

@@ -76,10 +76,10 @@ Notes:
 Status: completed
 Goal: No US company in the user data path.
 Notes:
-- LLM: self-hosted Ollama (Qwen 2.5 7B) on office server, exposed via `llm.ruisilvastudio.com` (API key auth).
-- Database + Auth: self-hosted Supabase on office server, exposed via `supabase.ruisilvastudio.com`.
-- Both proxied through Scaleway relay (Paris, PAR-1) → WireGuard tunnel → office server.
-- Frontend: Vercel (static files only, no user data). DNS: Cloudflare (DNS-only, no proxying).
+- LLM: self-hosted Ollama (Qwen 2.5 7B) on Prod server, exposed via `llm.ruisilvastudio.com` (API key auth).
+- Database + Auth: self-hosted Supabase on Prod server, exposed via `supabase.ruisilvastudio.com`.
+- Both proxied through Cloudflare Tunnel → Prod server (192.168.1.229).
+- Frontend: Vercel (static files only, no user data). DNS + tunnel: Cloudflare (via Cloudflare Tunnel).
 - Daily Postgres backups at 2am, 7-day retention.
 - Full infra details: see `atlas-path-operational-playbook.md` → Sovereign Infrastructure.
 
